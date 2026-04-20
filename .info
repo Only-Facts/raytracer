@@ -1,0 +1,162 @@
+######################################################
+struct CFrame {
+    utils::vector::Vector3<double> position;
+    utils::vector::Vector3<double> orientation;
+};
+
+class enum Shape {
+    None,
+    Point,
+    Plane,
+    Sphere,
+    Cylinder,
+    Cone,
+};
+
+struct ShapeDescriptor {
+    raytracer::Shape id = raytracer::Shape::None;
+
+    /* all */
+    utils::vector::Vector3<double> origin = {0.0, 0.0, 0.0}; // {x, y, z}
+    utils::vector::Vector3<double> orientation = {0.0, 0.0, 0.0}; // {x, y, z}
+
+    /* plane & cylinder & cone */
+    utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
+
+    /* sphere & cylinder & cone */
+    float radius;
+};
+
+######################################################
+IObject
+
+functions ->
+void translate(const utils::vector::Vector3<double>& v); // Apply the translation on the object
+float computeSDF(const utils::vector::Vector3<double>& point) const; // Return the closest norm with the point
+bool isColliding(const utils::vector::Vector3<double>& point) const;
+raytracer::CFrame getCFrame(void) const;
+
+######################################################
+AObject
+
+storage ->
+raytracer::CFrame _cframe: position + orientation
+raytracer::ShapeDescriptor _descriptor;
+std::vector<std::pair<utils::vector::Vector3<double>, float>> _lightRays;
+
+functions ->
+void translate(const utils::vector::Vector3<double>& v);
+float computeSDF(const utils::vector::Vector3<double>& point) const;
+bool isColliding(const utils::vector::Vector3<double>& point) const;
+raytracer::CFrame getCFrame(void) const;
+
+######################################################
+Camera: AObject
+
+storage ->
+std::vector<utils::vector::Vector3<uint8_t>> _screen: Screen pixel
+
+functions ->
+void render(void); // Start rendering steps
+
+######################################################
+IMaterial
+
+functions ->
+float getTransparency(void) const;
+float getLightReflectionCoef(void) const;
+utils::vector::Vector3<uint8_t> getColor(void) const;
+
+######################################################
+AMaterial: IMaterial
+
+storage ->
+float _transparency: Material transparency
+float _reflection: Material light reflection
+utils::vector::Vector3<uint8_t> _color;
+
+functions ->
+float getTransparency(void) const;
+float getLightReflectionCoef(void) const;
+utils::vector::Vector3<uint8_t> getColor(void) const;
+
+######################################################
+RGBMaterial: AMaterial
+// Default material
+
+######################################################
+...Object: AObject
+
+storage ->
+std::shared_ptr<raytracer::IMaterial> _material;
+
+functions ->
+
+######################################################
+IRay: AObject
+
+functions ->
+void reset(void); // Reset values
+
+######################################################
+Ray: IRay
+
+storage ->
+utils::vector::Vector3<std::uint8_t> _color: RGB color that what hit, add a percentage of the color from the surface hitted each time
+
+functions ->
+void reset(void);
+
+######################################################
+LightRay: IRay
+
+storage ->
+float _intensity: Intensity of the light: Decrease at each surface hitted
+
+functions ->
+void reset(void);
+
+######################################################
+ILight: AObject
+
+functions ->
+void init(void); // Create default light rays
+void reset(void); // Reset light rays values (don't recreate it)
+
+######################################################
+ALight: ILight
+
+storage ->
+std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
+
+######################################################
+Directional: ALight
+
+functions ->
+void init(void);
+void reset(void);
+
+######################################################
+Ambient: ALight
+
+functions ->
+void init(void);
+void reset(void);
+
+######################################################
+render:
+ ~ - handle input
+ 0 - reset object status
+ 1 - init rays & light rays
+ 2 - compute SDF on light rays
+ 3 - compute SDF on rays
+ 5 - update screen display
+
+######################################################
+shapes:
+ - Point // Used for rays
+ - Plane // Used for camera
+ - Sphere
+ - Cylinder
+ - Cone
+ - ...

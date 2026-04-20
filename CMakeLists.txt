@@ -1,0 +1,215 @@
+cmake_minimum_required(VERSION 3.20)
+set(TARGET raytracer)
+project(${TARGET} VERSION 1.0 LANGUAGES CXX)
+
+# =========================
+# Compilateur & Standard
+# =========================
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}) # TARGET destination
+set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Moderne compilation -fPIE
+add_definitions(-DFORCED_CXX_STANDARD=14) # Used for the attribute definition
+# Unknow flag -> add_compile_options(-fno-gnu-unique) # Ensure unload from dclose properly
+
+# =========================
+# Requirement
+# =========================
+find_package(Python3 REQUIRED) # Try to find python for the dependencies
+#find_package(SFML REQUIRED)
+
+# =========================
+# Warnings
+# =========================
+add_compile_options(
+    -W
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wunused-parameter
+    -Wshadow
+    -Wuninitialized
+)
+
+# =========================
+# Sources
+# =========================
+set(SRC
+    # Main
+    src/raytracer/main.cpp
+
+    # Rays
+    src/raytracer/rays/Ray.cpp
+    src/raytracer/rays/LightRay.cpp
+)
+add_executable(${TARGET} ${SRC})
+#add_library(${TARGET} STATIC ${SRC})
+#add_library(${TARGET} SHARED ${SRC})
+
+set(SRC_LIBS
+)
+
+# =========================
+# Cameras
+# =========================
+set(SRC_CAMERAS
+)
+
+set(SRC_CAMERA
+    src/raytracer/cameras/Camera.cpp
+)
+add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
+
+# =========================
+# Lights
+# =========================
+set(SRC_LIGHTS
+)
+
+set(SRC_DIRECTIONAL
+    src/raytracer/lights/Directional.cpp
+)
+add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
+
+set(SRC_AMBIENT
+    src/raytracer/lights/Ambient.cpp
+)
+add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
+
+# =========================
+# Objects
+# =========================
+set(SRC_OBJECTS
+)
+
+set(SRC_POINT
+    src/raytracer/objects/Point.cpp
+)
+add_library(object_point SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_POINT})
+
+set(SRC_PLANE
+    src/raytracer/objects/Plane.cpp
+)
+add_library(object_plane SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_PLANE})
+
+set(SRC_SPHERE
+    src/raytracer/objects/Sphere.cpp
+)
+add_library(object_sphere SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_SPHERE})
+
+set(SRC_CYLINDER
+    src/raytracer/objects/Cylinder.cpp
+)
+add_library(object_cylinder SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CYLINDER})
+
+set(SRC_CONE
+    src/raytracer/objects/Cone.cpp
+)
+add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
+
+# =========================
+# Materials
+# =========================
+set(SRC_MATERIALS
+)
+
+set(SRC_RGB
+    src/raytracer/materials/RGB.cpp
+)
+add_library(material_rgb SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_RGB})
+
+# =========================
+# Compilation parameters
+# =========================
+set_target_properties(
+    camera_camera
+    PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/cameras
+)
+set_target_properties(
+    light_directional
+    light_ambient
+    PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/lights
+)
+set_target_properties(
+    object_point
+    object_plane
+    object_sphere
+    object_cylinder
+    object_cone
+    PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/objects
+)
+set_target_properties(
+    material_rgb
+    PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/materials
+)
+
+# =========================
+# Dependencies
+# =========================
+add_custom_target(generated_exception_header ALL
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/scripts/generate_exception_header.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+add_dependencies(${TARGET} generated_exception_header)
+foreach(target
+    camera_camera
+    light_directional
+    light_ambient
+    object_point
+    object_plane
+    object_sphere
+    object_cylinder
+    object_cone
+    material_rgb
+)
+    add_dependencies(${target} generated_exception_header)
+endforeach()
+
+# =========================
+# Includes
+# =========================
+# Global includes
+target_include_directories(${TARGET} PRIVATE include)
+target_link_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
+target_link_libraries(${TARGET} PRIVATE utils)
+foreach(target
+    camera_camera
+    light_directional
+    light_ambient
+    object_point
+    object_plane
+    object_sphere
+    object_cylinder
+    object_cone
+    material_rgb
+)
+    target_include_directories(${target} PRIVATE include)
+    target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
+    target_link_libraries(${target} PRIVATE utils)
+endforeach()
+
+# =========================
+# Modes
+# =========================
+target_compile_options(${TARGET} PRIVATE
+    $<$<CONFIG:Debug>:-g -ggdb3>
+    $<$<CONFIG:Release>:-O1>
+)
+
+# =========================
+# Utils
+# =========================
+add_custom_target(get_unregistered_files
+    COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/check_files.sh unregistered ${SRC}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)

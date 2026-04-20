@@ -1,0 +1,10 @@
+{
+    "errors": [
+        {
+            "code": "Exit",
+            "message": "Exit",
+            "info": "Exit",
+            "restrictions": ["None"]
+        }
+    ]
+}

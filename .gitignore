@@ -1,0 +1,23 @@
+## Compilation
+*.o
+*.a
+*.so
+a.out
+raytracer
+
+## Vim
+*.sw*
+\#*#
+*~
+:*
+q
+vg
+z
+
+## CMake
+build/
+__pycache__
+/libs
+
+## Other
+#.info
