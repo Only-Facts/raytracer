@@ -37,8 +37,9 @@ add_compile_options(
 # Sources
 # =========================
 set(SRC
-    # Main
+    # Global
     src/raytracer/main.cpp
+    src/raytracer/DynamicLibrary.cpp
 
     # Rays
     src/raytracer/rays/Ray.cpp
@@ -56,9 +57,11 @@ set(SRC_LIBS
 # =========================
 set(SRC_CAMERAS
     src/raytracer/cameras/lib.cpp
+    src/raytracer/cameras/ACamera.cpp
 )
 
 set(SRC_CAMERA
+    src/raytracer/cameras/camera/lib.cpp
     src/raytracer/cameras/camera/Camera.cpp
 )
 add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
@@ -68,17 +71,20 @@ add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
 # =========================
 set(SRC_LIGHTS
     src/raytracer/lights/lib.cpp
+    src/raytracer/lights/ALight.cpp
 )
-
-set(SRC_DIRECTIONAL
-    src/raytracer/lights/directional/Directional.cpp
-)
-add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
 
 set(SRC_AMBIENT
+    src/raytracer/lights/ambient/lib.cpp
     src/raytracer/lights/ambient/Ambient.cpp
 )
 add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
+
+set(SRC_DIRECTIONAL
+    src/raytracer/lights/directional/lib.cpp
+    src/raytracer/lights/directional/Directional.cpp
+)
+add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
 
 # =========================
 # Objects
@@ -88,26 +94,31 @@ set(SRC_OBJECTS
 )
 
 set(SRC_POINT
+    src/raytracer/objects/point/lib.cpp
     src/raytracer/objects/point/Point.cpp
 )
 add_library(object_point SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_POINT})
 
 set(SRC_PLANE
+    src/raytracer/objects/plane/lib.cpp
     src/raytracer/objects/plane/Plane.cpp
 )
 add_library(object_plane SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_PLANE})
 
 set(SRC_SPHERE
+    src/raytracer/objects/sphere/lib.cpp
     src/raytracer/objects/sphere/Sphere.cpp
 )
 add_library(object_sphere SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_SPHERE})
 
 set(SRC_CYLINDER
+    src/raytracer/objects/cylinder/lib.cpp
     src/raytracer/objects/cylinder/Cylinder.cpp
 )
 add_library(object_cylinder SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CYLINDER})
 
 set(SRC_CONE
+    src/raytracer/objects/cone/lib.cpp
     src/raytracer/objects/cone/Cone.cpp
 )
 add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
@@ -120,6 +131,7 @@ set(SRC_MATERIALS
 )
 
 set(SRC_RGB
+    src/raytracer/materials/rgb/lib.cpp
     src/raytracer/materials/rgb/RGB.cpp
 )
 add_library(material_rgb SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_RGB})
@@ -134,8 +146,8 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/cameras
 )
 set_target_properties(
-    light_directional
     light_ambient
+    light_directional
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/lights
@@ -167,8 +179,8 @@ add_custom_target(generated_exception_header ALL
 add_dependencies(${TARGET} generated_exception_header)
 foreach(target
     camera_camera
-    light_directional
     light_ambient
+    light_directional
     object_point
     object_plane
     object_sphere
@@ -188,8 +200,8 @@ target_link_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
 target_link_libraries(${TARGET} PRIVATE utils)
 foreach(target
     camera_camera
-    light_directional
     light_ambient
+    light_directional
     object_point
     object_plane
     object_sphere

@@ -32,6 +32,7 @@ enum class Code: std::size_t {
     VectorInvalidIndex,
     ExceptionCodeRestriction,
     Exit,
+    NotSupportedFunction,
     ANSIMouseEvent,
     CliInternal,
     CliHook,
@@ -51,6 +52,7 @@ constexpr inline const char *Message[] = {
     /* VectorInvalidIndex */ "Invalid index on a vector",
     /* ExceptionCodeRestriction */ "Error during the setup of an exception",
     /* Exit */ "Exit",
+    /* NotSupportedFunction */ "This function is not supported by this class",
     /* ANSIMouseEvent */ "Error during the read of the mouse event",
     /* CliInternal */ "Internal error from the cli",
     /* CliHook */ "Error during a hook call",
@@ -69,6 +71,7 @@ constexpr inline const char *Info[] = {
     /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
     /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
     /* Exit */ "Exit",
+    /* NotSupportedFunction */ nullptr,
     /* ANSIMouseEvent */ nullptr,
     /* CliInternal */ nullptr,
     /* CliHook */ nullptr,
@@ -92,6 +95,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
     /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
     /* Exit */ 0b0001, // allow: None
+    /* NotSupportedFunction */ 0b0110, // allow: Fatal, Error
     /* ANSIMouseEvent */ 0b0110, // allow: Fatal, Error
     /* CliInternal */ 0b0110, // allow: Fatal, Error
     /* CliHook */ 0b1110, // allow: Fatal, Error, Warning

@@ -156,3 +156,18 @@ shapes:
  - Cylinder
  - Cone
  - ...
+
+######################################################
+config file:
+
+<shape_name>: {
+    type = "point"|"plane"|"sphere"|"cylinder"|"cone"; // Case insensitive
+    material = "rgb"; // Case insensitive
+
+    position = [0.0, 1.0, 2.0]; // Double
+    orientation = [0.0, 0.0, 0.0]; // Double
+
+    dimension = [0, 0]; // size_t
+
+    radius = 5.0; // Double
+};

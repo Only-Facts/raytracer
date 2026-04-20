@@ -3,7 +3,7 @@
 *.a
 *.so
 a.out
-raytracer
+/raytracer
 
 ## Vim
 *.sw*
