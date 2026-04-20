@@ -39,6 +39,9 @@ enum class Code: std::size_t {
     CliParser,
     CliExecution,
     CliUndefined,
+    Dlopen,
+    Dlsym,
+    Dlclose,
     CODE_SENTINEL // sentinel used for verification
 };
 
@@ -55,6 +58,9 @@ constexpr inline const char *Message[] = {
     /* CliParser */ "Error during the parsing",
     /* CliExecution */ "Error during the command execution",
     /* CliUndefined */ "An undefined error has append",
+    /* Dlopen */ "Failed to load a dynamic library",
+    /* Dlsym */ "Failed to load a function from a dynamic library",
+    /* Dlclose */ "Failed to release a loaded dynamic library",
 };
 
 /* Potential default info: nullptr same as "[None]" */
@@ -70,6 +76,9 @@ constexpr inline const char *Info[] = {
     /* CliParser */ nullptr,
     /* CliExecution */ nullptr,
     /* CliUndefined */ nullptr,
+    /* Dlopen */ nullptr,
+    /* Dlsym */ nullptr,
+    /* Dlclose */ nullptr,
 };
 
 /* Potential restriction on exception code */
@@ -90,6 +99,9 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* CliParser */ 0b0000, // allow: All
     /* CliExecution */ 0b0110, // allow: Fatal, Error
     /* CliUndefined */ 0b0110, // allow: Fatal, Error
+    /* Dlopen */ 0b0110, // allow: Fatal, Error
+    /* Dlsym */ 0b0110, // allow: Fatal, Error
+    /* Dlclose */ 0b0110, // allow: Fatal, Error
 };
 
 // Check at the compile time the correspondece between the message & code

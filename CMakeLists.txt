@@ -55,10 +55,11 @@ set(SRC_LIBS
 # Cameras
 # =========================
 set(SRC_CAMERAS
+    src/raytracer/cameras/lib.cpp
 )
 
 set(SRC_CAMERA
-    src/raytracer/cameras/Camera.cpp
+    src/raytracer/cameras/camera/Camera.cpp
 )
 add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
 
@@ -66,15 +67,16 @@ add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
 # Lights
 # =========================
 set(SRC_LIGHTS
+    src/raytracer/lights/lib.cpp
 )
 
 set(SRC_DIRECTIONAL
-    src/raytracer/lights/Directional.cpp
+    src/raytracer/lights/directional/Directional.cpp
 )
 add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
 
 set(SRC_AMBIENT
-    src/raytracer/lights/Ambient.cpp
+    src/raytracer/lights/ambient/Ambient.cpp
 )
 add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
 
@@ -82,30 +84,31 @@ add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
 # Objects
 # =========================
 set(SRC_OBJECTS
+    src/raytracer/objects/lib.cpp
 )
 
 set(SRC_POINT
-    src/raytracer/objects/Point.cpp
+    src/raytracer/objects/point/Point.cpp
 )
 add_library(object_point SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_POINT})
 
 set(SRC_PLANE
-    src/raytracer/objects/Plane.cpp
+    src/raytracer/objects/plane/Plane.cpp
 )
 add_library(object_plane SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_PLANE})
 
 set(SRC_SPHERE
-    src/raytracer/objects/Sphere.cpp
+    src/raytracer/objects/sphere/Sphere.cpp
 )
 add_library(object_sphere SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_SPHERE})
 
 set(SRC_CYLINDER
-    src/raytracer/objects/Cylinder.cpp
+    src/raytracer/objects/cylinder/Cylinder.cpp
 )
 add_library(object_cylinder SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CYLINDER})
 
 set(SRC_CONE
-    src/raytracer/objects/Cone.cpp
+    src/raytracer/objects/cone/Cone.cpp
 )
 add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
 
@@ -113,10 +116,11 @@ add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
 # Materials
 # =========================
 set(SRC_MATERIALS
+    src/raytracer/materials/lib.cpp
 )
 
 set(SRC_RGB
-    src/raytracer/materials/RGB.cpp
+    src/raytracer/materials/rgb/RGB.cpp
 )
 add_library(material_rgb SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_RGB})
 

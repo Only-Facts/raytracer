@@ -19,6 +19,7 @@ struct ShapeDescriptor {
     /* all */
     utils::vector::Vector3<double> origin = {0.0, 0.0, 0.0}; // {x, y, z}
     utils::vector::Vector3<double> orientation = {0.0, 0.0, 0.0}; // {x, y, z}
+    std::shared_ptr<raytracer::IMaterial> material;
 
     /* plane & cylinder & cone */
     utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
@@ -33,7 +34,6 @@ IObject
 functions ->
 void translate(const utils::vector::Vector3<double>& v); // Apply the translation on the object
 float computeSDF(const utils::vector::Vector3<double>& point) const; // Return the closest norm with the point
-bool isColliding(const utils::vector::Vector3<double>& point) const;
 raytracer::CFrame getCFrame(void) const;
 
 ######################################################
@@ -46,8 +46,6 @@ std::vector<std::pair<utils::vector::Vector3<double>, float>> _lightRays;
 
 functions ->
 void translate(const utils::vector::Vector3<double>& v);
-float computeSDF(const utils::vector::Vector3<double>& point) const;
-bool isColliding(const utils::vector::Vector3<double>& point) const;
 raytracer::CFrame getCFrame(void) const;
 
 ######################################################
@@ -85,12 +83,10 @@ RGBMaterial: AMaterial
 // Default material
 
 ######################################################
-...Object: AObject
-
-storage ->
-std::shared_ptr<raytracer::IMaterial> _material;
+...: AObject
 
 functions ->
+float computeSDF(const utils::vector::Vector3<double>& point) const;
 
 ######################################################
 IRay: AObject

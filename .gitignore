@@ -19,5 +19,10 @@ build/
 __pycache__
 /libs
 
+## Doxygen
+Doxyfile
+/html
+/latex
+
 ## Other
 #.info
