@@ -43,7 +43,7 @@ class ACamera: public raytracer::ICamera {
 
         // ------------ Function ---------- //
         nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};
-        nodiscard std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const {return this->_rays;};
+        nodiscard std::vector<std::shared_ptr<raytracer::Ray>>& getRays(void) const {return this->_rays;};
         void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
         nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
 
