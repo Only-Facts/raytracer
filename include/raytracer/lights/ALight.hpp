@@ -17,6 +17,8 @@ File Description:
     /* INCLUDE */
 
     /* type */
+    #define _Attribute
+    #include "utils/utils.hpp"      // nodiscard
     #include "ILight.hpp"           // raytracer::ILight
     #include "../rays/LightRay.hpp" // raytracer::LightRay
 
@@ -27,6 +29,7 @@ namespace raytracer { // namespace start
 class ALight: public raytracer::ILight {
     protected:
         std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
+        bool _global = false;
 
     public:
         // ---------- Pre-Function -------- //
@@ -35,6 +38,8 @@ class ALight: public raytracer::ILight {
 
         // ------------ Function ---------- //
         std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};
+        void setGlobal(bool global) {this->_global = global;};
+        nodiscard bool isGlobal(void) const {return this->_global;};
 
         // ------------ Operator ---------- //
         ALight& operator=(const ALight& object) = delete;

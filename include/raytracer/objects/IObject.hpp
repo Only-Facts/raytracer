@@ -32,8 +32,9 @@ class IObject {
     public:
         // ---------- Pre-Function -------- //
         virtual void reflectRay(std::shared_ptr<raytracer::IRay> ray) const = 0;
-        virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0; // Return the closest norm with the point
-        virtual void translate(const utils::vector::Vector3<double>& v) = 0; // Apply the translation on the object
+        virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
+        virtual void translate(const utils::vector::Vector3<double>& v) = 0;
+        virtual void rotate(const utils::vector::Vector3<double>& v) = 0;
         virtual void addLightRay(std::pair<utils::vector::Vector3<double>, float> lightRay) = 0;
         virtual void setShapeDescriptor(const raytracer::ShapeDescriptor& descriptor) = 0;
         virtual void setCFrame(const raytracer::CFrame& cframe) = 0;

@@ -130,11 +130,11 @@ set(SRC_MATERIALS
     src/raytracer/materials/lib.cpp
 )
 
-set(SRC_RGB
-    src/raytracer/materials/rgb/lib.cpp
-    src/raytracer/materials/rgb/RGB.cpp
+set(SRC_DEFAULT
+    src/raytracer/materials/default/lib.cpp
+    src/raytracer/materials/default/Default.cpp
 )
-add_library(material_rgb SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_RGB})
+add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT})
 
 # =========================
 # Compilation parameters
@@ -143,14 +143,14 @@ set_target_properties(
     camera_camera
     PROPERTIES
         PREFIX ""
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/cameras
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/cameras
 )
 set_target_properties(
     light_ambient
     light_directional
     PROPERTIES
         PREFIX ""
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/lights
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/lights
 )
 set_target_properties(
     object_point
@@ -160,13 +160,13 @@ set_target_properties(
     object_cone
     PROPERTIES
         PREFIX ""
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/objects
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/objects
 )
 set_target_properties(
-    material_rgb
+    material_default
     PROPERTIES
         PREFIX ""
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs/materials
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/materials
 )
 
 # =========================
@@ -186,7 +186,7 @@ foreach(target
     object_sphere
     object_cylinder
     object_cone
-    material_rgb
+    material_default
 )
     add_dependencies(${target} generated_exception_header)
 endforeach()
@@ -207,7 +207,7 @@ foreach(target
     object_sphere
     object_cylinder
     object_cone
-    material_rgb
+    material_default
 )
     target_include_directories(${target} PRIVATE include)
     target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)

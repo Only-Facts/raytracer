@@ -3,15 +3,15 @@ Edition:
 ##  @date 20/04/2026 by @author Tsukini
 
 File Name:
-##  @file RGB.hpp
+##  @file Default.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef RGB_H
-    #define RGB_H
+#ifndef DEFAULT_H
+    #define DEFAULT_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
@@ -27,20 +27,20 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class RGB: public raytracer::AMaterial {
+class Default: public raytracer::AMaterial {
     public:
         // ------------ Operator ---------- //
-        RGB& operator=(const RGB& object) = delete;
-        RGB& operator=(RGB&& object) = delete;
+        Default& operator=(const Default& object) = delete;
+        Default& operator=(Default&& object) = delete;
 
         // ---------- Constructor --------- //
-        RGB() = default;
-        RGB(const RGB& object) = delete;
-        RGB(RGB&& object) = delete;
+        Default() = default;
+        Default(const Default& object) = delete;
+        Default(Default&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~RGB() = default;
+        ~Default() = default;
 };
 
 } // namespace end
-#endif /* RGB_H */
+#endif /* DEFAULT_H */

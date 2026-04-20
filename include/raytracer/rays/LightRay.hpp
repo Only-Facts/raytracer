@@ -28,6 +28,7 @@ namespace raytracer { // namespace start
 
 class LightRay: public raytracer::IRay {
     private:
+        utils::vector::Vector3<std::uint8_t> _color; // Color of the light
         float _intensity; // Intensity of the light, decrease at each surface hitted
 
     public:
@@ -35,6 +36,8 @@ class LightRay: public raytracer::IRay {
         void reset(void);
 
         // ------------ Function ---------- //
+        void setColor(utils::vector::Vector3<std::uint8_t> color) {this->_color = color;};
+        utils::vector::Vector3<std::uint8_t> getColor(void) const {return this->_color;};
         void setIntensity(float intensity) {this->_intensity = intensity;};
         float getIntensity(void) const {return this->_intensity;};
 

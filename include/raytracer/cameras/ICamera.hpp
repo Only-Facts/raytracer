@@ -36,6 +36,8 @@ class ICamera: public raytracer::AObject {
         virtual void reset(void) = 0; // Reset rays values (don't recreate it)
         virtual const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const = 0;
         virtual std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const = 0;
+        virtual void setFieldOfView(float fieldOfView) = 0;
+        virtual float getFieldOfView(void) const = 0;
 
         // ------------ Operator ---------- //
         ICamera& operator=(const ICamera& object) = delete;

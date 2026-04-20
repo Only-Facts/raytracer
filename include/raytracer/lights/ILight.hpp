@@ -30,6 +30,8 @@ class ILight: public raytracer::AObject {
         virtual void init(void) = 0; // Create default light rays
         virtual void reset(void) = 0; // Reset light rays values (don't recreate it)
         virtual std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const = 0;
+        virtual void setGlobal(bool global) = 0;
+        virtual bool isGlobal(void) const = 0;
 
         // ------------ Operator ---------- //
         ILight& operator=(const ILight& object) = delete;

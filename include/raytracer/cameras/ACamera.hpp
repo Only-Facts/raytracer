@@ -34,6 +34,7 @@ class ACamera: public raytracer::ICamera {
     protected:
         std::vector<utils::vector::Vector3<std::uint8_t>> _screen; // Screen pixel
         std::vector<std::shared_ptr<raytracer::Ray>> _rays;
+        float _fieldOfView = 70.0f;
 
     public:
         // ---------- Pre-Function -------- //
@@ -43,6 +44,8 @@ class ACamera: public raytracer::ICamera {
         // ------------ Function ---------- //
         nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};
         nodiscard std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const {return this->_rays;};
+        void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
+        nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
 
         // ------------ Operator ---------- //
         ACamera& operator=(const ACamera& object) = delete;
