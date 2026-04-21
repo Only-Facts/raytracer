@@ -12,10 +12,14 @@ File Description:
 
 #define _Exception
 #define _Attribute
+#define _Write
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include <filesystem>
 #include <exception>
+#include <memory>
+#include <vector>
+#include <string>
 
 static void isDirectory(const std::string& path)
 {
@@ -86,8 +90,20 @@ void raytracer::Raytracer::load(int argc, char *argv[])
     for (; i < argc; ++i) {
         arg = std::string(argv[i]);
 
+        // -n, --newton
+        if (arg == "-n" || arg == "--newton") {
+            // Check the option argument
+            if (this->_settings.newton) {
+                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                std::cout << e.formated() << std::endl;
+            }
+
+            // Set the newton mode
+            this->_settings.newton = true;
+        }
+
         // -c, --camera <used_camera_path>
-        if (arg == "-c" || arg == "--camera") {
+        else if (arg == "-c" || arg == "--camera") {
             if (i + 1 >= argc)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-c requires <used_camera_path>");
 
@@ -131,6 +147,12 @@ void raytracer::Raytracer::load(int argc, char *argv[])
                 std::cout << e.formated() << std::endl;
             }
             isDirectory(argv[++i]);
+
+            // Ignored case
+            if (this->_settings.gui) {
+                utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::IgnoredArgument, arg);
+                std::cout << e.formated() << std::endl;
+            }
 
             // Set the ppm save path
             this->_settings.rendered_set = true;
@@ -186,4 +208,90 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             std::cout << e.formated() << std::endl;
         }*/
     }
+}
+
+static nodiscard std::vector<std::filesystem::path> getPlugins(const std::filesystem::path& root)
+{
+    std::vector<std::filesystem::path> plugins;
+
+    // Check the root permission & type
+    if (!std::filesystem::exists(root) || !std::filesystem::is_directory(root))
+        return plugins;
+
+    // Get recursively the file
+    for (const auto& entry: std::filesystem::recursive_directory_iterator(root)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".so") likely {
+            plugins.push_back(entry.path());
+        }
+    }
+
+    return plugins;
+}
+
+void raytracer::Raytracer::init(void)
+{
+    std::vector<std::filesystem::path> plugins = getPlugins(this->_settings.plugins_path);
+    std::shared_ptr<raytracer::DynamicLibrary> lib;
+    std::size_t type = 0;
+    bool selectedCamera = false;
+
+    // For each of them try to load it and dispatch it
+    if (plugins.size() == 0) unlikely {
+        throw utils::exception::ErrorException(utils::exception::Code::NoPlugins);
+    }
+    std::cout << utils::write::strong() << plugins.size() << utils::write::reset() << ": plugins where found" << std::endl;
+    
+    // Load each
+    for (const std::filesystem::path& path: plugins) {
+        // Try to load the lib
+        lib = std::make_shared<raytracer::DynamicLibrary>(path);
+
+        selectedCamera |= (!this->_settings.camera_set || (this->_settings.camera_set && path == this->_settings.camera_path));
+
+        // Continue only if the lib was succefully loaded
+        if (lib->isloaded()) likely {
+            std::cout << utils::write::strong() << path << utils::write::reset() << ": plugin succefully " << utils::write::color_rgb(0, 255, 0) << "loaded" << utils::write::reset() << std::endl;
+            type = lib->getType();
+
+            // Selected camera
+            if (type == CAMERA && selectedCamera && !this->_camera) {
+                try {
+                    raytracer::ICamera* (*factory)() = lib->loadFunction<raytracer::ICamera* (*)()>("factory");
+                    this->_camera = std::shared_ptr<raytracer::ICamera>(factory());
+                    std::cout << utils::write::strong() << path << utils::write::reset() << ": camera selected" << std::endl;
+                } catch (const utils::exception::IException&) {
+                    std::cout << utils::write::strong() << path << utils::write::reset() << ": the camera wasn't " << utils::write::color_rgb(255, 0, 0) << "created" << utils::write::reset() << std::endl;
+                    throw;
+                }
+            }
+
+            // Plugins type check (just stored)
+            if (type == CAMERA || type == LIGHT || type == OBJECT || type == MATERIAL) {
+                this->_libs[lib->getName()] = lib;
+            } else unlikely {
+                std::cout << utils::write::color_rgb(0, 255, 0) << utils::write::strong() << path << utils::write::reset() << ": plugins has a different type than those accepted" << std::endl;
+                continue;
+            }
+        } else unlikely {
+            std::cout << utils::write::strong() << path << utils::write::reset() << ": plugin not " << utils::write::color_rgb(255, 0, 0) << "loaded" << utils::write::reset() << std::endl;
+        }
+    }
+
+    // Check camera loading
+    if (!this->_camera) unlikely {
+        throw utils::exception::ErrorException(utils::exception::Code::NoLoadedCamera);
+    }
+
+    // Init the scene with the config file
+    this->scene();
+
+    // Init rays
+    this->_camera->init();
+    for (std::shared_ptr<raytracer::ILight>& light: this->_lights)
+        light->init();
+}
+
+void raytracer::Raytracer::scene(void)
+{
+    
 }

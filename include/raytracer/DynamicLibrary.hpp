@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file DynamicLibrary.hpp
@@ -46,7 +46,6 @@ class DynamicLibrary {
     public:
         std::size_t (*getType)() = nullptr; // Return the type of the lib
         const char* (*getName)() = nullptr; // Return the name of the lib
-        void* (*factory)() = nullptr; // Return a ptr on the class of the lib
 
         // ------------ Function ---------- //
         nodiscard bool isloaded() const noexcept {return (this->_lib && this->getType && this->getName);};

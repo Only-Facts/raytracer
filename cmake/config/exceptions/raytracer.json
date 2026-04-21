@@ -1,4 +1,14 @@
 {
     "errors": [
+        {
+            "code": "NoPlugins",
+            "message": "Wasn't able to find any plugins",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "NoLoadedCamera",
+            "message": "Wasn't able to load any camera",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        }
     ]
 }

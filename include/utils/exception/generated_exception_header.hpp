@@ -29,6 +29,8 @@ namespace utils::exception { // namespace start
 /* Definition of the different exception code */
 enum class Code: std::size_t {
     Undefined = 0,
+    NoPlugins,
+    NoLoadedCamera,
     VectorInvalidIndex,
     ExceptionCodeRestriction,
     Exit,
@@ -45,6 +47,7 @@ enum class Code: std::size_t {
     Dlclose,
     ArgumentsNumber,
     InvalidArgument,
+    IgnoredArgument,
     OptionOverride,
     MissingOptionArgument,
     MissingOption,
@@ -59,6 +62,8 @@ enum class Code: std::size_t {
 /* Corresponding exception message for each code */
 constexpr inline const char *Message[] = {
     /* Undefined */ "An undefined error has occured",
+    /* NoPlugins */ "Wasn't able to find any plugins",
+    /* NoLoadedCamera */ "Wasn't able to load any camera",
     /* VectorInvalidIndex */ "Invalid index on a vector",
     /* ExceptionCodeRestriction */ "Error during the setup of an exception",
     /* Exit */ "Exit",
@@ -75,6 +80,7 @@ constexpr inline const char *Message[] = {
     /* Dlclose */ "Failed to release a loaded dynamic library",
     /* ArgumentsNumber */ "Invalid number of arguments given, use '-h' for more information",
     /* InvalidArgument */ "Can't interpret this argument",
+    /* IgnoredArgument */ "This argument won't be used",
     /* OptionOverride */ "Duplicated option, this will override the precedent",
     /* MissingOptionArgument */ "The option require argument that where not given",
     /* MissingOption */ "An option is missing",
@@ -88,6 +94,8 @@ constexpr inline const char *Message[] = {
 /* Potential default info: nullptr same as "[None]" */
 constexpr inline const char *Info[] = {
     /* Undefined */ nullptr,
+    /* NoPlugins */ nullptr,
+    /* NoLoadedCamera */ nullptr,
     /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
     /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
     /* Exit */ "Exit",
@@ -104,6 +112,7 @@ constexpr inline const char *Info[] = {
     /* Dlclose */ nullptr,
     /* ArgumentsNumber */ nullptr,
     /* InvalidArgument */ nullptr,
+    /* IgnoredArgument */ nullptr,
     /* OptionOverride */ nullptr,
     /* MissingOptionArgument */ nullptr,
     /* MissingOption */ nullptr,
@@ -122,6 +131,8 @@ constexpr inline const char *Info[] = {
 // 0b1000 = Warning			(allow Warning)
 constexpr inline const std::uint8_t Restriction[] = {
     /* Undefined */ 0b0000, // allow: All
+    /* NoPlugins */ 0b1110, // allow: Fatal, Error, Warning
+    /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
     /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
     /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
     /* Exit */ 0b0001, // allow: None
@@ -138,6 +149,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Dlclose */ 0b0110, // allow: Fatal, Error
     /* ArgumentsNumber */ 0b0110, // allow: Fatal, Error
     /* InvalidArgument */ 0b1110, // allow: Fatal, Error, Warning
+    /* IgnoredArgument */ 0b1110, // allow: Fatal, Error, Warning
     /* OptionOverride */ 0b1001, // allow: None, Warning
     /* MissingOptionArgument */ 0b0110, // allow: Fatal, Error
     /* MissingOption */ 0b1110, // allow: Fatal, Error, Warning

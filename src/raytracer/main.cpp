@@ -28,7 +28,7 @@ static cold void printHelp()
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
     std::cout << "\t./raytracer <scene_cfg_path> [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
-    std::cout << "\t./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
     std::cout << utils::write::reset() << std::endl;
@@ -42,6 +42,8 @@ static cold void printHelp()
     std::cout << "\t\tWrite the informations of the executable" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-gui" << utils::write::reset() << std::endl;
     std::cout << "\t\tActivate the render at runtime" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-n, --newton" << utils::write::reset() << std::endl;
+    std::cout << "\t\tActivate the newton mode, apply aproximative gravity on rays" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-c, --camera " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "used_camera_path" << utils::write::reset() << ">" << std::endl;
     std::cout << "\t\tForce the camera plugin used (default: first found)" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-p, --plugins " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "plugins_directory_path" << utils::write::reset() << ">" << std::endl;
@@ -74,6 +76,7 @@ static cold void run(int argc, char *argv[])
 
     // Init the settings
     raytracer.load(argc, argv);
+    if (!raytracer.isViewer()) raytracer.init();
 
     // Change the start depending on the settings
     if (raytracer.isGui() || raytracer.isViewer()) {

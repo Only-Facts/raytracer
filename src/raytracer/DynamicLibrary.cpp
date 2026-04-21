@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file DynamicLibrary.hpp
@@ -40,14 +40,6 @@ cold raytracer::DynamicLibrary::DynamicLibrary(const std::string& lib) noexcept
     // Load name getter
     try {
         this->getName = this->loadFunction<const char* (*)()>("name");
-    } catch (const utils::exception::IException& e) {
-        std::cout << e.formated() << std::endl;
-        return;
-    }
-
-    // Load lib factory
-    try {
-        this->factory = this->loadFunction<void* (*)()>("factory");
     } catch (const utils::exception::IException& e) {
         std::cout << e.formated() << std::endl;
         return;

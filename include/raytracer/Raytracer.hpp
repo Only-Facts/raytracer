@@ -45,6 +45,7 @@ struct Settings {
     std::string ppm_path; // <ppm_file_path>
     std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
+    bool newton = false; // -n, --newton
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
@@ -72,14 +73,17 @@ class Raytracer {
         // ---------- Pre-Function -------- //
         /* init */
         void load(int argc, char *argv[]); // Load settings
+        void init(void); // Init plugins & rays
+        void scene(void); // Load scene file
 
         /* gui */
         void gui(void); // Handle opening, closing of the gui
-        void loop(void); // Handle loop for the gui (update the rendre or not in the viewer mode)
+        void loop(void); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
         void display(void); // Use the camera screen to update the gui render
 
         /* global */
         void render(void); // Update camera screen
+        void loadRender(void); // Load the given ppm file
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
