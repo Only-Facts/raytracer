@@ -160,6 +160,7 @@ void raytracer::Raytracer::saveRender(void)
     std::filesystem::path dir = this->_settings.rendered_path;
     cfg.replace_extension(".ppm");
     std::filesystem::path editedPath = dir / cfg.filename();
+    std::filesystem::create_directories(editedPath.parent_path());
     std::string path = editedPath.string();
     std::ofstream file(path, std::ios::binary);
     if (!file)
