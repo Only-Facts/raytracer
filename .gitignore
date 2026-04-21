@@ -4,6 +4,7 @@
 *.so
 a.out
 /raytracer
+/rendered
 
 ## Vim
 *.sw*

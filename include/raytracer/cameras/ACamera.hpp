@@ -21,6 +21,7 @@ File Description:
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, utils::vector::Vector2, nodiscard
     #include "ICamera.hpp"      // raytracer::ICamera
+    #include "../Define.hpp"    // values
     #include "../rays/Ray.hpp"  // raytracer::Ray
     #include <cstdint>          // std::uint8_t, std::uint16_t
     #include <memory>           // std::shared_ptr
@@ -41,6 +42,7 @@ class ACamera: public raytracer::ICamera {
         // ---------- Pre-Function -------- //
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
+        void updateScreen(void);
 
         // ------------ Function ---------- //
         nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};

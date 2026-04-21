@@ -21,6 +21,7 @@ File Description:
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
     #include "IMaterial.hpp"    // raytracer:IMaterial
+    #include "../Define.hpp"    // values
     #include <limits>           // UINT8_MAX
     #include <vector>           // std::vector
 
@@ -30,7 +31,7 @@ namespace raytracer { // namespace start
 
 class AMaterial: public raytracer::IMaterial {
     protected:
-        utils::vector::Vector3<uint8_t> _color = {UINT8_MAX, UINT8_MAX, UINT8_MAX}; // Material color
+        utils::vector::Vector3<uint8_t> _color = DEFAULT_COLOR; // Material color
         float _transparency = 0.0f; // Material transparency
         float _reflection = 0.0f; // Material light reflection
         bool _mirror = false; // Reflect the camera rays

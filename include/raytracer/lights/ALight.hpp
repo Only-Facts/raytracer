@@ -21,6 +21,7 @@ File Description:
     #include "utils/utils.hpp"      // nodiscard
     #include "ILight.hpp"           // raytracer::ILight
     #include "../rays/LightRay.hpp" // raytracer::LightRay
+    #include "../Define.hpp"        // values
     #include <cstdint>              // std::uint8_t   
     #include <limits>               // UINT8_MAX
 
@@ -31,7 +32,7 @@ namespace raytracer { // namespace start
 class ALight: public raytracer::ILight {
     protected:
         std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
-        utils::vector::Vector3<std::uint8_t> _color = {UINT8_MAX, UINT8_MAX, UINT8_MAX};
+        utils::vector::Vector3<std::uint8_t> _color = DEFAULT_COLOR;
         float _intensity = 1.0f;
 
     public:

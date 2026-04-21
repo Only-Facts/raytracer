@@ -34,6 +34,7 @@ class ICamera: public raytracer::AObject {
         // ---------- Pre-Function -------- //
         virtual void init(void) = 0; // Create default rays
         virtual void reset(void) = 0; // Reset rays values (don't recreate it)
+        virtual void updateScreen(void) = 0; // Take rays and apply them to the screen
         virtual const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const = 0;
         virtual std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const = 0;
         virtual void setResolution(utils::vector::Vector2<std::uint16_t> resolution) = 0;

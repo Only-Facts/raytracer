@@ -47,4 +47,10 @@ void raytracer::Directional::init(void)
 
 void raytracer::Directional::reset(void)
 {
+    // For each rays set default light value
+    for (std::shared_ptr<raytracer::LightRay>& ray: this->_rays) {
+        ray->reset();
+        ray->setColor(this->_color);
+        ray->setIntensity(this->_intensity);
+    }
 }

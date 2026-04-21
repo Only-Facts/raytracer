@@ -22,6 +22,7 @@ File Description:
     #include "utils/utils.hpp"      // utils::exception::*, utils::vector::Vector2
     #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
     #include "Struct.hpp"           // raytracer::ShapeDescriptor
+    #include "Define.hpp"           // values
     #include "cameras/ICamera.hpp"  // raytracer::ICamera
     #include "lights/ILight.hpp"    // raytracer::ILight
     #include "objects/IObject.hpp"  // raytracer::IObject
@@ -32,14 +33,6 @@ File Description:
     #include <memory>               // std::shared_ptr
     #include <vector>               // std::vector
     #include <string>               // std::string
-
-    //----------------------------------------------------------------//
-    /* DEFINE */
-
-    /* default */
-    #define PLUGINS_PATH "./plugins/"
-    #define RENDERED_PATH "./rendered/"
-    #define PPM_MAGIC 0x22
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//

@@ -18,6 +18,7 @@ File Description:
 
     /* type */
     #include "../objects/AObject.hpp"   // raytracer::AObject
+    #include "../Define.hpp"            // values
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//

@@ -85,6 +85,20 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
     // Clear the window
     window.clear(sf::Color::Black);
 
+    // Draw each pixel
+    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
+    for (std::uint16_t y = 0; y < resolution.y; ++y) {
+        for (std::uint16_t x = 0; x < resolution.x; ++x) {
+            const utils::vector::Vector3<std::uint8_t>& color = pixels[y * resolution.x + x];
+            sf::Vertex point(
+                sf::Vector2f(x, y),
+                sf::Color(color.x, color.y, color.z)
+            );
+            window.draw(&point, 1, sf::Points);
+        }
+    }
+
     // Update the display
     window.display();
 }
@@ -111,10 +125,12 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
         - Reflect (only for mirror material)
         - Apply color (not for mirror material)
         - kill (not for mirror material)
+    4 - Update camera screen
     too far -> kill
 */
 void raytracer::Raytracer::render(void)
 {
+    
 }
 
 void raytracer::Raytracer::loadRender(void)

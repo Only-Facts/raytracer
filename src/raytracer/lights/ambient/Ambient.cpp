@@ -48,4 +48,10 @@ void raytracer::Ambient::init(void)
 
 void raytracer::Ambient::reset(void)
 {
+    // For each rays set default light value
+    for (std::shared_ptr<raytracer::LightRay>& ray: this->_rays) {
+        ray->reset();
+        ray->setColor(this->_color);
+        ray->setIntensity(this->_intensity);
+    }
 }

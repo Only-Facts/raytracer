@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -11,7 +11,9 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/rays/Ray.hpp"
+#include <limits>
 
 void raytracer::Ray::reset(void)
 {
+    this->_color = DEFAULT_COLOR;
 }

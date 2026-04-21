@@ -16,6 +16,7 @@ File Description:
 #include "raytracer/cameras/Camera.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
+#include <limits>
 
 void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
@@ -43,8 +44,20 @@ void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, cons
 
 void raytracer::Camera::init(void)
 {
+    std::size_t size = static_cast<std::size_t>(this->_resolution.x) * this->_resolution.y;
+
+    // Clear old data
+    this->_screen.clear();
+    this->_rays.clear();
+
+    // Resize screen size
+    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_rays.resize(size, nullptr);
 }
 
 void raytracer::Camera::reset(void)
 {
+    // For each rays set default light value
+    for (std::shared_ptr<raytracer::Ray>& ray: this->_rays)
+        ray->reset();
 }
