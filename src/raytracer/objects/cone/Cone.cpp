@@ -13,8 +13,8 @@ File Description:
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/Cone.hpp"
-#include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
+#include "raytracer/Struct.hpp"
 
 void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
@@ -28,16 +28,15 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
 
-    /*
     // Other settings
+    if (!node.exists("dimension"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
     const libconfig::Setting& dim = node["dimension"];
-    descriptor.dimension.x = dim[0];
-    descriptor.dimension.y = dim[1];
+    descriptor.dimension.y = dim[0];
 
-    float radius = 0.0f;
-    mat.lookupValue("radius", radius);
-    descriptor.radius = radius;
-    */
+    if (!node.exists("radius"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
+    descriptor.radius = node["radius"];
 
     // Set the descriptor
     this->setShapeDescriptor(descriptor);

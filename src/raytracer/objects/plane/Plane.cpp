@@ -14,9 +14,29 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/objects/Plane.hpp"
 #include "raytracer/Raytracer.hpp"
+#include "raytracer/Struct.hpp"
 
 void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
+    raytracer::ShapeDescriptor descriptor;
+
+    // Get the object material
+    if (!node.exists("material"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
+    descriptor.material = raytracer.parseMaterial(node["material"]);
+
+    // Setup the cframe
+    raytracer::Raytracer::setCFrame(descriptor, node);
+    
+    // Other settings
+    if (!node.exists("dimension"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
+    const libconfig::Setting& dim = node["dimension"];
+    descriptor.dimension.x = dim[0];
+    descriptor.dimension.y = dim[1];
+
+    // Set the descriptor
+    this->setShapeDescriptor(descriptor);
 }
 
 void raytracer::Plane::reflectRay(std::shared_ptr<raytracer::IRay> ray) const

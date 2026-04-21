@@ -51,6 +51,9 @@ struct ShapeDescriptor {
     /* plane & cylinder & cone */
     utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
 
+    /* cylinder */
+    bool infinite = false;
+
     /* sphere & cylinder & cone */
     float radius = 0.0f;
 
