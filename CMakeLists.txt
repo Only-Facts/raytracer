@@ -65,6 +65,8 @@ set(SRC_LIBS
 # Cameras
 # =========================
 set(SRC_CAMERAS
+    src/raytracer/rays/ARay.cpp
+    src/raytracer/rays/Ray.cpp
     src/raytracer/cameras/lib.cpp
     src/raytracer/cameras/ACamera.cpp
 )
@@ -79,6 +81,8 @@ add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
 # Lights
 # =========================
 set(SRC_LIGHTS
+    src/raytracer/rays/ARay.cpp
+    src/raytracer/rays/LightRay.cpp
     src/raytracer/lights/lib.cpp
     src/raytracer/lights/ALight.cpp
 )
