@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.cpp
@@ -11,6 +11,10 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/objects/Cone.hpp"
+
+void raytracer::Cone::parse(const libconfig::Setting& node)
+{
+}
 
 void raytracer::Cone::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
 {

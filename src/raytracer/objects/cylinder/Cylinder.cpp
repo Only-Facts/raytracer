@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cylinder.cpp
@@ -11,6 +11,10 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/objects/Cylinder.hpp"
+
+void raytracer::Cylinder::parse(const libconfig::Setting& node)
+{
+}
 
 void raytracer::Cylinder::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
 {

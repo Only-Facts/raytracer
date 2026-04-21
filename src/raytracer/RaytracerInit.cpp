@@ -15,6 +15,8 @@ File Description:
 #define _Write
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
+#include "raytracer/Struct.hpp"
+#include <libconfig.h++>
 #include <filesystem>
 #include <exception>
 #include <memory>
@@ -233,6 +235,7 @@ void raytracer::Raytracer::init(void)
     std::vector<std::filesystem::path> plugins = getPlugins(this->_settings.plugins_path);
     std::shared_ptr<raytracer::DynamicLibrary> lib;
     std::size_t type = 0;
+    std::string name;
     bool selectedCamera = false;
 
     // For each of them try to load it and dispatch it
@@ -252,6 +255,7 @@ void raytracer::Raytracer::init(void)
         if (lib->isloaded()) likely {
             std::cout << utils::write::strong() << path << utils::write::reset() << ": plugin succefully " << utils::write::color_rgb(0, 255, 0) << "loaded" << utils::write::reset() << std::endl;
             type = lib->getType();
+            name = lib->getName();
 
             // Selected camera
             if (type == CAMERA && selectedCamera && !this->_camera) {
@@ -267,7 +271,8 @@ void raytracer::Raytracer::init(void)
 
             // Plugins type check (just stored)
             if (type == CAMERA || type == LIGHT || type == OBJECT || type == MATERIAL) {
-                this->_libs[lib->getName()] = lib;
+                std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+                this->_libs[name + std::to_string(type)] = lib;
             } else unlikely {
                 std::cout << utils::write::color_rgb(0, 255, 0) << utils::write::strong() << path << utils::write::reset() << ": plugins has a different type than those accepted" << std::endl;
                 continue;
@@ -282,7 +287,7 @@ void raytracer::Raytracer::init(void)
         throw utils::exception::ErrorException(utils::exception::Code::NoLoadedCamera);
     }
 
-    // Init the scene with the config file
+    // InitD the scene with the config file
     this->scene();
 
     // Init rays
@@ -293,5 +298,82 @@ void raytracer::Raytracer::init(void)
 
 void raytracer::Raytracer::scene(void)
 {
-    
+    libconfig::Config cfg;
+
+    // Try to load the config file
+    try {
+        cfg.readFile(this->_settings.cfg_path.c_str());
+    } catch (const libconfig::FileIOException&) {
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "File IO error");
+    } catch (const libconfig::ParseException& e) {
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, std::string("Parse error at ") + e.getFile() + ":" + std::to_string(e.getLine()) + " - " + e.getError());
+    }
+
+    // For each node in the config
+    const libconfig::Setting& root = cfg.getRoot();
+    bool camera = false;
+    std::string type;
+    for (int i = 0; i < root.getLength(); ++i) {
+        // Get the node
+        const libconfig::Setting& node = root[i];
+
+        // Get the type of the node
+        node.lookupValue("type", type);
+        std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+
+        // Dispatch the node constructor
+        if (type == "camera") {
+            if (camera)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
+            this->_camera->parse(node);
+            camera = true;
+        } else if (type == "light") {
+            this->parseLight(node);
+        } else if (type == "object") {
+            this->parseObject(node);
+        } else {
+            throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Unknow node type: " + type);
+        }
+    }
+    if (!camera)
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The camera wasn't set in the scene");
+}
+
+std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const libconfig::Setting& node)
+{
+    // Get the light name
+    std::string name;
+    node.lookupValue("name", name);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    // Create the material using factory & call it's parser
+    std::shared_ptr<raytracer::IMaterial> material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
+    material->parse(node);
+    return material;
+}
+
+void raytracer::Raytracer::parseLight(const libconfig::Setting& node)
+{
+    // Get the light name
+    std::string name;
+    node.lookupValue("name", name);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    // Create the light using factory & call it's parser
+    std::shared_ptr<raytracer::ILight> light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
+    light->parse(node);
+    this->_lights.push_back(light);
+}
+
+void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
+{
+    // Get the object name
+    std::string name;
+    node.lookupValue("name", name);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    // Create the object using factory & call it's parser
+    std::shared_ptr<raytracer::IObject> object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
+    object->parse(node);
+    this->_objects.push_back(object);
 }

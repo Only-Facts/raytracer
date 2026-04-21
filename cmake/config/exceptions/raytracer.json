@@ -9,6 +9,11 @@
             "code": "NoLoadedCamera",
             "message": "Wasn't able to load any camera",
             "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "Parser",
+            "message": "Error during the parsing",
+            "restrictions": ["Fatal", "Error", "Warning"]
         }
     ]
 }

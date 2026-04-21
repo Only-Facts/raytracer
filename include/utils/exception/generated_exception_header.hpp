@@ -31,6 +31,7 @@ enum class Code: std::size_t {
     Undefined = 0,
     NoPlugins,
     NoLoadedCamera,
+    Parser,
     VectorInvalidIndex,
     ExceptionCodeRestriction,
     Exit,
@@ -64,6 +65,7 @@ constexpr inline const char *Message[] = {
     /* Undefined */ "An undefined error has occured",
     /* NoPlugins */ "Wasn't able to find any plugins",
     /* NoLoadedCamera */ "Wasn't able to load any camera",
+    /* Parser */ "Error during the parsing",
     /* VectorInvalidIndex */ "Invalid index on a vector",
     /* ExceptionCodeRestriction */ "Error during the setup of an exception",
     /* Exit */ "Exit",
@@ -96,6 +98,7 @@ constexpr inline const char *Info[] = {
     /* Undefined */ nullptr,
     /* NoPlugins */ nullptr,
     /* NoLoadedCamera */ nullptr,
+    /* Parser */ nullptr,
     /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
     /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
     /* Exit */ "Exit",
@@ -133,6 +136,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Undefined */ 0b0000, // allow: All
     /* NoPlugins */ 0b1110, // allow: Fatal, Error, Warning
     /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
+    /* Parser */ 0b1110, // allow: Fatal, Error, Warning
     /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
     /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
     /* Exit */ 0b0001, // allow: None

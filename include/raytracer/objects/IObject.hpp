@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -20,6 +20,7 @@ File Description:
     #define _Vector
     #include "utils/utils.hpp"  // utils::vector::Vector3
     #include "../Struct.hpp"    // raytracer::CFrame
+    #include <libconfig.h++>    // libconfig::Setting
     #include <memory>           // std::shared_ptr
 
 namespace raytracer { // namespace start
@@ -31,6 +32,7 @@ class IRay;
 class IObject {
     public:
         // ---------- Pre-Function -------- //
+        virtual void parse(const libconfig::Setting& node) = 0;
         virtual void reflectRay(std::shared_ptr<raytracer::IRay> ray) const = 0;
         virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
         virtual void translate(const utils::vector::Vector3<double>& v) = 0;

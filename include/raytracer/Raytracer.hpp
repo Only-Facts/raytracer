@@ -17,12 +17,15 @@ File Description:
     /* INCLUDE */
 
     /* type */
+    #define _Exception
     #define _Vector
-    #include "utils/utils.hpp"      // utils::vector::Vector2
+    #include "utils/utils.hpp"      // utils::exception::*, utils::vector::Vector2
     #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
+    #include "Struct.hpp"           // raytracer::ShapeDescriptor
     #include "cameras/ICamera.hpp"  // raytracer::ICamera
     #include "lights/ILight.hpp"    // raytracer::ILight
     #include "objects/IObject.hpp"  // raytracer::IObject
+    #include <libconfig.h++>        // libconfig::Setting
     #include <unordered_map>        // std::unordered_map
     #include <cstddef>              // std::size_t
     #include <memory>               // std::shared_ptr
@@ -69,12 +72,29 @@ class Raytracer {
         std::vector<std::shared_ptr<raytracer::ILight>> _lights;
         std::vector<std::shared_ptr<raytracer::IObject>> _objects;
 
+        // ------------ Function ---------- //
+        template<typename T>
+        std::shared_ptr<T> factory(const std::string& name)
+        {
+            auto it = this->_libs.find(name);
+            if (it == this->_libs.end())
+                throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NoPlugins, "Invalid type in the scene, can't find corresponding plugin");
+            std::shared_ptr<raytracer::DynamicLibrary> lib = it->second;
+            T* (*fn)() = lib->loadFunction<T* (*)()>("factory");
+            return std::shared_ptr<T>(fn());
+        }
+
     public:
         // ---------- Pre-Function -------- //
         /* init */
         void load(int argc, char *argv[]); // Load settings
         void init(void); // Init plugins & rays
+
+        /* parsing */
         void scene(void); // Load scene file
+        std::shared_ptr<raytracer::IMaterial> parseMaterial(const libconfig::Setting& node);
+        void parseLight(const libconfig::Setting& node);
+        void parseObject(const libconfig::Setting& node);
 
         /* gui */
         void gui(void); // Handle opening, closing of the gui
@@ -89,6 +109,26 @@ class Raytracer {
         // ------------ Function ---------- //
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
+
+        // -------- Static-Function ------- //
+        static void setCFrame(raytracer::ShapeDescriptor& descriptor, const libconfig::Setting& node)
+        {
+            // Check existantce
+            if (!node.exists("position"))
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The position field isn't defined for the CFrame");
+            else if (!node.exists("orientation"))
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The orientation field isn't defined for the CFrame");
+
+            // Set values
+            const libconfig::Setting& pos = node["position"];
+            descriptor.cframe.position.x = pos[0];
+            descriptor.cframe.position.y = pos[1];
+            descriptor.cframe.position.z = pos[2];
+            const libconfig::Setting& rot = node["orientation"];
+            descriptor.cframe.orientation.x = rot[0];
+            descriptor.cframe.orientation.y = rot[1];
+            descriptor.cframe.orientation.z = rot[2];
+        }
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

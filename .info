@@ -172,6 +172,7 @@ config file:
     type = "camera"; // Case insensitive
 
     resolution = [0, 0]; // size_t
+    fieldOfView = 70f; // float
 
     position = [0.0, 0.0, 0.0]; // Double
     orientation = [0.0, 0.0, 0.0]; // Double
@@ -179,7 +180,7 @@ config file:
 
 <light_name>: {
     type = "light"; // Case insensitive
-    name = "ambient"|"directional"; // Case insensitive
+    name = "global(not handle for now)"|"ambient"|"directional"; // Case insensitive
 
     intensity = 1.0f; // Float (100% by default)
     color = [UINT8_MAX, UINT8_MAX, UINT8_MAX]; // uint8_t (white by default)

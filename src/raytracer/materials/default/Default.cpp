@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Default.cpp
@@ -12,4 +12,6 @@ File Description:
 
 #include "raytracer/materials/Default.hpp"
 
-/* nothing */
+void raytracer::Default::parse(const libconfig::Setting& node)
+{
+}

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera.hpp
@@ -26,6 +26,7 @@ namespace raytracer { // namespace start
 class Camera: public raytracer::ACamera {
     public:
         // ---------- Pre-Function -------- //
+        void parse(const libconfig::Setting& node);
         void init(void);
         void reset(void);
 

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.hpp
@@ -30,6 +30,7 @@ namespace raytracer { // namespace start
 class Point: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
+        void parse(const libconfig::Setting& node);
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
 

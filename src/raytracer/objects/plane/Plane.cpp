@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.cpp
@@ -11,6 +11,10 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/objects/Plane.hpp"
+
+void raytracer::Plane::parse(const libconfig::Setting& node)
+{
+}
 
 void raytracer::Plane::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
 {

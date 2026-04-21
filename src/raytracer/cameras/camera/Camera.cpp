@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera.cpp
@@ -11,6 +11,10 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/cameras/Camera.hpp"
+
+void raytracer::Camera::parse(const libconfig::Setting& node)
+{
+}
 
 void raytracer::Camera::init(void)
 {

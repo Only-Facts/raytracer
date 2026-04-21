@@ -18,7 +18,9 @@ add_definitions(-DFORCED_CXX_STANDARD=14) # Used for the attribute definition
 # Requirement
 # =========================
 find_package(Python3 REQUIRED) # Try to find python for the dependencies
-#find_package(SFML REQUIRED)
+find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBCONFIG REQUIRED libconfig++)
 
 # =========================
 # Warnings
@@ -200,6 +202,9 @@ endforeach()
 target_include_directories(${TARGET} PRIVATE include)
 target_link_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
 target_link_libraries(${TARGET} PRIVATE utils)
+target_include_directories(${TARGET} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
+target_link_libraries(${TARGET} PRIVATE ${LIBCONFIG_LIBRARIES})
+target_link_libraries(${TARGET} PRIVATE sfml-graphics sfml-window sfml-system)
 foreach(target
     camera_camera
     light_ambient
@@ -214,6 +219,9 @@ foreach(target
     target_include_directories(${target} PRIVATE include)
     target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
     target_link_libraries(${target} PRIVATE utils)
+    target_include_directories(${target} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
+    target_link_libraries(${target} PRIVATE ${LIBCONFIG_LIBRARIES})
+    target_link_libraries(${target} PRIVATE sfml-graphics sfml-window sfml-system)
 endforeach()
 
 # =========================
