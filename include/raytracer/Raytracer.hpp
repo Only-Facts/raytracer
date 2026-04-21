@@ -74,7 +74,7 @@ class Raytracer {
 
         // ------------ Function ---------- //
         template<typename T>
-        std::shared_ptr<T> factory(const std::string& name)
+        std::shared_ptr<T> factory(const std::string& name) const
         {
             auto it = this->_libs.find(name);
             if (it == this->_libs.end())
@@ -92,7 +92,7 @@ class Raytracer {
 
         /* parsing */
         void scene(void); // Load scene file
-        std::shared_ptr<raytracer::IMaterial> parseMaterial(const libconfig::Setting& node);
+        std::shared_ptr<raytracer::IMaterial> parseMaterial(const libconfig::Setting& node) const;
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
 

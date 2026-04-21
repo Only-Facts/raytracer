@@ -10,9 +10,12 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Exception
+#include "utils/utils.hpp"
 #include "raytracer/objects/Point.hpp"
+#include "raytracer/Raytracer.hpp"
 
-void raytracer::Point::parse(const libconfig::Setting& node)
+void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
 }
 

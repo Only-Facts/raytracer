@@ -18,21 +18,22 @@ File Description:
 
     /* type */
     #define _Vector
-    #include "utils/utils.hpp"  // utils::vector::Vector3
-    #include "../Struct.hpp"    // raytracer::CFrame
-    #include <libconfig.h++>    // libconfig::Setting
-    #include <memory>           // std::shared_ptr
+    #include "utils/utils.hpp"          // utils::vector::Vector3
+    #include "../Struct.hpp"            // raytracer::CFrame
+    #include <libconfig.h++>            // libconfig::Setting
+    #include <memory>                   // std::shared_ptr
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
 class IRay;
+class Raytracer;
 
 class IObject {
     public:
         // ---------- Pre-Function -------- //
-        virtual void parse(const libconfig::Setting& node) = 0;
+        virtual void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) = 0;
         virtual void reflectRay(std::shared_ptr<raytracer::IRay> ray) const = 0;
         virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
         virtual void translate(const utils::vector::Vector3<double>& v) = 0;

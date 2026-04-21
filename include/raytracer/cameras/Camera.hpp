@@ -26,7 +26,7 @@ namespace raytracer { // namespace start
 class Camera: public raytracer::ACamera {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const libconfig::Setting& node);
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
         void init(void);
         void reset(void);
 

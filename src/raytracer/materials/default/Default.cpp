@@ -10,8 +10,32 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Attribute
+#include "utils/utils.hpp"
 #include "raytracer/materials/Default.hpp"
+#include "raytracer/Raytracer.hpp"
 
-void raytracer::Default::parse(const libconfig::Setting& node)
+void raytracer::Default::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
+    // Other settings
+    if (node.exists("color")) {
+        const libconfig::Setting& color = node["color"];
+        this->_color = {
+            (int)color[0],
+            (int)color[1],
+            (int)color[2]
+        };
+    }
+
+    float transparency = 0.f;
+    if (node.lookupValue("transparency", transparency))
+        this->_transparency = transparency;
+
+    float reflection = 0.f;
+    if (node.lookupValue("reflection", reflection))
+        this->_reflection = reflection;
+
+    bool mirror = false;
+    if (node.lookupValue("is_mirror", mirror))
+        this->_mirror = mirror;
 }

@@ -30,7 +30,7 @@ namespace raytracer { // namespace start
 class Cone: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const libconfig::Setting& node);
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
 

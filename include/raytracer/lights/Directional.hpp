@@ -26,7 +26,7 @@ namespace raytracer { // namespace start
 class Directional: public raytracer::ALight {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const libconfig::Setting& node);
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
         void init(void);
         void reset(void);
 

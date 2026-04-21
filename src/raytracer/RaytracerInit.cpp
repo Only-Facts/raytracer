@@ -15,7 +15,6 @@ File Description:
 #define _Write
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
-#include "raytracer/Struct.hpp"
 #include <libconfig.h++>
 #include <filesystem>
 #include <exception>
@@ -325,7 +324,7 @@ void raytracer::Raytracer::scene(void)
         if (type == "camera") {
             if (camera)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
-            this->_camera->parse(node);
+            this->_camera->parse(*this, node);
             camera = true;
         } else if (type == "light") {
             this->parseLight(node);
@@ -339,7 +338,7 @@ void raytracer::Raytracer::scene(void)
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The camera wasn't set in the scene");
 }
 
-std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const libconfig::Setting& node)
+std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const
 {
     // Get the light name
     std::string name;
@@ -348,7 +347,7 @@ std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const 
 
     // Create the material using factory & call it's parser
     std::shared_ptr<raytracer::IMaterial> material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
-    material->parse(node);
+    material->parse(*this, node);
     return material;
 }
 
@@ -361,7 +360,7 @@ void raytracer::Raytracer::parseLight(const libconfig::Setting& node)
 
     // Create the light using factory & call it's parser
     std::shared_ptr<raytracer::ILight> light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
-    light->parse(node);
+    light->parse(*this, node);
     this->_lights.push_back(light);
 }
 
@@ -374,6 +373,6 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
 
     // Create the object using factory & call it's parser
     std::shared_ptr<raytracer::IObject> object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
-    object->parse(node);
+    object->parse(*this, node);
     this->_objects.push_back(object);
 }

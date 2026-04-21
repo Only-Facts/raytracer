@@ -25,10 +25,12 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
+class Raytracer;
+
 class IMaterial {
     public:
         // ---------- Pre-Function -------- //
-        virtual void parse(const libconfig::Setting& node) = 0;
+        virtual void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) = 0;
         virtual utils::vector::Vector3<uint8_t> getColor(void) const = 0;
         virtual float getTransparency(void) const = 0;
         virtual float getLightReflectionCoef(void) const = 0;

@@ -10,10 +10,32 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Exception
+#define _Attribute
+#include "utils/utils.hpp"
 #include "raytracer/cameras/Camera.hpp"
+#include "raytracer/Struct.hpp"
+#include "raytracer/Raytracer.hpp"
 
-void raytracer::Camera::parse(const libconfig::Setting& node)
+void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
+    raytracer::ShapeDescriptor descriptor;
+
+    // Setup the cframe
+    raytracer::Raytracer::setCFrame(descriptor, node);
+
+    // Other settings
+    if (!node.exists("resolution"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
+    const libconfig::Setting& res = node["resolution"];
+    this->_resolution = {res[0], res[1]};
+
+    float fieldOfView = 70.0f;
+    if (node.lookupValue("fieldOfView", fieldOfView))
+        this->_fieldOfView = fieldOfView;
+
+    // Set the descriptor
+    this->setShapeDescriptor(descriptor);
 }
 
 void raytracer::Camera::init(void)

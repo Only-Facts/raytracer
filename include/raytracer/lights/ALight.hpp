@@ -21,6 +21,8 @@ File Description:
     #include "utils/utils.hpp"      // nodiscard
     #include "ILight.hpp"           // raytracer::ILight
     #include "../rays/LightRay.hpp" // raytracer::LightRay
+    #include <cstdint>              // std::uint8_t   
+    #include <limits>               // UINT8_MAX
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -29,7 +31,8 @@ namespace raytracer { // namespace start
 class ALight: public raytracer::ILight {
     protected:
         std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
-        bool _global = false;
+        utils::vector::Vector3<std::uint8_t> _color = {UINT8_MAX, UINT8_MAX, UINT8_MAX};
+        float _intensity = 1.0f;
 
     public:
         // ---------- Pre-Function -------- //
@@ -38,8 +41,6 @@ class ALight: public raytracer::ILight {
 
         // ------------ Function ---------- //
         std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};
-        void setGlobal(bool global) {this->_global = global;};
-        nodiscard bool isGlobal(void) const {return this->_global;};
 
         // ------------ Operator ---------- //
         ALight& operator=(const ALight& object) = delete;

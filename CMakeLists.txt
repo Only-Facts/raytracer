@@ -94,6 +94,8 @@ add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL
 # Objects
 # =========================
 set(SRC_OBJECTS
+    src/raytracer/DynamicLibrary.cpp
+    src/raytracer/RaytracerInit.cpp
     src/raytracer/objects/lib.cpp
 )
 

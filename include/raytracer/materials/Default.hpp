@@ -30,7 +30,7 @@ namespace raytracer { // namespace start
 class Default: public raytracer::AMaterial {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const libconfig::Setting& node);
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
 
         // ------------ Operator ---------- //
         Default& operator=(const Default& object) = delete;
