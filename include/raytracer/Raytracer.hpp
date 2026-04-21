@@ -38,6 +38,7 @@ File Description:
     /* default */
     #define PLUGINS_PATH "./plugins/"
     #define RENDERED_PATH "./rendered/"
+    #define PPM_MAGIC 0x22
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//

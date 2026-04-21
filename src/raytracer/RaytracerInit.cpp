@@ -286,10 +286,12 @@ void raytracer::Raytracer::init(void)
         throw utils::exception::ErrorException(utils::exception::Code::NoLoadedCamera);
     }
 
-    // InitD the scene with the config file
+    // Init the scene with the config file
     this->scene();
 
     // Init rays
+    if (this->_settings.resolution_set)
+        this->_camera->setResolution(this->_settings.resolution);
     this->_camera->init();
     for (std::shared_ptr<raytracer::ILight>& light: this->_lights)
         light->init();

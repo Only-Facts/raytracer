@@ -19,10 +19,10 @@ File Description:
     /* type */
     #define _Vector
     #define _Attribute
-    #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
+    #include "utils/utils.hpp"  // utils::vector::Vector3, utils::vector::Vector2, nodiscard
     #include "ICamera.hpp"      // raytracer::ICamera
     #include "../rays/Ray.hpp"  // raytracer::Ray
-    #include <cstdint>          // std::uint8_t
+    #include <cstdint>          // std::uint8_t, std::uint16_t
     #include <memory>           // std::shared_ptr
     #include <vector>           // std::vector
 
@@ -34,7 +34,7 @@ class ACamera: public raytracer::ICamera {
     protected:
         std::vector<utils::vector::Vector3<std::uint8_t>> _screen; // Screen pixel
         std::vector<std::shared_ptr<raytracer::Ray>> _rays;
-        std::pair<std::size_t, std::size_t> _resolution;
+        utils::vector::Vector2<std::uint16_t> _resolution;
         float _fieldOfView = 70.0f;
 
     public:
@@ -45,8 +45,8 @@ class ACamera: public raytracer::ICamera {
         // ------------ Function ---------- //
         nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};
         nodiscard std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const {return this->_rays;};
-        void setResolution(std::pair<std::size_t, std::size_t> resolution) {this->_resolution = resolution;};
-        nodiscard std::pair<std::size_t, std::size_t> getResolution(void) const {return this->_resolution;};
+        void setResolution(utils::vector::Vector2<std::uint16_t> resolution) {this->_resolution = resolution;};
+        nodiscard utils::vector::Vector2<std::uint16_t> getResolution(void) const {return this->_resolution;};
         void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
         nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
 
