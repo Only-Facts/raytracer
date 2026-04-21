@@ -32,8 +32,8 @@ void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libcon
     if (!node.exists("dimension"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
     const libconfig::Setting& dim = node["dimension"];
-    descriptor.dimension.x = dim[0];
-    descriptor.dimension.y = dim[1];
+    descriptor.dimension.x = (int)dim[0];
+    descriptor.dimension.y = (int)dim[1];
 
     // Set the descriptor
     this->setShapeDescriptor(descriptor);

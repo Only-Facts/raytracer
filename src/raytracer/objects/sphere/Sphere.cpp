@@ -31,7 +31,7 @@ void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libco
     // Other settings
     if (!node.exists("radius"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
-    descriptor.radius = node["radius"];
+    descriptor.radius = (double)node["radius"];
 
     // Set the descriptor
     this->setShapeDescriptor(descriptor);

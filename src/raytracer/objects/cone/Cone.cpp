@@ -32,11 +32,11 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     if (!node.exists("dimension"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
     const libconfig::Setting& dim = node["dimension"];
-    descriptor.dimension.y = dim[0];
+    descriptor.dimension.y = (int)dim[0];
 
     if (!node.exists("radius"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
-    descriptor.radius = node["radius"];
+    descriptor.radius = (double)node["radius"];
 
     // Set the descriptor
     this->setShapeDescriptor(descriptor);
