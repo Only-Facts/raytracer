@@ -25,6 +25,7 @@ File Description:
     #include "cameras/ICamera.hpp"  // raytracer::ICamera
     #include "lights/ILight.hpp"    // raytracer::ILight
     #include "objects/IObject.hpp"  // raytracer::IObject
+    #include <SFML/Graphics.hpp>    // sf::RenderWindow
     #include <libconfig.h++>        // libconfig::Setting
     #include <unordered_map>        // std::unordered_map
     #include <cstddef>              // std::size_t
@@ -99,8 +100,8 @@ class Raytracer {
 
         /* gui */
         void gui(void); // Handle opening, closing of the gui
-        void loop(void); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
-        void display(void); // Use the camera screen to update the gui render
+        void loop(sf::RenderWindow& window); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
+        void display(sf::RenderWindow& window); // Use the camera screen to update the gui render
 
         /* global */
         void render(void); // Update camera screen

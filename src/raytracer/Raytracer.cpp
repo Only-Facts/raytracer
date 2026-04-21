@@ -14,22 +14,79 @@ File Description:
 #define _Vector
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 #include <filesystem>
 #include <fstream>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
+/*
+gui:
+    load gui
+    loop:
+        input handling
+        render
+        display
+    close gui
+
+viewer:
+    load gui
+    load ppm
+    display
+    loop:
+        input handling
+    close gui
+*/
 void raytracer::Raytracer::gui(void)
 {
+    // Open display
+    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    sf::VideoMode mode(resolution.x, resolution.y);
+    sf::RenderWindow window(mode, "Raytracer", sf::Style::Titlebar | sf::Style::Close);
+
+    // Pre loop (viewer mode)
+    if (this->_settings.viewer) {
+        this->loadRender();
+        this->display(window);
+    }
+
+    // Update display
+    loop(window);
+
+    // Close display
+    window.close();
 }
 
-void raytracer::Raytracer::loop(void)
+void raytracer::Raytracer::loop(sf::RenderWindow& window)
 {
+    sf::Event event;
+
+    // Loop while the window is open
+    while (window.isOpen()) {
+
+        // Listen event
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        // Update display content (gui mode)
+        if (this->_settings.gui) {
+            this->render();
+            this->display(window);
+        }
+    }
 }
 
-void raytracer::Raytracer::display(void)
+void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
+    // Clear the window
+    window.clear(sf::Color::Black);
+
+    // Update the display
+    window.display();
 }
 
 /*
