@@ -43,6 +43,16 @@ enum class Code: std::size_t {
     Dlopen,
     Dlsym,
     Dlclose,
+    ArgumentsNumber,
+    InvalidArgument,
+    OptionOverride,
+    MissingOptionArgument,
+    MissingOption,
+    MissingArgument,
+    MissingEnvVar,
+    InvalidDirectory,
+    InvalidFile,
+    InvalidFileExtension,
     CODE_SENTINEL // sentinel used for verification
 };
 
@@ -63,6 +73,16 @@ constexpr inline const char *Message[] = {
     /* Dlopen */ "Failed to load a dynamic library",
     /* Dlsym */ "Failed to load a function from a dynamic library",
     /* Dlclose */ "Failed to release a loaded dynamic library",
+    /* ArgumentsNumber */ "Invalid number of arguments given, use '-h' for more information",
+    /* InvalidArgument */ "Can't interpret this argument",
+    /* OptionOverride */ "Duplicated option, this will override the precedent",
+    /* MissingOptionArgument */ "The option require argument that where not given",
+    /* MissingOption */ "An option is missing",
+    /* MissingArgument */ "An argument is missing",
+    /* MissingEnvVar */ "An environement variable is missing",
+    /* InvalidDirectory */ "Invalid directory given",
+    /* InvalidFile */ "Invalid file given",
+    /* InvalidFileExtension */ "The file extension is different than expected",
 };
 
 /* Potential default info: nullptr same as "[None]" */
@@ -82,6 +102,16 @@ constexpr inline const char *Info[] = {
     /* Dlopen */ nullptr,
     /* Dlsym */ nullptr,
     /* Dlclose */ nullptr,
+    /* ArgumentsNumber */ nullptr,
+    /* InvalidArgument */ nullptr,
+    /* OptionOverride */ nullptr,
+    /* MissingOptionArgument */ nullptr,
+    /* MissingOption */ nullptr,
+    /* MissingArgument */ nullptr,
+    /* MissingEnvVar */ nullptr,
+    /* InvalidDirectory */ nullptr,
+    /* InvalidFile */ nullptr,
+    /* InvalidFileExtension */ nullptr,
 };
 
 /* Potential restriction on exception code */
@@ -106,6 +136,16 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Dlopen */ 0b0110, // allow: Fatal, Error
     /* Dlsym */ 0b0110, // allow: Fatal, Error
     /* Dlclose */ 0b0110, // allow: Fatal, Error
+    /* ArgumentsNumber */ 0b0110, // allow: Fatal, Error
+    /* InvalidArgument */ 0b1110, // allow: Fatal, Error, Warning
+    /* OptionOverride */ 0b1001, // allow: None, Warning
+    /* MissingOptionArgument */ 0b0110, // allow: Fatal, Error
+    /* MissingOption */ 0b1110, // allow: Fatal, Error, Warning
+    /* MissingArgument */ 0b1110, // allow: Fatal, Error, Warning
+    /* MissingEnvVar */ 0b1110, // allow: Fatal, Error, Warning
+    /* InvalidDirectory */ 0b1110, // allow: Fatal, Error, Warning
+    /* InvalidFile */ 0b1110, // allow: Fatal, Error, Warning
+    /* InvalidFileExtension */ 0b1110, // allow: Fatal, Error, Warning
 };
 
 // Check at the compile time the correspondece between the message & code

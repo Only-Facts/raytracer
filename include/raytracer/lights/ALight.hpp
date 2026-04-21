@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ALight.hpp
@@ -37,7 +37,7 @@ class ALight: public raytracer::ILight {
         float computeSDF(const utils::vector::Vector3<double>& point) const;
 
         // ------------ Function ---------- //
-        std::vector<std::shared_ptr<raytracer::LightRay>>& getRays(void) const {return this->_rays;};
+        std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};
         void setGlobal(bool global) {this->_global = global;};
         nodiscard bool isGlobal(void) const {return this->_global;};
 

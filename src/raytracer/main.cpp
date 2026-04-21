@@ -14,6 +14,7 @@ File Description:
 #define _Exception
 #define _Write
 #include "utils/utils.hpp"
+#include "raytracer/Raytracer.hpp"
 #include <iostream>
 
 static cold void printHelp()
@@ -26,16 +27,19 @@ static cold void printHelp()
 
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
-    std::cout << "\t./raytracer <scene_cfg_path> [-gui] [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
+    std::cout << utils::write::reset() << std::endl;
+    
+    std::cout << utils::write::format("<strong>INFORMATION<>") << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Magenta) << "\t./raytracer <ppm_file_path>" << utils::write::reset() << "\tSwitch to ppm viewer mode and display the given ppm file" << std::endl;
     std::cout << utils::write::reset() << std::endl;
 
     std::cout << utils::write::format("<strong>OPTIONS<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-h, --help" << utils::write::reset() << std::endl;
     std::cout << "\t\tWrite the informations of the executable" << std::endl;
-    std::cout << utils::write::color(utils::write::Color::Green) << "\t-ppm " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "ppm_file_path" << utils::write::reset() << ">" << std::endl;
-    std::cout << "\t\tSwitch to ppm viewer and display the ppm selected <" << utils::write::color(utils::write::Color::Red) << "ppm_file_path" << utils::write::reset() << ">" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-gui" << utils::write::reset() << std::endl;
     std::cout << "\t\tActivate the render at runtime" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-c, --camera " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "used_camera_path" << utils::write::reset() << ">" << std::endl;
@@ -63,13 +67,13 @@ static cold void printHelp()
     std::cout << utils::write::reset() << std::flush;
 }
 
-static cold void run(int argc, char *argv[], char *env[])
+static cold void run(int argc, char *argv[])
 {
     // Init the raytracer
     raytracer::Raytracer raytracer;
 
     // Init the settings
-    raytracer.load(argc, argv, env);
+    raytracer.load(argc, argv);
 
     // Change the start depending on the settings
     if (raytracer.isGui() || raytracer.isViewer()) {
@@ -80,7 +84,7 @@ static cold void run(int argc, char *argv[], char *env[])
     }
 }
 
-int main(int argc, char *argv[], char *env[])
+int main(int argc, char *argv[])
 {
     // Basic flag help detection
     for (int i = 1; i < argc; ++i) {
@@ -92,10 +96,11 @@ int main(int argc, char *argv[], char *env[])
     }
 
     try {
-        run(argc, argv, env);
+        run(argc, argv);
     } catch (const utils::exception::IException& e) { // For our own custom error
         if (e.isNone()) return OK; // Intercept exception of type None such as exit
         std::cerr << e.formated() << std::endl;
+        return KO;
     } catch (const std::exception& e) { // For error from plugins library that haven't compatible error
         std::cerr << e.what() << std::endl;
         return KO;

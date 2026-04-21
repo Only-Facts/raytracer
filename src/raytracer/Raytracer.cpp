@@ -3,7 +3,7 @@ Edition:
 ##  @date 21/04/2026 by @author Tsukini
 
 File Name:
-##  @file Raytracer.hpp
+##  @file Raytracer.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -11,10 +11,6 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/Raytracer.hpp"
-
-void raytracer::Raytracer::load(int argc, char *argv[], char *env[])
-{
-}
 
 void raytracer::Raytracer::gui()
 {

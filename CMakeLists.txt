@@ -39,6 +39,8 @@ add_compile_options(
 set(SRC
     # Global
     src/raytracer/main.cpp
+    src/raytracer/Raytracer.cpp
+    src/raytracer/RaytracerInit.cpp
     src/raytracer/DynamicLibrary.cpp
 
     # Rays

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 21/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -20,8 +20,10 @@ File Description:
     #define _Vector
     #include "utils/utils.hpp"      // utils::vector::Vector2
     #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
+    #include "cameras/ICamera.hpp"  // raytracer::ICamera
+    #include "lights/ILight.hpp"    // raytracer::ILight
+    #include "objects/IObject.hpp"  // raytracer::IObject
     #include <unordered_map>        // std::unordered_map
-    #include <cstdbool>             // bool
     #include <cstddef>              // std::size_t
     #include <memory>               // std::shared_ptr
     #include <vector>               // std::vector
@@ -39,14 +41,20 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 struct Settings {
-    bool viewer = false; // -ppm
-    std::string ppm_path; // -ppm
+    bool viewer = false;
+    std::string ppm_path; // <ppm_file_path>
+    std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
-    bool modified[4] = {false}; // {camera_path, plugins_path, rendered_path, resolution}
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     utils::vector::Vector2<std::size_t> resolution = {0, 0}; // -r, --resolution
+
+    /* edited variables */
+    bool camera_set = false; // camera_path
+    bool plugins_set = false; // plugins_path
+    bool rendered_set = false; // rendered_path
+    bool resolution_set = false; // resolution
 };
 
 class Raytracer {
@@ -63,7 +71,7 @@ class Raytracer {
     public:
         // ---------- Pre-Function -------- //
         /* init */
-        void load(int argc, char *argv[], char *env[]); // Load settings
+        void load(int argc, char *argv[]); // Load settings
 
         /* gui */
         void gui(void); // Handle opening, closing of the gui

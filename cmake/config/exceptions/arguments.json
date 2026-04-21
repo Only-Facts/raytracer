@@ -1,0 +1,54 @@
+{
+    "errors": [
+        {
+            "code": "ArgumentsNumber",
+            "message": "Invalid number of arguments given, use '-h' for more information",
+            "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "InvalidArgument",
+            "message": "Can't interpret this argument",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "OptionOverride",
+            "message": "Duplicated option, this will override the precedent",
+            "restrictions": ["None", "Warning"]
+        },
+        {
+            "code": "MissingOptionArgument",
+            "message": "The option require argument that where not given",
+            "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "MissingOption",
+            "message": "An option is missing",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "MissingArgument",
+            "message": "An argument is missing",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "MissingEnvVar",
+            "message": "An environement variable is missing",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "InvalidDirectory",
+            "message": "Invalid directory given",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "InvalidFile",
+            "message": "Invalid file given",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "InvalidFileExtension",
+            "message": "The file extension is different than expected",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        }
+    ]
+}
