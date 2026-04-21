@@ -28,9 +28,12 @@ void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, cons
     if (!node.exists("resolution"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
     const libconfig::Setting& res = node["resolution"];
-    this->_resolution = {res[0], res[1]};
+    this->_resolution = {
+        (int)res[0],
+        (int)res[1]
+    };
 
-    float fieldOfView = 70.0f;
+    double fieldOfView = 70.0f;
     if (node.lookupValue("fieldOfView", fieldOfView))
         this->_fieldOfView = fieldOfView;
 

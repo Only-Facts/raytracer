@@ -25,7 +25,7 @@ void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, con
     raytracer::Raytracer::setCFrame(descriptor, node);
 
     // Other settings
-    float intensity = 1.0f;
+    double intensity = 1.0f;
     if (node.lookupValue("intensity", intensity))
         this->_intensity = intensity;
 

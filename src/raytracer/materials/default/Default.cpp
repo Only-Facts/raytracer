@@ -27,11 +27,11 @@ void raytracer::Default::parse(unused const raytracer::Raytracer& raytracer, con
         };
     }
 
-    float transparency = 0.f;
+    double transparency = 0.f;
     if (node.lookupValue("transparency", transparency))
         this->_transparency = transparency;
 
-    float reflection = 0.f;
+    double reflection = 0.f;
     if (node.lookupValue("reflection", reflection))
         this->_reflection = reflection;
 
