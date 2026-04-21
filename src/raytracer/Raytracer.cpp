@@ -87,6 +87,9 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
     // Clear the window
     window.clear(sf::Color::Black);
+    
+    // Update screen pixels
+    this->_camera->updateScreen();
 
     // Draw each pixel
     utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
