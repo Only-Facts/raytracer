@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -14,6 +14,7 @@ File Description:
 #define _Vector
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
+#include "raytracer/cameras/Camera.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <filesystem>
@@ -41,16 +42,18 @@ viewer:
 */
 void raytracer::Raytracer::gui(void)
 {
+    // Init screen data from save (viewer mode)
+    if (this->_settings.viewer)
+        this->loadRender();
+
     // Open display
     utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
     sf::VideoMode mode(resolution.x, resolution.y);
     sf::RenderWindow window(mode, "Raytracer", sf::Style::Titlebar | sf::Style::Close);
 
     // Pre loop (viewer mode)
-    if (this->_settings.viewer) {
-        this->loadRender();
+    if (this->_settings.viewer)
         this->display(window);
-    }
 
     // Update display
     loop(window);
@@ -135,6 +138,9 @@ void raytracer::Raytracer::render(void)
 
 void raytracer::Raytracer::loadRender(void)
 {
+    // Init default camera (to use default camera comportement)
+    this->_camera = std::make_shared<raytracer::Camera>();
+
     // Try to open the ppm file
     std::ifstream file(this->_settings.ppm_path, std::ios::binary);
     if (!file)
@@ -195,6 +201,7 @@ void raytracer::Raytracer::saveRender(void)
     const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
     std::vector<std::uint8_t> buffer;
     buffer.reserve(pixels.size() * 3);
+    buffer.resize(pixels.size() * 3);
     for (std::size_t i = 0; i < pixels.size(); ++i) {
         buffer[i * 3 + 0] = pixels[i].x;
         buffer[i * 3 + 1] = pixels[i].y;

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera.cpp
@@ -16,6 +16,7 @@ File Description:
 #include "raytracer/cameras/Camera.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
+#include "raytracer/rays/Ray.hpp"
 #include <limits>
 
 void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
@@ -51,8 +52,12 @@ void raytracer::Camera::init(void)
     this->_rays.clear();
 
     // Resize screen size
+    this->_screen.reserve(size);
+    this->_rays.reserve(size);
     this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
+    for (std::size_t i = 0; i < size; ++i)
+        this->_rays[i] = std::make_shared<raytracer::Ray>();
 }
 
 void raytracer::Camera::reset(void)

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.hpp
@@ -19,14 +19,14 @@ File Description:
     /* type */
     #define _Vector
     #include "utils/utils.hpp"  // utils::vector::Vector3
-    #include "IRay.hpp"         // raytracer::IRay
+    #include "ARay.hpp"         // raytracer::ARay
     #include <cstdint>          // std::uint8_t
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class LightRay: public raytracer::IRay {
+class LightRay: public raytracer::ARay {
     private:
         utils::vector::Vector3<std::uint8_t> _color; // Color of the light
         float _intensity; // Intensity of the light, decrease at each surface hitted

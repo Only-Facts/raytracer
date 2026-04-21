@@ -3,45 +3,47 @@ Edition:
 ##  @date 22/04/2026 by @author Tsukini
 
 File Name:
-##  @file Camera.hpp
+##  @file ARay.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef CAMERA_H
-    #define CAMERA_H
+#ifndef ARAY_H
+    #define ARAY_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
 
     /* type */
-    #include "ACamera.hpp"  // raytracer::ACamera
+    #include "../objects/AObject.hpp"   // raytracer::AObject
+    #include "../Define.hpp"            // values
+    #include "IRay.hpp"                 // raytracer::IRay
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Camera: public raytracer::ACamera {
+class ARay: public raytracer::IRay {
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
-        void init(void);
-        void reset(void);
+        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
+        float computeSDF(const utils::vector::Vector3<double>& point) const;
 
         // ------------ Operator ---------- //
-        Camera& operator=(const Camera& object) = delete;
-        Camera& operator=(Camera&& object) = delete;
+        ARay& operator=(const ARay& object) = delete;
+        ARay& operator=(ARay&& object) = delete;
 
         // ---------- Constructor --------- //
-        Camera() = default;
-        Camera(const Camera& object) = delete;
-        Camera(Camera&& object) = delete;
+        ARay() = default;
+        ARay(const ARay& object) = delete;
+        ARay(ARay&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Camera() = default;
+        ~ARay() = default;
 };
 
 } // namespace end
-#endif /* CAMERA_H */
+#endif /* ARAY_H */

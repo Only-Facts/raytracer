@@ -46,8 +46,13 @@ set(SRC
     src/raytracer/DynamicLibrary.cpp
 
     # Rays
+    src/raytracer/rays/ARay.cpp
     src/raytracer/rays/Ray.cpp
     src/raytracer/rays/LightRay.cpp
+
+    # Camera (used for the viewer mode)
+    src/raytracer/cameras/ACamera.cpp
+    src/raytracer/cameras/camera/Camera.cpp
 )
 add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} STATIC ${SRC})

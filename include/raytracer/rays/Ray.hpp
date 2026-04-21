@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.hpp
@@ -19,14 +19,14 @@ File Description:
     /* type */
     #define _Vector
     #include "utils/utils.hpp"          // utils::vector::Vector3
-    #include "IRay.hpp"                 // raytracer::IRay
+    #include "ARay.hpp"                 // raytracer::ARay
     #include <cstdint>                  // std::uint8_t
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Ray: public raytracer::IRay {
+class Ray: public raytracer::ARay {
     private:
         utils::vector::Vector3<std::uint8_t> _color; // RGB color that what hit, add a percentage of the color from the surface hitted each time
 
