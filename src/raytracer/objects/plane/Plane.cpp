@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.cpp
@@ -39,10 +39,10 @@ void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libcon
     this->setShapeDescriptor(descriptor);
 }
 
-void raytracer::Plane::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
+float raytracer::Plane::computeSDF(const utils::vector::Vector3<double>& point) const
 {
 }
 
-float raytracer::Plane::computeSDF(const utils::vector::Vector3<double>& point) const
+utils::vector::Vector3<double> raytracer::Plane::computeHit(const utils::vector::Vector3<double>& point) const
 {
 }

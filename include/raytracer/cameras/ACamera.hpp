@@ -41,6 +41,7 @@ class ACamera: public raytracer::ICamera {
         // ---------- Pre-Function -------- //
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
         void updateScreen(void);
 
         // ------------ Function ---------- //

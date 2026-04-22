@@ -28,6 +28,8 @@ class IRay: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
         virtual void reset(void) = 0; // Reset ray values
+        virtual void kill(void) = 0;
+        virtual bool isAlive(void) const = 0;
 
         // ------------ Operator ---------- //
         IRay& operator=(const IRay& object) = delete;

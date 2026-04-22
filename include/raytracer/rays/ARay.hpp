@@ -26,11 +26,17 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class ARay: public raytracer::IRay {
+    protected:
+        bool _alive = true;
+
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
+        void kill(void) {this->_alive = false;};
+        bool isAlive(void) const {return this->_alive;};
 
         // ------------ Operator ---------- //
         ARay& operator=(const ARay& object) = delete;

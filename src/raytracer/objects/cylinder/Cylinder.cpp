@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cylinder.cpp
@@ -44,10 +44,10 @@ void raytracer::Cylinder::parse(const raytracer::Raytracer& raytracer, const lib
     this->setShapeDescriptor(descriptor);
 }
 
-void raytracer::Cylinder::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
+float raytracer::Cylinder::computeSDF(const utils::vector::Vector3<double>& point) const
 {
 }
 
-float raytracer::Cylinder::computeSDF(const utils::vector::Vector3<double>& point) const
+utils::vector::Vector3<double> raytracer::Cylinder::computeHit(const utils::vector::Vector3<double>& point) const
 {
 }

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -15,5 +15,6 @@ File Description:
 
 void raytracer::Ray::reset(void)
 {
+    this->_alive = true;
     this->_color = DEFAULT_COLOR;
 }

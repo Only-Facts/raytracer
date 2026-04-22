@@ -39,6 +39,7 @@ class ALight: public raytracer::ILight {
         // ---------- Pre-Function -------- //
         void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
 
         // ------------ Function ---------- //
         std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};

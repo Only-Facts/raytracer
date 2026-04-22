@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.hpp
@@ -31,8 +31,8 @@ class Plane: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
-        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
         float computeSDF(const utils::vector::Vector3<double>& point) const;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
 
         // ------------ Operator ---------- //
         Plane& operator=(const Plane& object) = delete;

@@ -21,7 +21,9 @@ File Description:
     #include "utils/utils.hpp"          // utils::vector::Vector3
     #include "../Struct.hpp"            // raytracer::CFrame
     #include <libconfig.h++>            // libconfig::Setting
+    #include <cstdint>                  // std::uint8_t
     #include <memory>                   // std::shared_ptr
+    #include <tuple>                    // std::tuple
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -36,9 +38,12 @@ class IObject {
         virtual void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) = 0;
         virtual void reflectRay(std::shared_ptr<raytracer::IRay> ray) const = 0;
         virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
+        virtual utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const = 0;
         virtual void translate(const utils::vector::Vector3<double>& v) = 0;
         virtual void rotate(const utils::vector::Vector3<double>& v) = 0;
-        virtual void addLightRay(std::pair<utils::vector::Vector3<double>, float> lightRay) = 0;
+        virtual utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const = 0;
+        virtual void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) = 0;
+        virtual void clearLightRays(void) = 0;
         virtual void setShapeDescriptor(const raytracer::ShapeDescriptor& descriptor) = 0;
         virtual void setCFrame(const raytracer::CFrame& cframe) = 0;
         virtual const raytracer::ShapeDescriptor& getShapeDescriptor(void) const = 0;

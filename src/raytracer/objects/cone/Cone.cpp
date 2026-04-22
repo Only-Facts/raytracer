@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.cpp
@@ -29,10 +29,12 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     raytracer::Raytracer::setCFrame(descriptor, node);
 
     // Other settings
-    if (!node.exists("dimension"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
-    const libconfig::Setting& dim = node["dimension"];
-    descriptor.dimension.y = (int)dim[0];
+    if (node.exists("dimension")) {
+        const libconfig::Setting& dim = node["dimension"];
+        descriptor.dimension.y = (int)dim[0];
+    } else {
+        descriptor.infinite = true;
+    }
 
     if (!node.exists("radius"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
@@ -42,10 +44,10 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     this->setShapeDescriptor(descriptor);
 }
 
-void raytracer::Cone::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
+float raytracer::Cone::computeSDF(const utils::vector::Vector3<double>& point) const
 {
 }
 
-float raytracer::Cone::computeSDF(const utils::vector::Vector3<double>& point) const
+utils::vector::Vector3<double> raytracer::Cone::computeHit(const utils::vector::Vector3<double>& point) const
 {
 }

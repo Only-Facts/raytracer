@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -32,10 +32,12 @@ void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libcon
     this->setShapeDescriptor(descriptor);
 }
 
-void raytracer::Point::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
-{
-}
-
 float raytracer::Point::computeSDF(const utils::vector::Vector3<double>& point) const
 {
+    return (point - this->getCFrame().position).length();
+}
+
+utils::vector::Vector3<double> raytracer::Point::computeHit(const utils::vector::Vector3<double>& point) const
+{
+    return (point - this->getCFrame().position).normalize();
 }

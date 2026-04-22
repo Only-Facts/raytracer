@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Directional.hpp
@@ -24,6 +24,9 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class Directional: public raytracer::ALight {
+    private:
+        float _fieldOfLight = 70.0f;
+
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);

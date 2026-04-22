@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.cpp
@@ -14,6 +14,7 @@ File Description:
 
 void raytracer::LightRay::reset(void)
 {
+    this->_alive = true;
     this->_color = DEFAULT_COLOR;
     this->_intensity = 1.0f;
 }

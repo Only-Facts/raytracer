@@ -29,15 +29,22 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class AObject: public raytracer::IObject {
+    private:
+        std::vector<std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float>> _lightRays;
+
     protected:
         raytracer::ShapeDescriptor _descriptor;
-        std::vector<std::pair<utils::vector::Vector3<double>, float>> _lightRays;
 
     public:
+        // ---------- Pre-Function -------- //
+        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
+        utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const;
+
         // ------------ Function ---------- //
         void translate(const utils::vector::Vector3<double>& v) {this->_descriptor.cframe.position += v;};
         void rotate(const utils::vector::Vector3<double>& v) {this->_descriptor.cframe.orientation += v;};
-        void addLightRay(std::pair<utils::vector::Vector3<double>, float> lightRay) {this->_lightRays.push_back(lightRay);};
+        void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) {this->_lightRays.push_back(lightRay);};
+        void clearLightRays(void) {this->_lightRays.clear();};
         void setShapeDescriptor(const raytracer::ShapeDescriptor& descriptor) {this->_descriptor = descriptor;};
         void setCFrame(const raytracer::CFrame& cframe) {this->_descriptor.cframe = cframe;};
         nodiscard const raytracer::ShapeDescriptor& getShapeDescriptor(void) const {return this->_descriptor;};

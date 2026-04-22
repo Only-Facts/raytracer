@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ALight.cpp
@@ -15,12 +15,17 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/lights/ALight.hpp"
 
-void raytracer::ALight::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
+void raytracer::ALight::reflectRay(unused std::shared_ptr<raytracer::IRay> ray) const
 {
     throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Lights does not support: reflectRay");
 }
 
-float raytracer::ALight::computeSDF(const utils::vector::Vector3<double>& point) const
+float raytracer::ALight::computeSDF(unused const utils::vector::Vector3<double>& point) const
 {
     throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Lights does not support: computeSDF");
+}
+
+utils::vector::Vector3<double> raytracer::ALight::computeHit(unused const utils::vector::Vector3<double>& point) const
+{
+    throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Lights does not support: computeHit");
 }

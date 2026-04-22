@@ -45,6 +45,9 @@ set(SRC
     src/raytracer/RaytracerInit.cpp
     src/raytracer/DynamicLibrary.cpp
 
+    # Objects
+    src/raytracer/objects/AObject.cpp
+
     # Rays
     src/raytracer/rays/ARay.cpp
     src/raytracer/rays/Ray.cpp
@@ -69,6 +72,7 @@ set(SRC_CAMERAS
     src/raytracer/rays/Ray.cpp
     src/raytracer/cameras/lib.cpp
     src/raytracer/cameras/ACamera.cpp
+    src/raytracer/objects/AObject.cpp
 )
 
 set(SRC_CAMERA
@@ -85,6 +89,7 @@ set(SRC_LIGHTS
     src/raytracer/rays/LightRay.cpp
     src/raytracer/lights/lib.cpp
     src/raytracer/lights/ALight.cpp
+    src/raytracer/objects/AObject.cpp
 )
 
 set(SRC_AMBIENT
@@ -106,6 +111,7 @@ set(SRC_OBJECTS
     src/raytracer/DynamicLibrary.cpp
     src/raytracer/RaytracerInit.cpp
     src/raytracer/objects/lib.cpp
+    src/raytracer/objects/AObject.cpp
 )
 
 set(SRC_POINT

@@ -18,6 +18,7 @@ File Description:
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
+#include <cmath>
 
 void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
@@ -59,7 +60,34 @@ void raytracer::Camera::init(void)
 
 void raytracer::Camera::reset(void)
 {
+    utils::vector::Vector2<std::uint16_t> resolution;
+    raytracer::CFrame cframe;
+    double aspect, scale;
+    double px, py, u, v;
+
     // For each rays set default light value
     for (std::shared_ptr<raytracer::Ray>& ray: this->_rays)
         ray->reset();
+
+    // Set rays init position & orientation
+    resolution = this->getResolution();
+    aspect = resolution.x / resolution.y;
+    scale = std::tan(this->_fieldOfView * 0.5 * M_PI / 180.0);
+    for (std::size_t y = 0; y < resolution.y; ++y) {
+        for (std::size_t x = 0; x < resolution.x; ++x) {
+            // Orientation
+            u = (x + 0.5) / resolution.x;
+            v = (y + 0.5) / resolution.y;
+            px = (2.0 * u - 1.0) * aspect * scale;
+            py = (1.0 - 2.0 * v) * scale;
+            cframe.orientation = {px, py, -1.0};
+            cframe.orientation = cframe.orientation.normalize();
+            // Position
+            cframe.orientation = this->getCFrame().orientation;
+            cframe.position = this->getCFrame().position;
+            cframe.position.x += x;
+            cframe.position.y += y;
+            this->_rays[y * resolution.x + x]->setCFrame(cframe);
+        }
+    }
 }

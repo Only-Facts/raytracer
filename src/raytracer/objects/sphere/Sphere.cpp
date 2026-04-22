@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 22/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.cpp
@@ -37,10 +37,12 @@ void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libco
     this->setShapeDescriptor(descriptor);
 }
 
-void raytracer::Sphere::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
-{
-}
-
 float raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
 {
+    return (point - this->getCFrame().position).length() - this->getShapeDescriptor().radius;
+}
+
+utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point) const
+{
+    return (point - this->getCFrame().position).normalize();
 }
