@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -51,7 +51,7 @@ struct ShapeDescriptor {
     /* plane & cylinder & cone */
     utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
 
-    /* cylinder & cone */
+    /* plane & cylinder & cone */
     bool infinite = false;
 
     /* sphere & cylinder & cone */

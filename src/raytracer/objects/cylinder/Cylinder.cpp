@@ -15,6 +15,7 @@ File Description:
 #include "raytracer/objects/Cylinder.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
+#include <cmath>
 
 void raytracer::Cylinder::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
@@ -46,8 +47,32 @@ void raytracer::Cylinder::parse(const raytracer::Raytracer& raytracer, const lib
 
 float raytracer::Cylinder::computeSDF(const utils::vector::Vector3<double>& point) const
 {
+    utils::vector::Vector3<double> diff = this->getCFrame().position - point;
+    double dist = diff.length() - this->getShapeDescriptor().radius;
+
+    // Infinite
+    if (this->getShapeDescriptor().infinite) {
+        return dist;
+    }
+
+    // Finite
+    else {
+        double dy = std::fabs(diff.y) - this->getShapeDescriptor().dimension.y / 2.0;
+
+        // In the height
+        if (dy <= 0)
+            return dist;
+
+        // Out of the height & out of the circle
+        if (dist > 0)
+            return std::sqrt(dist * dist + dy * dy);
+
+        // Out of the height & in the circle
+        return dy;
+    }
 }
 
 utils::vector::Vector3<double> raytracer::Cylinder::computeHit(const utils::vector::Vector3<double>& point) const
 {
+    return {0.0, 0.0, 0.0};
 }

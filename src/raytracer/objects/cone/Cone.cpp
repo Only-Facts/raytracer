@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.cpp
@@ -46,8 +46,16 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
 
 float raytracer::Cone::computeSDF(const utils::vector::Vector3<double>& point) const
 {
+    // Infinite
+    if (this->getShapeDescriptor().infinite) {
+    }
+
+    // Finite
+    else {
+    }
 }
 
 utils::vector::Vector3<double> raytracer::Cone::computeHit(const utils::vector::Vector3<double>& point) const
 {
+    return {0.0, 0.0, 0.0};
 }

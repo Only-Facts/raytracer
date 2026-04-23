@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.cpp
@@ -15,6 +15,7 @@ File Description:
 #include "raytracer/objects/Plane.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
+#include <cmath>
 
 void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
@@ -29,11 +30,13 @@ void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libcon
     raytracer::Raytracer::setCFrame(descriptor, node);
     
     // Other settings
-    if (!node.exists("dimension"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The dimension field isn't defined for the object");
-    const libconfig::Setting& dim = node["dimension"];
-    descriptor.dimension.x = (int)dim[0];
-    descriptor.dimension.y = (int)dim[1];
+    if (node.exists("dimension")) {
+        const libconfig::Setting& dim = node["dimension"];
+        descriptor.dimension.x = (int)dim[0];
+        descriptor.dimension.y = (int)dim[1];
+    } else {
+        descriptor.infinite = true;
+    }
 
     // Set the descriptor
     this->setShapeDescriptor(descriptor);
@@ -41,8 +44,17 @@ void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libcon
 
 float raytracer::Plane::computeSDF(const utils::vector::Vector3<double>& point) const
 {
+    // Infinite
+    if (this->getShapeDescriptor().infinite) {
+        return std::abs(point.y - this->getCFrame().position.y);
+    }
+
+    // Finite
+    else {
+    }
 }
 
 utils::vector::Vector3<double> raytracer::Plane::computeHit(const utils::vector::Vector3<double>& point) const
 {
+    return {0.0, 0.0, 0.0};
 }

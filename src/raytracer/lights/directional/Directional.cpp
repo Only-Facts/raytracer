@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Directional.cpp
@@ -60,16 +60,10 @@ void raytracer::Directional::init(void)
         this->_rays[i] = std::make_shared<raytracer::LightRay>();
 }
 
-static inline double degToRad(double deg)
-{
-    return deg * M_PI / 180.0;
-}
-
 void raytracer::Directional::reset(void)
 {
     utils::vector::Vector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
     raytracer::CFrame cframe;
-    float angleX = 0.0, angleY = 0.0;
 
     // For each rays set default light value
     for (std::shared_ptr<raytracer::LightRay>& ray: this->_rays) {
