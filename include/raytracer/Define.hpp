@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -17,12 +17,12 @@ File Description:
     /* DEFINE */
 
     /* values */
-    #define LIGHT_INTENSITY_LIMIT 1e-8 // Kill the ray under this intensity
-    #define SDF_COLLINDING_LIMIT 1e-8 // Detect colliding if the SDF is below or equal to that value
+    #define LIGHT_INTENSITY_LIMIT 1e-2 // Kill the ray under this intensity
+    #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
     #define LIGHT_COLOR_LIMIT 1e-2 // Radius of the circle to take color on a shape pixel hit point
-    #define RENDER_DISTANCE 100 // Kill the ray if the SDF is above or equal to that valuea
-    #define LIGHT_RAY 100000 // Number of rays by light
-    #define DEFAULT_LIGHT false // Enable or disable seeing object without light
+    #define RENDER_DISTANCE 1000 // Kill the ray if the SDF is above or equal to that valuea
+    #define LIGHT_RAY 10000 // Number of rays by light
+    #define DEFAULT_LIGHT true // Enable or disable seeing object without light
 
     /* default */
     #define PLUGINS_PATH "./plugins/"

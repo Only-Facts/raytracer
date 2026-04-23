@@ -73,7 +73,7 @@ class Raytracer {
         {
             auto it = this->_libs.find(name);
             if (it == this->_libs.end())
-                throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NoPlugins, "Invalid type in the scene, can't find corresponding plugin");
+                throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NoPlugins, std::string("Invalid type in the scene, can't find corresponding plugin: ") + name);
             std::shared_ptr<raytracer::DynamicLibrary> lib = it->second;
             T* (*fn)() = lib->loadFunction<T* (*)()>("factory");
             return std::shared_ptr<T>(fn());

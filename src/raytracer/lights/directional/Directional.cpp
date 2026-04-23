@@ -60,12 +60,16 @@ void raytracer::Directional::init(void)
         this->_rays[i] = std::make_shared<raytracer::LightRay>();
 }
 
+static inline double degToRad(double deg)
+{
+    return deg * M_PI / 180.0;
+}
+
 void raytracer::Directional::reset(void)
 {
-    utils::vector::Vector2<std::uint16_t> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
+    utils::vector::Vector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
     raytracer::CFrame cframe;
-    double aspect, scale;
-    double px, py, u, v;
+    float angleX = 0.0, angleY = 0.0;
 
     // For each rays set default light value
     for (std::shared_ptr<raytracer::LightRay>& ray: this->_rays) {
@@ -75,28 +79,15 @@ void raytracer::Directional::reset(void)
     }
 
     // Set rays init position & orientation
-    aspect = resolution.x / resolution.y;
-    scale = std::tan(this->_fieldOfLight * 0.5 * M_PI / 180.0);
-    for (std::size_t y = 0; y < resolution.y; ++y) {
-        for (std::size_t x = 0; x < resolution.x; ++x) {
+    std::cout << "light: " << resolution << std::endl;
+    for (int y = 0; y < resolution.y; ++y) {
+        for (int x = 0; x < resolution.x; ++x) {
             // Orientation
-            u = (x + 0.5) / resolution.x;
-            v = (y + 0.5) / resolution.y;
-            px = (2.0 * u - 1.0) * aspect * scale;
-            py = (1.0 - 2.0 * v) * scale;
-            /*
-            if (px * px + py * py > 1.0) { // For those who come after... the circle border
-                this->_rays[y * resolution.x + x]->kill();
-                continue;
-            }
-            */
-            cframe.orientation = {px, py, -1.0};
-            cframe.orientation = cframe.orientation.normalize();
-            // Position
             cframe.orientation = this->getCFrame().orientation;
+            // Position
             cframe.position = this->getCFrame().position;
-            cframe.position.x += x;
-            cframe.position.y += y;
+            cframe.position.x += (x - resolution.x / 2);
+            cframe.position.y += (y - resolution.y / 2);
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }

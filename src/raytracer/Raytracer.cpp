@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -236,10 +236,10 @@ void raytracer::Raytracer::render(void)
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
+                std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getShapeDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray);
                 } else {
-                    std::cout << "Collide camera" << std::endl;
                     ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));
                     ray->kill();
                 }

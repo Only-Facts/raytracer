@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -27,7 +27,6 @@ void raytracer::AObject::reflectRay(std::shared_ptr<raytracer::IRay> ray) const
     ray->setCFrame(cframe);
 }
 
-#include <iostream>
 utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
 {
     utils::vector::Vector3<std::uint8_t> pointColor = this->getShapeDescriptor().material->getColor();

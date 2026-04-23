@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera.cpp
@@ -60,10 +60,8 @@ void raytracer::Camera::init(void)
 
 void raytracer::Camera::reset(void)
 {
-    utils::vector::Vector2<std::uint16_t> resolution;
+    utils::vector::Vector2<int> resolution;
     raytracer::CFrame cframe;
-    double aspect, scale;
-    double px, py, u, v;
 
     // For each rays set default light value
     for (std::shared_ptr<raytracer::Ray>& ray: this->_rays)
@@ -71,22 +69,15 @@ void raytracer::Camera::reset(void)
 
     // Set rays init position & orientation
     resolution = this->getResolution();
-    aspect = resolution.x / resolution.y;
-    scale = std::tan(this->_fieldOfView * 0.5 * M_PI / 180.0);
-    for (std::size_t y = 0; y < resolution.y; ++y) {
-        for (std::size_t x = 0; x < resolution.x; ++x) {
+    std::cout << "camera: " << resolution << std::endl;
+    for (int y = 0; y < resolution.y; ++y) {
+        for (int x = 0; x < resolution.x; ++x) {
             // Orientation
-            u = (x + 0.5) / resolution.x;
-            v = (y + 0.5) / resolution.y;
-            px = (2.0 * u - 1.0) * aspect * scale;
-            py = (1.0 - 2.0 * v) * scale;
-            cframe.orientation = {px, py, -1.0};
-            cframe.orientation = cframe.orientation.normalize();
-            // Position
             cframe.orientation = this->getCFrame().orientation;
+            // Position
             cframe.position = this->getCFrame().position;
-            cframe.position.x += x;
-            cframe.position.y += y;
+            cframe.position.x += (x - resolution.x / 2);
+            cframe.position.y += (y - resolution.y / 2);
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }
