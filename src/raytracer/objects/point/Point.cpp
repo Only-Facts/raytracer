@@ -18,7 +18,7 @@ File Description:
 
 void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Get the object material
     if (!node.exists("material"))
@@ -27,17 +27,7 @@ void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libcon
 
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
-    
+
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
-}
-
-float raytracer::Point::computeSDF(const utils::vector::Vector3<double>& point) const
-{
-    return (point - this->getCFrame().position).length();
-}
-
-utils::vector::Vector3<double> raytracer::Point::computeHit(const utils::vector::Vector3<double>& point) const
-{
-    return (point - this->getCFrame().position).normalize();
+    this->setObjectDescriptor(descriptor);
 }

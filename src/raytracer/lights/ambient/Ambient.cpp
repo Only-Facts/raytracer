@@ -21,7 +21,7 @@ File Description:
 
 void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
@@ -41,7 +41,7 @@ void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, con
     }
 
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
+    this->setObjectDescriptor(descriptor);
 }
 
 void raytracer::Ambient::init(void)

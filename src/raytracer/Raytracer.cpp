@@ -183,12 +183,12 @@ void raytracer::Raytracer::render(void)
                     std::cout << "Collide light" << std::endl;
                     nearestObject->reflectRay(ray);
                     nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity()});
-                    ray->setIntensity(ray->getIntensity() * nearestObject->getShapeDescriptor().material->getLightReflectionCoef());
+                    ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                     ray->setColor(
                         std::clamp(
-                            static_cast<utils::vector::Vector3<float>>(nearestObject->getShapeDescriptor().material->getColor()).normalize() *
+                            static_cast<utils::vector::Vector3<float>>(nearestObject->getObjectDescriptor().material->getColor()).normalize() *
                             static_cast<utils::vector::Vector3<float>>(ray->getColor()).normalize() *
-                            nearestObject->getShapeDescriptor().material->getLightReflectionCoef(),
+                            nearestObject->getObjectDescriptor().material->getLightReflectionCoef(),
                             {0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}
                         ) * 255
                     );
@@ -237,7 +237,7 @@ void raytracer::Raytracer::render(void)
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
                 std::cout << "Collide camera" << std::endl;
-                if (nearestObject->getShapeDescriptor().material->isMirror()) { // Mirror material
+                if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray);
                 } else {
                     ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));

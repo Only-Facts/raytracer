@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -18,6 +18,7 @@ File Description:
 #include <libconfig.h++>
 #include <filesystem>
 #include <exception>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include <string>
@@ -73,7 +74,12 @@ void raytracer::Raytracer::load(int argc, char *argv[])
         this->_settings.viewer = false;
         this->_settings.cfg_path = argv[i];
     } else {
-        isFile(argv[i], ".ppm");
+        if (std::filesystem::path(argv[i]).extension() != ".ppm") {
+            utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::InvalidFileExtension, "The first file given was interpreted has a '.ppm'");
+            std::cout << e.formated() << std::endl;
+        } else {
+            isFile(argv[i], ".ppm");
+        }
         this->_settings.viewer = true;
         this->_settings.ppm_path = argv[i];
         return;
@@ -95,7 +101,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
         if (arg == "-n" || arg == "--newton") {
             // Check the option argument
             if (this->_settings.newton) {
-                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
 
@@ -110,7 +116,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Check the option argument
             if (this->_settings.camera_set) {
-                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
             isFile(argv[++i], ".so");
@@ -127,7 +133,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Check the option argument
             if (this->_settings.plugins_set) {
-                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
             isDirectory(argv[++i]);
@@ -137,6 +143,23 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.plugins_path = argv[i];
         }
 
+        // -o, --obj <obj_directory_path>
+        else if (arg == "-o" || arg == "--obj") {
+            if (i + 1 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-o requires <obj_directory_path>");
+
+            // Check the option argument
+            if (this->_settings.obj_set) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+            isDirectory(argv[++i]);
+
+            // Set the plugins search path
+            this->_settings.obj_set = true;
+            this->_settings.obj_path = argv[i];
+        }
+
         // -s, --save <ppm_directory_path>
         else if (arg == "-s" || arg == "--save") {
             if (i + 1 >= argc)
@@ -144,14 +167,14 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Check the option argument
             if (this->_settings.rendered_set) {
-                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
             isDirectory(argv[++i]);
 
             // Ignored case
             if (this->_settings.gui) {
-                utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::IgnoredArgument, arg);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::IgnoredArgument, arg);
                 std::cout << e.formated() << std::endl;
             }
 
@@ -167,13 +190,13 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Check the option argument
             if (this->_settings.resolution_set) {
-                utils::exception::WarningException e(utils::exception::Code::OptionOverride);
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
             std::string res = argv[++i];
             auto pos = res.find('x');
             if (pos == std::string::npos)
-                throw utils::exception::CustomException(utils::exception::Warning, utils::exception::Code::InvalidArgument, std::string("Invalid resolution format: ") + res);
+                throw utils::exception::CustomException(utils::exception::Type::Warning, utils::exception::Code::InvalidArgument, std::string("Invalid resolution format: ") + res);
 
             // Try to set the resolution
             try {

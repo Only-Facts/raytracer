@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AMaterial.hpp
@@ -38,10 +38,10 @@ class AMaterial: public raytracer::IMaterial {
 
     public:
         // ------------ Function ---------- //
-        nodiscard utils::vector::Vector3<std::uint8_t> getColor(void) const {return this->_color;};
-        nodiscard float getTransparency(void) const {return this->_transparency;};
-        nodiscard float getLightReflectionCoef(void) const {return this->_reflection;};
-        nodiscard bool isMirror(void) const {return this->_mirror;};
+        nodiscard utils::vector::Vector3<std::uint8_t> getColor(void) const final {return this->_color;};
+        nodiscard float getTransparency(void) const final {return this->_transparency;};
+        nodiscard float getLightReflectionCoef(void) const final {return this->_reflection;};
+        nodiscard bool isMirror(void) const final {return this->_mirror;};
 
         // ------------ Operator ---------- //
         AMaterial& operator=(const AMaterial& object) = delete;

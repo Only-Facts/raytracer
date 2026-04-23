@@ -22,7 +22,7 @@ File Description:
 
 void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
@@ -31,14 +31,14 @@ void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, cons
     if (!node.exists("resolution"))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
     const libconfig::Setting& res = node["resolution"];
-    descriptor.dimension = {(int)res[0], (int)res[1]};
+    this->setResolution({(int)res[0], (int)res[1]});
 
     double fieldOfView = 70.0f;
     if (node.lookupValue("fieldOfView", fieldOfView))
         this->_fieldOfView = fieldOfView;
 
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
+    this->setObjectDescriptor(descriptor);
 }
 
 void raytracer::Camera::init(void)

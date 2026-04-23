@@ -88,7 +88,6 @@ set(SRC_LIGHTS
     src/raytracer/rays/ARay.cpp
     src/raytracer/rays/LightRay.cpp
     src/raytracer/lights/lib.cpp
-    src/raytracer/lights/ALight.cpp
     src/raytracer/objects/AObject.cpp
 )
 

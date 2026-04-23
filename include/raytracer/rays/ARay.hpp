@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.hpp
@@ -31,12 +31,11 @@ class ARay: public raytracer::IRay {
 
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
-        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
-        float computeSDF(const utils::vector::Vector3<double>& point) const;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
-        void kill(void) {this->_alive = false;};
-        bool isAlive(void) const {return this->_alive;};
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+
+        // ------------ Function ---------- //
+        void kill(void) final {this->_alive = false;};
+        bool isAlive(void) const final {return this->_alive;};
 
         // ------------ Operator ---------- //
         ARay& operator=(const ARay& object) = delete;

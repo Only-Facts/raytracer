@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ALight.hpp
@@ -36,11 +36,6 @@ class ALight: public raytracer::ILight {
         float _intensity = 1.0f;
 
     public:
-        // ---------- Pre-Function -------- //
-        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
-        float computeSDF(const utils::vector::Vector3<double>& point) const;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
-
         // ------------ Function ---------- //
         std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};
 

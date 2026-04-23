@@ -22,6 +22,7 @@ File Description:
     #include "materials/IMaterial.hpp"  // raytracer::IMaterial
     #include <cstddef>                  // std::size_t
     #include <memory>                   // std::shared_ptr
+    #include <vector>                   // std::vector
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -41,25 +42,23 @@ enum class Shape {
     Cone,
 };
 
-struct ShapeDescriptor {
+using Vertice = utils::vector::Vector3<double>;
+using Face = std::vector<Vertice>;
+
+struct ObjectDescriptor {
     raytracer::Shape id = raytracer::Shape::None;
 
     /* all */
     raytracer::CFrame cframe;
     std::shared_ptr<raytracer::IMaterial> material;
+    std::vector<raytracer::Face> faces;
 
-    /* plane & cylinder & cone */
-    utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
-
-    /* plane & cylinder & cone */
-    bool infinite = false;
-
-    /* sphere & cylinder & cone */
-    float radius = 0.0f;
+    /* cone & cylinder & plane & sphere */
+    float scale = 1.0f;
 
     // ---------- Constructor --------- //
-    ShapeDescriptor() = default;
-    ShapeDescriptor(const raytracer::CFrame& cframe): cframe{cframe} {};
+    ObjectDescriptor() = default;
+    ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe} {};
 };
 
 } // namespace end

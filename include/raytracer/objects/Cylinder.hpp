@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cylinder.hpp
@@ -30,9 +30,7 @@ namespace raytracer { // namespace start
 class Cylinder: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
-        float computeSDF(const utils::vector::Vector3<double>& point) const;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
 
         // ------------ Operator ---------- //
         Cylinder& operator=(const Cylinder& object) = delete;

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.cpp
@@ -15,21 +15,6 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/cameras/ACamera.hpp"
 #include <cstdint>
-
-void raytracer::ACamera::reflectRay(unused std::shared_ptr<raytracer::IRay> ray) const
-{
-    throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Cameras does not support: reflectRay");
-}
-
-float raytracer::ACamera::computeSDF(unused const utils::vector::Vector3<double>& point) const
-{
-    throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Cameras does not support: computeSDF");
-}
-
-utils::vector::Vector3<double> raytracer::ACamera::computeHit(unused const utils::vector::Vector3<double>& point) const
-{
-    throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Cameras does not support: computeHit");
-}
 
 void raytracer::ACamera::updateScreen(void)
 {

@@ -18,7 +18,7 @@ File Description:
 
 void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Get the object material
     if (!node.exists("material"))
@@ -29,20 +29,13 @@ void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libco
     raytracer::Raytracer::setCFrame(descriptor, node);
     
     // Other settings
-    if (!node.exists("radius"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
-    descriptor.radius = (double)node["radius"];
+    double scale = 1.0;
+    if (node.lookupValue("scale", scale))
+        descriptor.scale = scale;
 
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
-}
+    this->setObjectDescriptor(descriptor);
 
-float raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
-{
-    return (point - this->getCFrame().position).length() - this->getShapeDescriptor().radius;
-}
-
-utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point) const
-{
-    return (point - this->getCFrame().position).normalize();
+    // Load the shape vertex
+    this->loadObj(raytracer.ObjPath("sphere.obj"));
 }

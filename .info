@@ -13,7 +13,7 @@ class enum Shape {
     Cone,
 };
 
-struct ShapeDescriptor {
+struct ObjectDescriptor {
     raytracer::Shape id = raytracer::Shape::None;
 
     /* all */
@@ -41,7 +41,7 @@ AObject
 
 storage ->
 raytracer::CFrame _cframe: position + orientation
-raytracer::ShapeDescriptor _descriptor;
+raytracer::ObjectDescriptor _descriptor;
 std::vector<std::pair<utils::vector::Vector3<double>, float>> _lightRays;
 
 functions ->

@@ -19,7 +19,7 @@ File Description:
 
 void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
@@ -43,7 +43,7 @@ void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer,
         this->_fieldOfLight = fieldOfLight;
 
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
+    this->setObjectDescriptor(descriptor);
 }
 
 void raytracer::Directional::init(void)

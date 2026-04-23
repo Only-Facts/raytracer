@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Directional.hpp
@@ -29,9 +29,9 @@ class Directional: public raytracer::ALight {
 
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
-        void init(void);
-        void reset(void);
+        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void init(void) final;
+        void reset(void) final;
 
         // ------------ Operator ---------- //
         Directional& operator=(const Directional& object) = delete;

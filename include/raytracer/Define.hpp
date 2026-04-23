@@ -16,10 +16,13 @@ File Description:
     //----------------------------------------------------------------//
     /* DEFINE */
 
-    /* values */
+    /* limits */
     #define LIGHT_INTENSITY_LIMIT 1e-2 // Kill the ray under this intensity
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
     #define LIGHT_COLOR_LIMIT 1e-2 // Radius of the circle to take color on a shape pixel hit point
+    #define MAX_VERTICES 3 // Allow point, segment, triangle
+
+    /* values */
     #define RENDER_DISTANCE 1000 // Kill the ray if the SDF is above or equal to that valuea
     #define LIGHT_RAY 10000 // Number of rays by light
     #define DEFAULT_LIGHT true // Enable or disable seeing object without light
@@ -27,6 +30,7 @@ File Description:
     /* default */
     #define PLUGINS_PATH "./plugins/"
     #define RENDERED_PATH "./rendered/"
+    #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
     #define DEFAULT_COLOR {0, 0, 0}
 

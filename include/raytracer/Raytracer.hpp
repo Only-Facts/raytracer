@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -21,7 +21,7 @@ File Description:
     #define _Vector
     #include "utils/utils.hpp"      // utils::exception::*, utils::vector::Vector2
     #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
-    #include "Struct.hpp"           // raytracer::ShapeDescriptor
+    #include "Struct.hpp"           // raytracer::ObjectDescriptor
     #include "Define.hpp"           // values
     #include "cameras/ICamera.hpp"  // raytracer::ICamera
     #include "lights/ILight.hpp"    // raytracer::ILight
@@ -47,12 +47,14 @@ struct Settings {
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
+    std::string obj_path = OBJ_PATH; // -o, --obj
     utils::vector::Vector2<std::size_t> resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
     bool camera_set = false; // camera_path
     bool plugins_set = false; // plugins_path
     bool rendered_set = false; // rendered_path
+    bool obj_set = false; // obj_path
     bool resolution_set = false; // resolution
 };
 
@@ -104,9 +106,10 @@ class Raytracer {
         // ------------ Function ---------- //
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
+        std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
 
         // -------- Static-Function ------- //
-        static void setCFrame(raytracer::ShapeDescriptor& descriptor, const libconfig::Setting& node)
+        static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
         {
             // Check existantce
             if (!node.exists("position"))

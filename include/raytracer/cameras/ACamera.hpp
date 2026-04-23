@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -35,20 +35,18 @@ class ACamera: public raytracer::ICamera {
     protected:
         std::vector<utils::vector::Vector3<std::uint8_t>> _screen; // Screen pixel
         std::vector<std::shared_ptr<raytracer::Ray>> _rays;
+        utils::vector::Vector2<std::uint16_t> _resolution;
         float _fieldOfView = 70.0f;
 
     public:
         // ---------- Pre-Function -------- //
-        void reflectRay(std::shared_ptr<raytracer::IRay> ray) const;
-        float computeSDF(const utils::vector::Vector3<double>& point) const;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const;
-        void updateScreen(void);
+        void updateScreen(void) final;
 
         // ------------ Function ---------- //
         nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};
         nodiscard std::vector<std::shared_ptr<raytracer::Ray>> getRays(void) const {return this->_rays;};
-        void setResolution(utils::vector::Vector2<std::uint16_t> resolution) {this->_descriptor.dimension = resolution;};
-        nodiscard utils::vector::Vector2<std::uint16_t> getResolution(void) const {return this->_descriptor.dimension;};
+        void setResolution(utils::vector::Vector2<std::uint16_t> resolution) {this->_resolution = resolution;};
+        nodiscard utils::vector::Vector2<std::uint16_t> getResolution(void) const {return this->_resolution;};
         void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
         nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
 

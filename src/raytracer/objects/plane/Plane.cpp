@@ -19,7 +19,7 @@ File Description:
 
 void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
-    raytracer::ShapeDescriptor descriptor;
+    raytracer::ObjectDescriptor descriptor;
 
     // Get the object material
     if (!node.exists("material"))
@@ -30,31 +30,13 @@ void raytracer::Plane::parse(const raytracer::Raytracer& raytracer, const libcon
     raytracer::Raytracer::setCFrame(descriptor, node);
     
     // Other settings
-    if (node.exists("dimension")) {
-        const libconfig::Setting& dim = node["dimension"];
-        descriptor.dimension.x = (int)dim[0];
-        descriptor.dimension.y = (int)dim[1];
-    } else {
-        descriptor.infinite = true;
-    }
+    double scale = 1.0;
+    if (node.lookupValue("scale", scale))
+        descriptor.scale = scale;
 
     // Set the descriptor
-    this->setShapeDescriptor(descriptor);
-}
+    this->setObjectDescriptor(descriptor);
 
-float raytracer::Plane::computeSDF(const utils::vector::Vector3<double>& point) const
-{
-    // Infinite
-    if (this->getShapeDescriptor().infinite) {
-        return std::abs(point.y - this->getCFrame().position.y);
-    }
-
-    // Finite
-    else {
-    }
-}
-
-utils::vector::Vector3<double> raytracer::Plane::computeHit(const utils::vector::Vector3<double>& point) const
-{
-    return {0.0, 0.0, 0.0};
+    // Load the shape vertex
+    this->loadObj(raytracer.ObjPath("plane.obj"));
 }

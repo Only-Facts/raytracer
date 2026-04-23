@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.hpp
@@ -33,7 +33,7 @@ class LightRay: public raytracer::ARay {
 
     public:
         // ---------- Pre-Function -------- //
-        void reset(void);
+        void reset(void) final;
 
         // ------------ Function ---------- //
         void setColor(utils::vector::Vector3<std::uint8_t> color) {this->_color = color;};
