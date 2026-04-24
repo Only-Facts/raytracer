@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.hpp
@@ -28,9 +28,14 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class Sphere: public raytracer::AObject {
+    private:
+        float _radius = 1.0f;
+
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        float computeSDF(const utils::vector::Vector3<double>& point) const final;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const final;
 
         // ------------ Operator ---------- //
         Sphere& operator=(const Sphere& object) = delete;

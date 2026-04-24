@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.cpp
@@ -10,13 +10,14 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Attribute
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/Sphere.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 
-void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -29,13 +30,20 @@ void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libco
     raytracer::Raytracer::setCFrame(descriptor, node);
     
     // Other settings
-    double scale = 1.0;
-    if (node.lookupValue("scale", scale))
-        descriptor.scale = scale;
+    if (!node.exists("radius"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The radius field isn't defined for the object");
+    this->_radius = node["radius"];
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
+}
 
-    // Load the shape vertex
-    this->loadObj(raytracer.ObjPath("sphere.obj"));
+hot float raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
+{
+    return (point - this->getObjectDescriptor().cframe.position).length() - this->_radius;
+}
+
+hot utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point) const
+{
+    return (point - this->getObjectDescriptor().cframe.position).normalize();
 }
