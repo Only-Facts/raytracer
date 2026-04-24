@@ -10,6 +10,7 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Attribute
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/AObject.hpp"
@@ -22,7 +23,7 @@ File Description:
 #include <exception>
 #include <iostream>
 
-utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
+hot utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
 {
     utils::vector::Vector3<std::uint16_t> pointColor = this->getObjectDescriptor().material->getColor();
     bool found = false;
@@ -45,7 +46,7 @@ utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const uti
     return pointColor;
 }
 
-void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor)
+cold void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor)
 {
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig config;
@@ -116,7 +117,7 @@ void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescr
     }
 }
 
-void raytracer::AObject::reflectRay(raytracer::IRay* ray) const
+hot void raytracer::AObject::reflectRay(raytracer::IRay* ray) const
 {
     raytracer::CFrame cframe = ray->getCFrame();
     utils::vector::Vector3<double> orientation = cframe.orientation.normalize();
@@ -166,7 +167,7 @@ static float triangleSDF(const utils::vector::Vector3<double>& point, const rayt
 }
 */
 
-static float triangleSDF(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+hot static float triangleSDF(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
     utils::vector::Vector3<double> ab = b - a;
     utils::vector::Vector3<double> ac = c - a;
@@ -210,7 +211,7 @@ static float triangleSDF(const utils::vector::Vector3<double>& point, const rayt
     });
 }
 
-float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point) const
+hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point) const
 {
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
 
@@ -233,7 +234,7 @@ float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point
     return std::sqrt(sdf);
 }
 
-utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const
+hot utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const
 {
     return {0.0, 0.0, 0.0};
 }

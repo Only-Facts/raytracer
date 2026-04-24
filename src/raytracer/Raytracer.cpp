@@ -12,6 +12,7 @@ File Description:
 
 #define _Exception
 #define _Vector
+#define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/cameras/Camera.hpp"
@@ -42,7 +43,7 @@ viewer:
         input handling
     close gui
 */
-void raytracer::Raytracer::gui(void)
+cold void raytracer::Raytracer::gui(void)
 {
     // Init screen data from save (viewer mode)
     if (this->_settings.viewer)
@@ -86,7 +87,7 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
     }
 }
 
-void raytracer::Raytracer::display(sf::RenderWindow& window)
+hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
     // Clear the window
     window.clear(sf::Color::Black);
@@ -112,7 +113,7 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
     window.display();
 }
 
-static void processLightChunk(std::vector<raytracer::LightRay*>& rays,
+static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
     raytracer::ICamera* camera)
@@ -175,7 +176,7 @@ static void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     }
 }
 
-static void processCameraChunk(std::vector<raytracer::Ray*>& rays,
+static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
     raytracer::ICamera* camera)
@@ -315,7 +316,7 @@ void raytracer::Raytracer::render(void)
         t.join();
 }
 
-void raytracer::Raytracer::loadRender(void)
+cold void raytracer::Raytracer::loadRender(void)
 {
     // Init default camera (to use default camera comportement)
     this->_camera = new raytracer::Camera();
@@ -354,7 +355,7 @@ void raytracer::Raytracer::loadRender(void)
         throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::ppmFile, std::string("Error during the file reading: ") + this->_settings.ppm_path);
 }
 
-void raytracer::Raytracer::saveRender(void)
+cold void raytracer::Raytracer::saveRender(void)
 {
     // Update screen pixels using rays color
     this->_camera->updateScreen();
