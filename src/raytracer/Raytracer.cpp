@@ -181,7 +181,8 @@ void raytracer::Raytracer::render(void)
                 if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
                     //std::cout << "Collide light" << std::endl;
                     nearestObject->reflectRay(ray);
-                    nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity()});
+                    float localIntensityCoef = 1.0f - (ray->getCFrame().position - this->_camera->getCFrame().position).length() / RENDER_DISTANCE;
+                    nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef});
                     ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                     ray->setColor(
                         nearestObject->getObjectDescriptor().material->getColor() *

@@ -23,8 +23,8 @@ File Description:
     #define MAX_VERTICES 3 // Allow point, segment, triangle
 
     /* values */
-    #define RENDER_DISTANCE 500 // Kill the ray if the SDF is above or equal to that valuea
-    #define LIGHT_RAY 10000 // Number of rays by light
+    #define RENDER_DISTANCE 250 // Kill the ray if the SDF is above or equal to that valuea
+    #define LIGHT_RAY 1000000 // Number of rays by light
     #define DEFAULT_LIGHT true // Enable or disable seeing object without light
 
     /* default */
@@ -32,6 +32,6 @@ File Description:
     #define RENDERED_PATH "./rendered/"
     #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
-    #define DEFAULT_COLOR {0, 255, 255}
+    #define DEFAULT_COLOR {0, 0, 0}
 
 #endif /* DEFINE_H */

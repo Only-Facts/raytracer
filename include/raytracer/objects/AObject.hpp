@@ -42,9 +42,9 @@ class AObject: public raytracer::IObject {
         void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) final;
 
         /* 3D logic */
-        void reflectRay(raytracer::IRay* ray) const final;
-        float computeSDF(const utils::vector::Vector3<double>& point) const final;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const final;
+        void reflectRay(raytracer::IRay* ray) const override;
+        float computeSDF(const utils::vector::Vector3<double>& point) const override;
+        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const override;
 
         /* color handling */
         utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const final;
