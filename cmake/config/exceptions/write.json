@@ -1,0 +1,9 @@
+{
+    "errors": [
+        {
+            "code": "ANSIMouseEvent",
+            "message": "Error during the read of the mouse event",
+            "restrictions": ["Fatal", "Error"]
+        }
+    ]
+}

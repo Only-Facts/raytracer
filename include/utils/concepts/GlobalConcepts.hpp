@@ -1,0 +1,52 @@
+/**************************************************************\
+
+ ██╗  ██╗ █████╗ ██████╗ ████████╗ █████╗ ███╗   ██╗██╗ █████╗ 
+ ╚██╗██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗████╗  ██║██║██╔══██╗
+  ╚███╔╝ ███████║██████╔╝   ██║   ███████║██╔██╗ ██║██║███████║
+  ██╔██╗ ██╔══██║██╔══██╗   ██║   ██╔══██║██║╚██╗██║██║██╔══██║
+ ██╔╝ ██╗██║  ██║██║  ██║   ██║   ██║  ██║██║ ╚████║██║██║  ██║
+ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
+
+Edition:
+##  @date 20/04/2026 by @author Tsukini
+
+File Name:
+##  @file GlobalConcepts.hpp
+
+File Description:
+##  Definition of the different global concepts
+\**************************************************************/
+
+#ifndef GLOBALCONCEPTS_H
+    #define GLOBALCONCEPTS_H
+
+    //----------------------------------------------------------------//
+    /* INCLUDE */
+
+    /* type */
+    #include <iostream> // std::ostream
+
+namespace utils::concepts { // namespace start
+//----------------------------------------------------------------//
+/* CONCEPTS */
+
+template<typename T, typename U>
+concept Convertible = requires(T a, U b) {
+    {static_cast<U>(a)} -> std::convertible_to<U>;
+};
+
+template<typename T>
+concept Swappable = requires(T a, T b) {
+    {std::swap(a, b)};
+};
+
+template<typename T>
+concept Streamable = requires(std::ostream& os, T a) {os << a;};
+
+template <class T, class U>
+concept convertible_to = std::is_convertible_v<T, U> && requires {
+    static_cast<U>(std::declval<T>());
+};
+
+} // namespace end
+#endif /* GLOBALCONCEPTS_H */

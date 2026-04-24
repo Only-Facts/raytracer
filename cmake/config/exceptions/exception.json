@@ -1,0 +1,10 @@
+{
+    "errors": [
+        {
+            "code": "ExceptionCodeRestriction",
+            "message": "Error during the setup of an exception",
+            "info": "Restriction trigerred on a code & type combination",
+            "restrictions": ["Fatal", "Error"]
+        }
+    ]
+}
