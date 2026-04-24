@@ -1,0 +1,15 @@
+{
+    "errors": [
+        {
+            "code": "Exit",
+            "message": "Exit",
+            "info": "Exit",
+            "restrictions": ["None"]
+        },
+        {
+            "code": "NotSupportedFunction",
+            "message": "This function is not supported by this class",
+            "restrictions": ["Fatal", "Error"]
+        }
+    ]
+}
