@@ -1,0 +1,33 @@
+{
+    "errors": [
+        {
+            "code": "CliInternal",
+            "message": "Internal error from the cli",
+            "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "CliHook",
+            "message": "Error during a hook call",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "CliMiddleware",
+            "message": "Error during a middleware call",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "CliParser",
+            "message": "Error during the parsing"
+        },
+        {
+            "code": "CliExecution",
+            "message": "Error during the command execution",
+            "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "CliUndefined",
+            "message": "An undefined error has append",
+            "restrictions": ["Fatal", "Error"]
+        }
+    ]
+}
