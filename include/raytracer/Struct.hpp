@@ -19,8 +19,8 @@ File Description:
     /* type */
     #define _Vector
     #include "utils/utils.hpp"          // utils::vector::Vector3, utils::vector::Vector2
-    #include "materials/IMaterial.hpp"  // raytracer::IMaterial
     #include <cstddef>                  // std::size_t
+    #include <cstdint>                  // std::uint8_t
     #include <memory>                   // std::shared_ptr
     #include <vector>                   // std::vector
 
@@ -42,8 +42,12 @@ enum class Shape {
     Cone,
 };
 
+using Color = utils::vector::Vector3<std::uint8_t>;
+
 using Vertice = utils::vector::Vector3<double>;
 using Face = std::vector<Vertice>;
+
+class IMaterial;
 
 struct ObjectDescriptor {
     raytracer::Shape id = raytracer::Shape::None;

@@ -19,20 +19,22 @@ File Description:
     /* type */
     #define _Exception
     #define _Vector
-    #include "utils/utils.hpp"      // utils::exception::*, utils::vector::Vector2
-    #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
-    #include "Struct.hpp"           // raytracer::ObjectDescriptor
-    #include "Define.hpp"           // values
-    #include "cameras/ICamera.hpp"  // raytracer::ICamera
-    #include "lights/ILight.hpp"    // raytracer::ILight
-    #include "objects/IObject.hpp"  // raytracer::IObject
-    #include <SFML/Graphics.hpp>    // sf::RenderWindow
-    #include <libconfig.h++>        // libconfig::Setting
-    #include <unordered_map>        // std::unordered_map
-    #include <cstddef>              // std::size_t
-    #include <memory>               // std::shared_ptr
-    #include <vector>               // std::vector
-    #include <string>               // std::string
+    #include "utils/utils.hpp"          // utils::exception::*, utils::vector::Vector2
+    #include "DynamicLibrary.hpp"       // raytracer::DynamicLibrary
+    #include "Struct.hpp"               // raytracer::ObjectDescriptor
+    #include "Define.hpp"               // values
+    #include "special/Sky.hpp"          // raytracer::Sky
+    #include "cameras/ICamera.hpp"      // raytracer::ICamera
+    #include "materials/IMaterial.hpp"  // raytracer::IMaterial
+    #include "lights/ILight.hpp"        // raytracer::ILight
+    #include "objects/IObject.hpp"      // raytracer::IObject
+    #include <SFML/Graphics.hpp>        // sf::RenderWindow
+    #include <libconfig.h++>            // libconfig::Setting
+    #include <unordered_map>            // std::unordered_map
+    #include <cstddef>                  // std::size_t
+    #include <memory>                   // std::shared_ptr
+    #include <vector>                   // std::vector
+    #include <string>                   // std::string
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -43,7 +45,7 @@ struct Settings {
     std::string ppm_path; // <ppm_file_path>
     std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
-    bool newton = false; // -n, --newton
+    bool newton = false; // -n, --newton (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
@@ -65,6 +67,7 @@ class Raytracer {
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
+        raytracer::Sky _sky;
         raytracer::ICamera* _camera = nullptr;
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
