@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -137,24 +137,23 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
 */
 void raytracer::Raytracer::render(void)
 {
-    std::shared_ptr<raytracer::IObject> nearestObject;
+    raytracer::IObject* nearestObject;
     float sdf = 0.0f, actualSDF = 0.0f;
-    bool first = true, edited = true;
+    bool first = true;
 
     // 1 - Reset rays (camera & lights)
     this->_camera->reset();
-    for (std::shared_ptr<raytracer::ILight>& light: this->_lights)
+    for (raytracer::ILight* light: this->_lights)
         light->reset();
-    for (std::shared_ptr<raytracer::IObject>& object: this->_objects)
+    for (raytracer::IObject* object: this->_objects)
         object->clearLightRays();
 
     // 2 - Compute lights rays
-    while (edited) {
-        edited = false;
-        for (std::shared_ptr<raytracer::ILight>& light: this->_lights) {
-            for (std::shared_ptr<raytracer::LightRay>& ray: light->getRays()) {
+    for (raytracer::ILight* light: this->_lights) {
+        std::vector<raytracer::LightRay*> lightRays = light->getRays();
+        while (lightRays.size() > 0) {
+            for (raytracer::LightRay* ray: lightRays) {
                 if (!ray->isAlive()) continue;
-                edited = true;
 
                 // Kill those with no direction
                 if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
@@ -165,7 +164,7 @@ void raytracer::Raytracer::render(void)
                 // 1 - Compute SDF
                 sdf = 0.0f;
                 first = true;
-                for (std::shared_ptr<raytracer::IObject>& object: this->_objects) {
+                for (raytracer::IObject* object: this->_objects) {
                     actualSDF = object->computeSDF(ray->getCFrame().position);
                     if (first || actualSDF < sdf) {
                         first = false;
@@ -179,18 +178,17 @@ void raytracer::Raytracer::render(void)
                 ray->translate(ray->getCFrame().orientation.normalize() * sdf);
 
                 // 3 - Check SDF
+                //std::cout << "sdf (light " << i++ << "/" << light->getRays().size() << "): " << sdf << std::endl;
                 if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
-                    std::cout << "Collide light" << std::endl;
+                    //std::cout << "Collide light" << std::endl;
                     nearestObject->reflectRay(ray);
                     nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity()});
                     ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                     ray->setColor(
-                        std::clamp(
-                            static_cast<utils::vector::Vector3<float>>(nearestObject->getObjectDescriptor().material->getColor()).normalize() *
-                            static_cast<utils::vector::Vector3<float>>(ray->getColor()).normalize() *
-                            nearestObject->getObjectDescriptor().material->getLightReflectionCoef(),
-                            {0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}
-                        ) * 255
+                        nearestObject->getObjectDescriptor().material->getColor() *
+                        ray->getColor() *
+                        ray->getIntensity()
+                        / 255
                     );
                 }
 
@@ -201,16 +199,23 @@ void raytracer::Raytracer::render(void)
                     ray->kill();
                 }
             }
+
+            // Remove killed rays
+            lightRays.erase(
+                std::remove_if(lightRays.begin(), lightRays.end(),
+                    [](raytracer::LightRay* ray) {
+                    return !ray->isAlive();
+                }),
+                lightRays.end()
+            );
         }
     }
 
     // 3 - Compute camera rays
-    edited = true;
-    while (edited) {
-        edited = false;
-        for (std::shared_ptr<raytracer::Ray>& ray: this->_camera->getRays()) {
+    std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
+    while (cameraRays.size() > 0) {
+        for (raytracer::Ray* ray: cameraRays) {
             if (!ray->isAlive()) continue;
-            edited = true;
 
             // Kill those with no direction
             if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
@@ -221,7 +226,7 @@ void raytracer::Raytracer::render(void)
             // 1 - Compute SDF
             sdf = 0.0f;
             first = true;
-            for (std::shared_ptr<raytracer::IObject>& object: this->_objects) {
+            for (raytracer::IObject* object: this->_objects) {
                 actualSDF = object->computeSDF(ray->getCFrame().position);
                 if (first || actualSDF < sdf) {
                     first = false;
@@ -235,8 +240,9 @@ void raytracer::Raytracer::render(void)
             ray->translate(ray->getCFrame().orientation.normalize() * sdf);
 
             // 3 - Check SDF
+            //std::cout << "sdf (camera " << i++ << "/" << this->_camera->getRays().size() << "): " << sdf << std::endl;
             if (sdf <= SDF_COLLINDING_LIMIT) {
-                std::cout << "Collide camera" << std::endl;
+                //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray);
                 } else {
@@ -250,13 +256,22 @@ void raytracer::Raytracer::render(void)
                 ray->kill();
             }
         }
+
+        // Remove killed rays
+        cameraRays.erase(
+            std::remove_if(cameraRays.begin(), cameraRays.end(),
+                [](raytracer::Ray* ray) {
+                return !ray->isAlive();
+            }),
+            cameraRays.end()
+        );
     }
 }
 
 void raytracer::Raytracer::loadRender(void)
 {
     // Init default camera (to use default camera comportement)
-    this->_camera = std::make_shared<raytracer::Camera>();
+    this->_camera = new raytracer::Camera();
 
     // Try to open the ppm file
     std::ifstream file(this->_settings.ppm_path, std::ios::binary);
@@ -283,7 +298,7 @@ void raytracer::Raytracer::loadRender(void)
     // Read pixels
     std::vector<uint8_t> buffer(width * height * 3);
     file.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
-    std::vector<std::shared_ptr<raytracer::Ray>> rays = this->_camera->getRays();
+    std::vector<raytracer::Ray*> rays = this->_camera->getRays();
     for (std::size_t i = 0; i < width * height; ++i)
         rays[i]->setColor({buffer[i * 3 + 0], buffer[i * 3 + 1], buffer[i * 3 + 2]});
 

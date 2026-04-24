@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -41,7 +41,7 @@ class IObject {
         virtual void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) = 0;
 
         /* 3D logic */
-        virtual void reflectRay(std::shared_ptr<raytracer::IRay> ray) const = 0;
+        virtual void reflectRay(raytracer::IRay* ray) const = 0;
         virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
         virtual utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const = 0;
 

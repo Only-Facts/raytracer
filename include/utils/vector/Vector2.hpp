@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Vector2.hpp
@@ -62,6 +62,9 @@ class Vector2: public utils::vector::IVector<T> {
         template<typename U>
         T dot(const Vector2<U>& v) const
         requires utils::concepts::MultipliableWith<T, U> && utils::concepts::AddableWith<T, U> {return x * v.x + y * v.y;}
+        template<typename U>
+        T cross(const Vector2<U>& v) const
+        requires utils::concepts::MultipliableWith<T, U> && utils::concepts::SubtractableWith<T, U> {return x * v.y - y * v.x;}
         T length() const
         requires utils::concepts::Multipliable<T> {return std::sqrt(x * x + y * y);}
         T lengthSquared() const

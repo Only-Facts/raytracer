@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera.cpp
@@ -55,7 +55,7 @@ void raytracer::Camera::init(void)
     this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
-        this->_rays[i] = std::make_shared<raytracer::Ray>();
+        this->_rays[i] = new raytracer::Ray();
 }
 
 void raytracer::Camera::reset(void)
@@ -64,7 +64,7 @@ void raytracer::Camera::reset(void)
     raytracer::CFrame cframe;
 
     // For each rays set default light value
-    for (std::shared_ptr<raytracer::Ray>& ray: this->_rays)
+    for (raytracer::Ray* ray: this->_rays)
         ray->reset();
 
     // Set rays init position & orientation

@@ -88,6 +88,7 @@ set(SRC_LIGHTS
     src/raytracer/rays/ARay.cpp
     src/raytracer/rays/LightRay.cpp
     src/raytracer/lights/lib.cpp
+    src/raytracer/lights/ALight.cpp
     src/raytracer/objects/AObject.cpp
 )
 
@@ -112,6 +113,12 @@ set(SRC_OBJECTS
     src/raytracer/objects/lib.cpp
     src/raytracer/objects/AObject.cpp
 )
+
+set(SRC_OBJECT
+    src/raytracer/objects/object/lib.cpp
+    src/raytracer/objects/object/Object.cpp
+)
+add_library(object_object SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_OBJECT})
 
 set(SRC_POINT
     src/raytracer/objects/point/lib.cpp
@@ -173,6 +180,7 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/lights
 )
 set_target_properties(
+    object_object
     object_point
     object_plane
     object_sphere
@@ -201,6 +209,7 @@ foreach(target
     camera_camera
     light_ambient
     light_directional
+    object_object
     object_point
     object_plane
     object_sphere
@@ -225,6 +234,7 @@ foreach(target
     camera_camera
     light_ambient
     light_directional
+    object_object
     object_point
     object_plane
     object_sphere
@@ -245,7 +255,7 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Release>:-O1>
+    $<$<CONFIG:Release>:-O3 -march=native -ffast-math>
 )
 
 # =========================

@@ -4,7 +4,6 @@
 *.so
 a.out
 /raytracer
-/rendered
 
 ## Vim
 *.sw*
@@ -18,7 +17,10 @@ z
 ## CMake
 build/
 __pycache__
+/rendered
 /plugins
+/obj
+/scenes
 
 ## Doxygen
 Doxyfile
@@ -27,3 +29,4 @@ Doxyfile
 
 ## Other
 #.info
+perf.*

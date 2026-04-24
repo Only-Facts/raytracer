@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Ambient.cpp
@@ -55,7 +55,7 @@ void raytracer::Ambient::init(void)
     this->_rays.reserve(size);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
-        this->_rays[i] = std::make_shared<raytracer::LightRay>();
+        this->_rays[i] = new raytracer::LightRay();
 }
 
 static utils::vector::Vector3<double> randomSphereOrientation(void)
@@ -71,7 +71,7 @@ void raytracer::Ambient::reset(void)
     raytracer::CFrame cframe;
 
     // For each rays set default light value
-    for (std::shared_ptr<raytracer::LightRay>& ray: this->_rays) {
+    for (raytracer::LightRay* ray: this->_rays) {
         ray->reset();
         ray->setColor(this->_color);
         ray->setIntensity(this->_intensity);

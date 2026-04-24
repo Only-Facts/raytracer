@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 09/03/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AException.hpp
@@ -29,7 +29,7 @@ File Description:
 namespace utils::exception { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
-class AException: virtual public utils::exception::IException {
+class AException: public utils::exception::IException {
     private:
         /* Exception Data */
         std::vector<const char*> Message;

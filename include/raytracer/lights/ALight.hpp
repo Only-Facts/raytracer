@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ALight.hpp
@@ -31,13 +31,13 @@ namespace raytracer { // namespace start
 
 class ALight: public raytracer::ILight {
     protected:
-        std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
+        std::vector<raytracer::LightRay*> _rays;
         utils::vector::Vector3<std::uint8_t> _color = DEFAULT_COLOR;
         float _intensity = 1.0f;
 
     public:
         // ------------ Function ---------- //
-        std::vector<std::shared_ptr<raytracer::LightRay>> getRays(void) const {return this->_rays;};
+        std::vector<raytracer::LightRay*> getRays(void) const {return this->_rays;};
 
         // ------------ Operator ---------- //
         ALight& operator=(const ALight& object) = delete;
@@ -49,7 +49,7 @@ class ALight: public raytracer::ILight {
         ALight(ALight&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~ALight() = default;
+        ~ALight();
 };
 
 } // namespace

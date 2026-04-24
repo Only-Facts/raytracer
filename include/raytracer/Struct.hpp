@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -50,7 +50,7 @@ struct ObjectDescriptor {
 
     /* all */
     raytracer::CFrame cframe;
-    std::shared_ptr<raytracer::IMaterial> material;
+    raytracer::IMaterial* material;
     std::vector<raytracer::Face> faces;
 
     /* cone & cylinder & plane & sphere */

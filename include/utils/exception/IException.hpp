@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 10/03/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IException.hpp
@@ -26,7 +26,7 @@ namespace utils::exception { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class IException: virtual public std::exception {
+class IException: public std::exception {
     public:
         // --------- Pre-Function --------- //
         virtual utils::exception::Type getType() const noexcept = 0;

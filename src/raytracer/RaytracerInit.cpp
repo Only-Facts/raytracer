@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -283,7 +283,7 @@ void raytracer::Raytracer::init(void)
             if (type == CAMERA && selectedCamera && !this->_camera) {
                 try {
                     raytracer::ICamera* (*factory)() = lib->loadFunction<raytracer::ICamera* (*)()>("factory");
-                    this->_camera = std::shared_ptr<raytracer::ICamera>(factory());
+                    this->_camera = factory();
                     std::cout << utils::write::strong() << path << utils::write::reset() << ": camera selected" << std::endl;
                 } catch (const utils::exception::IException&) {
                     std::cout << utils::write::strong() << path << utils::write::reset() << ": the camera wasn't " << utils::write::color_rgb(255, 0, 0) << "created" << utils::write::reset() << std::endl;
@@ -316,7 +316,7 @@ void raytracer::Raytracer::init(void)
     if (this->_settings.resolution_set)
         this->_camera->setResolution(this->_settings.resolution);
     this->_camera->init();
-    for (std::shared_ptr<raytracer::ILight>& light: this->_lights)
+    for (raytracer::ILight* light: this->_lights)
         light->init();
 }
 
@@ -363,7 +363,7 @@ void raytracer::Raytracer::scene(void)
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The camera wasn't set in the scene");
 }
 
-std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const
+raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const
 {
     // Get the light name
     std::string name;
@@ -371,7 +371,7 @@ std::shared_ptr<raytracer::IMaterial> raytracer::Raytracer::parseMaterial(const 
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     // Create the material using factory & call it's parser
-    std::shared_ptr<raytracer::IMaterial> material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
+    raytracer::IMaterial* material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
     material->parse(*this, node);
     return material;
 }
@@ -384,7 +384,7 @@ void raytracer::Raytracer::parseLight(const libconfig::Setting& node)
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     // Create the light using factory & call it's parser
-    std::shared_ptr<raytracer::ILight> light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
+    raytracer::ILight* light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
     light->parse(*this, node);
     this->_lights.push_back(light);
 }
@@ -397,7 +397,17 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     // Create the object using factory & call it's parser
-    std::shared_ptr<raytracer::IObject> object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
+    raytracer::IObject* object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
     object->parse(*this, node);
     this->_objects.push_back(object);
+}
+
+raytracer::Raytracer::~Raytracer()
+{
+    if (this->_camera)
+        delete this->_camera;
+    for (raytracer::ILight* light: this->_lights)
+        delete light;
+    for (raytracer::IObject* object: this->_objects)
+        delete object;
 }

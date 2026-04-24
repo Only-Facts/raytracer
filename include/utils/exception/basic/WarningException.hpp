@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 03/03/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file WarningException.hpp
@@ -25,7 +25,7 @@ namespace utils::exception { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class WarningException: virtual public utils::exception::AException {
+class WarningException: public utils::exception::AException {
     public:
         // ------------ Operator ---------- //
         WarningException& operator=(const WarningException& object) = delete;

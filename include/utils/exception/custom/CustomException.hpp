@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/03/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file CustomException.hpp
@@ -25,7 +25,7 @@ namespace utils::exception { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class CustomException: virtual public utils::exception::AException {
+class CustomException: public utils::exception::AException {
     public:
         // ------------ Operator ---------- //
         CustomException& operator=(const CustomException& object) = delete;

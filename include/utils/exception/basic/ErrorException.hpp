@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/03/2026 by @author Tsukini
+##  @date 23/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ErrorException.hpp
@@ -25,7 +25,7 @@ namespace utils::exception { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class ErrorException: virtual public utils::exception::AException {
+class ErrorException: public utils::exception::AException {
     public:
         // ------------ Operator ---------- //
         ErrorException& operator=(const ErrorException& object) = delete;

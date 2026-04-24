@@ -30,4 +30,7 @@ void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libcon
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
+
+    // Load the shape vertex
+    this->loadObj(raytracer.ObjPath("point.obj"));
 }

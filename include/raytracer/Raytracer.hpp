@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -65,20 +65,20 @@ class Raytracer {
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
-        std::shared_ptr<raytracer::ICamera> _camera;
-        std::vector<std::shared_ptr<raytracer::ILight>> _lights;
-        std::vector<std::shared_ptr<raytracer::IObject>> _objects;
+        raytracer::ICamera* _camera = nullptr;
+        std::vector<raytracer::ILight*> _lights;
+        std::vector<raytracer::IObject*> _objects;
 
         // ------------ Function ---------- //
         template<typename T>
-        std::shared_ptr<T> factory(const std::string& name) const
+        T* factory(const std::string& name) const
         {
             auto it = this->_libs.find(name);
             if (it == this->_libs.end())
                 throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NoPlugins, std::string("Invalid type in the scene, can't find corresponding plugin: ") + name);
             std::shared_ptr<raytracer::DynamicLibrary> lib = it->second;
             T* (*fn)() = lib->loadFunction<T* (*)()>("factory");
-            return std::shared_ptr<T>(fn());
+            return fn();
         }
 
     public:
@@ -89,7 +89,7 @@ class Raytracer {
 
         /* parsing */
         void scene(void); // Load scene file
-        std::shared_ptr<raytracer::IMaterial> parseMaterial(const libconfig::Setting& node) const;
+        raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
 
@@ -126,6 +126,10 @@ class Raytracer {
             descriptor.cframe.orientation.x = rot[0];
             descriptor.cframe.orientation.y = rot[1];
             descriptor.cframe.orientation.z = rot[2];
+
+            // Normalize orientation (only if not null)
+            if (descriptor.cframe.orientation >= 1e-8 || descriptor.cframe.orientation <= -1e-8)
+                descriptor.cframe.orientation = descriptor.cframe.orientation.normalize();
         }
 
         // ------------ Operator ---------- //
@@ -138,7 +142,7 @@ class Raytracer {
         Raytracer(Raytracer&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Raytracer() = default;
+        ~Raytracer();
 };
 
 } // namespace end
