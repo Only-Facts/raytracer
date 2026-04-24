@@ -22,8 +22,8 @@ File Description:
 #include <fstream>
 #include <cstddef>
 #include <cstdint>
+#include <thread>
 #include <vector>
-#include <iostream>
 
 /*
 gui:
@@ -112,6 +112,126 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
     window.display();
 }
 
+static void processLightChunk(std::vector<raytracer::LightRay*>& rays,
+    size_t start, size_t end,
+    const std::vector<raytracer::IObject*>& objects,
+    raytracer::ICamera* camera)
+{
+    raytracer::IObject* nearestObject = nullptr;
+    float sdf = 0.0, actualSDF = 0.0;
+    bool first = true, edited = true;
+
+    while (edited) {
+        edited = false;
+        for (std::size_t i = start; i < end; ++i) {
+            raytracer::LightRay* ray = rays[i];
+            if (!ray->isAlive()) continue;
+            edited = true;
+
+            // Kill those with no direction
+            if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
+                ray->kill();
+                continue;
+            }
+
+            // 1 - Compute SDF
+            sdf = 0.0f;
+            first = true;
+            for (raytracer::IObject* object: objects) {
+                actualSDF = object->computeSDF(ray->getCFrame().position);
+                if (first || actualSDF < sdf) {
+                    first = false;
+                    sdf = actualSDF;
+                    nearestObject = object;
+                }
+            }
+            if (first) continue;
+
+            // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
+            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+
+            // 3 - Check SDF
+            if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
+                //std::cout << "Collide light" << std::endl;
+                nearestObject->reflectRay(ray);
+                float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
+                nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef});
+                ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
+                ray->setColor(
+                    nearestObject->getObjectDescriptor().material->getColor() *
+                    ray->getColor() *
+                    ray->getIntensity()
+                    / 255
+                );
+            }
+
+            // Kill conditions
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+                ray->kill();
+            } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
+                ray->kill();
+            }
+        }
+    }
+}
+
+static void processCameraChunk(std::vector<raytracer::Ray*>& rays,
+    size_t start, size_t end,
+    const std::vector<raytracer::IObject*>& objects,
+    raytracer::ICamera* camera)
+{
+    raytracer::IObject* nearestObject = nullptr;
+    float sdf = 0.0, actualSDF = 0.0;
+    bool first = true, edited = true;
+
+    while (edited) {
+        edited = false;
+        for (std::size_t i = start; i < end; ++i) {
+            raytracer::Ray* ray = rays[i];
+            if (!ray->isAlive()) continue;
+            edited = true;
+
+            // Kill those with no direction
+            if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
+                ray->kill();
+                continue;
+            }
+
+            // 1 - Compute SDF
+            sdf = 0.0f;
+            first = true;
+            for (raytracer::IObject* object: objects) {
+                actualSDF = object->computeSDF(ray->getCFrame().position);
+                if (first || actualSDF < sdf) {
+                    first = false;
+                    sdf = actualSDF;
+                    nearestObject = object;
+                }
+            }
+            if (first) continue;
+
+            // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
+            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+
+            // 3 - Check SDF
+            if (sdf <= SDF_COLLINDING_LIMIT) {
+                //std::cout << "Collide camera" << std::endl;
+                if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
+                    nearestObject->reflectRay(ray);
+                } else {
+                    ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));
+                    ray->kill();
+                }
+            }
+
+            // Kill conditions
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+                ray->kill();
+            }
+        }
+    }
+}
+
 /*
  1 - Reset rays (camera & lights)
  2 - Compute lights rays
@@ -137,9 +257,9 @@ void raytracer::Raytracer::display(sf::RenderWindow& window)
 */
 void raytracer::Raytracer::render(void)
 {
-    raytracer::IObject* nearestObject;
-    float sdf = 0.0f, actualSDF = 0.0f;
-    bool first = true;
+    std::vector<std::thread> threads;
+    std::size_t countThreads = 1, chunkSize = 1;
+    std::size_t start = 0, end = 0;
 
     // 1 - Reset rays (camera & lights)
     this->_camera->reset();
@@ -151,120 +271,48 @@ void raytracer::Raytracer::render(void)
     // 2 - Compute lights rays
     for (raytracer::ILight* light: this->_lights) {
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
-        while (lightRays.size() > 0) {
-            for (raytracer::LightRay* ray: lightRays) {
-                if (!ray->isAlive()) continue;
+        countThreads = std::thread::hardware_concurrency();
+        chunkSize = lightRays.size() / countThreads;
+        threads.clear();
+        for (std::size_t i = 0; i < countThreads; ++i) {
+            start = i * chunkSize;
+            end = (i == countThreads - 1) ? lightRays.size() : start + chunkSize;
 
-                // Kill those with no direction
-                if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
-                    ray->kill();
-                    continue;
-                }
-
-                // 1 - Compute SDF
-                sdf = 0.0f;
-                first = true;
-                for (raytracer::IObject* object: this->_objects) {
-                    actualSDF = object->computeSDF(ray->getCFrame().position);
-                    if (first || actualSDF < sdf) {
-                        first = false;
-                        sdf = actualSDF;
-                        nearestObject = object;
-                    }
-                }
-                if (first) continue;
-
-                // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-                ray->translate(ray->getCFrame().orientation.normalize() * sdf);
-
-                // 3 - Check SDF
-                if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
-                    //std::cout << "Collide light" << std::endl;
-                    nearestObject->reflectRay(ray);
-                    float localIntensityCoef = 1.0f - (ray->getCFrame().position - this->_camera->getCFrame().position).length() / RENDER_DISTANCE;
-                    nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef});
-                    ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
-                    ray->setColor(
-                        nearestObject->getObjectDescriptor().material->getColor() *
-                        ray->getColor() *
-                        ray->getIntensity()
-                        / 255
-                    );
-                }
-
-                // Kill conditions
-                if (std::isnan(sdf) || (ray->getCFrame().position - this->_camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
-                    ray->kill();
-                } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
-                    ray->kill();
-                }
-            }
-
-            // Remove killed rays
-            lightRays.erase(
-                std::remove_if(lightRays.begin(), lightRays.end(),
-                    [](raytracer::LightRay* ray) {
-                    return !ray->isAlive();
-                }),
-                lightRays.end()
+            // Start the thread
+            threads.emplace_back(processLightChunk,
+                std::ref(lightRays),
+                start, end,
+                std::cref(this->_objects),
+                this->_camera
             );
         }
+
+        // Wait for the threads
+        for (std::thread& t: threads)
+            t.join();
     }
 
     // 3 - Compute camera rays
     std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
-    while (cameraRays.size() > 0) {
-        for (raytracer::Ray* ray: cameraRays) {
-            if (!ray->isAlive()) continue;
+    countThreads = std::thread::hardware_concurrency();
+    chunkSize = cameraRays.size() / countThreads;
+    threads.clear();
+    for (std::size_t i = 0; i < countThreads; ++i) {
+        start = i * chunkSize;
+        end = (i == countThreads - 1) ? cameraRays.size() : start + chunkSize;
 
-            // Kill those with no direction
-            if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
-                ray->kill();
-                continue;
-            }
-
-            // 1 - Compute SDF
-            sdf = 0.0f;
-            first = true;
-            for (raytracer::IObject* object: this->_objects) {
-                actualSDF = object->computeSDF(ray->getCFrame().position);
-                if (first || actualSDF < sdf) {
-                    first = false;
-                    sdf = actualSDF;
-                    nearestObject = object;
-                }
-            }
-            if (first) continue;
-
-            // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
-
-            // 3 - Check SDF
-            if (sdf <= SDF_COLLINDING_LIMIT) {
-                //std::cout << "Collide camera" << std::endl;
-                if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
-                    nearestObject->reflectRay(ray);
-                } else {
-                    ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));
-                    ray->kill();
-                }
-            }
-
-            // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - this->_camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
-                ray->kill();
-            }
-        }
-
-        // Remove killed rays
-        cameraRays.erase(
-            std::remove_if(cameraRays.begin(), cameraRays.end(),
-                [](raytracer::Ray* ray) {
-                return !ray->isAlive();
-            }),
-            cameraRays.end()
+        // Start the thread
+        threads.emplace_back(processCameraChunk,
+            std::ref(cameraRays),
+            start, end,
+            std::cref(this->_objects),
+            this->_camera
         );
     }
+
+    // Wait for the threads
+    for (std::thread& t: threads)
+        t.join();
 }
 
 void raytracer::Raytracer::loadRender(void)

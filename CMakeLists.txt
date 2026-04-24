@@ -33,7 +33,16 @@ add_compile_options(
     -Wunused-parameter
     -Wshadow
     -Wuninitialized
+    -Wnan-infinity-disabled
 )
+
+# Sanitizer options
+#add_compile_options(
+#    -g -ggdb3
+#    -fno-omit-frame-pointer
+#    -fsanitize=address
+#)
+#add_link_options(-fsanitize=address)
 
 # =========================
 # Sources
@@ -255,7 +264,8 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Release>:-O3 -march=native -ffast-math>
+    $<$<CONFIG:Release>:-O3 -ffast-math -march=native -funroll-loops -pipe -DNDEBUG>
+    # -flto
 )
 
 # =========================

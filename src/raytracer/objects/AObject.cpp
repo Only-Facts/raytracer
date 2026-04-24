@@ -131,11 +131,11 @@ static float segmentSDF(const utils::vector::Vector3<double>& point, const raytr
 {
     utils::vector::Vector3<double> ab = b - a;
     double v = ab.dot(ab);
-    if (v == 0.0) return (point - a).length(); // Security
+    if (v == 0.0) return (point - a).lengthSquared(); // Security
     double t = (point - a).dot(ab) / v;
     t = std::clamp(t, 0.0, 1.0);
     utils::vector::Vector3<double> closest = a + t * ab;
-    return (point - closest).length();
+    return (point - closest).lengthSquared();
 }
 
 /*
@@ -186,8 +186,8 @@ static float triangleSDF(const utils::vector::Vector3<double>& point, const rayt
     }
 
     // Project the point on the triangle
-    double distPlane = ap.dot(n) / std::sqrt(nLen2);
-    utils::vector::Vector3<double> proj = point - n * (distPlane / std::sqrt(nLen2));
+    double distPlane = ap.dot(n);
+    utils::vector::Vector3<double> proj = point - n * (distPlane / nLen2);
 
     // Check if the point is inside
     utils::vector::Vector3<double> bp = proj - b;
@@ -200,7 +200,7 @@ static float triangleSDF(const utils::vector::Vector3<double>& point, const rayt
     if ((ab.cross(proj - a)).dot(n) >= 0
         && (bc.cross(bp)).dot(n) >= 0
         && (ca.cross(cp)).dot(n) >= 0)
-        return std::abs(distPlane);
+        return (distPlane * distPlane) / nLen2;
 
     // Edge case, on side
     return std::min({
@@ -220,7 +220,7 @@ float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point
 
         // Dispatch the computing
         switch (face.size()) {
-            case 1: dist = (point - face[0]).length();                      break;
+            case 1: dist = (point - face[0]).lengthSquared();               break;
             case 2: dist = segmentSDF(point, face[0], face[1]);             break;
             case 3: dist = triangleSDF(point, face[0], face[1], face[2]);   break;
             default:
@@ -230,7 +230,7 @@ float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point
         sdf = std::min(sdf, dist);
     }
 
-    return sdf;
+    return std::sqrt(sdf);
 }
 
 utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const

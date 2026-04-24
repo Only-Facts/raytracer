@@ -23,6 +23,7 @@ File Description:
     #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor
     #include "IObject.hpp"      // raytracer::IObject
     #include <vector>           // std::vector
+    #include <mutex>            // std::mutex, std::lock_guard
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -31,6 +32,7 @@ namespace raytracer { // namespace start
 class AObject: public raytracer::IObject {
     private:
         std::vector<std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float>> _lightRays;
+        std::mutex _lightRaysMutex;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -55,7 +57,7 @@ class AObject: public raytracer::IObject {
         void rotate(const utils::vector::Vector3<double>& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
-        void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) final {this->_lightRays.push_back(lightRay);};
+        void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) final {std::lock_guard<std::mutex> lock(this->_lightRaysMutex); this->_lightRays.push_back(lightRay);};
         void clearLightRays(void) final {this->_lightRays.clear();};
 
         /* getter & setter */
