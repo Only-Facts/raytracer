@@ -24,7 +24,7 @@ File Description:
 
 utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
 {
-    utils::vector::Vector3<std::uint8_t> pointColor = this->getObjectDescriptor().material->getColor();
+    utils::vector::Vector3<std::uint16_t> pointColor = this->getObjectDescriptor().material->getColor();
     bool found = false;
 
     // For each light rays

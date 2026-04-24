@@ -178,7 +178,6 @@ void raytracer::Raytracer::render(void)
                 ray->translate(ray->getCFrame().orientation.normalize() * sdf);
 
                 // 3 - Check SDF
-                //std::cout << "sdf (light " << i++ << "/" << light->getRays().size() << "): " << sdf << std::endl;
                 if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
                     //std::cout << "Collide light" << std::endl;
                     nearestObject->reflectRay(ray);
@@ -240,7 +239,6 @@ void raytracer::Raytracer::render(void)
             ray->translate(ray->getCFrame().orientation.normalize() * sdf);
 
             // 3 - Check SDF
-            //std::cout << "sdf (camera " << i++ << "/" << this->_camera->getRays().size() << "): " << sdf << std::endl;
             if (sdf <= SDF_COLLINDING_LIMIT) {
                 //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
