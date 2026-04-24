@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -10,13 +10,14 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Attribute
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/Point.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 
-void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+cold void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -28,9 +29,22 @@ void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libcon
     // Setup the cframe
     raytracer::Raytracer::setCFrame(descriptor, node);
 
+    // Get the camera
+    this->_camera = raytracer.getCamera();
+
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
+}
 
-    // Load the shape vertex
-    this->loadObj(raytracer.ObjPath("point.obj"));
+hot float raytracer::Point::computeSDF(const utils::vector::Vector3<double>& point) const
+{
+    return (point - this->getObjectDescriptor().cframe.position).length();
+}
+
+hot utils::vector::Vector3<double> raytracer::Point::computeHit(const utils::vector::Vector3<double>& point) const
+{
+    if (this->_camera)
+        return (this->_camera->getCFrame().position - point).normalize(); // Camera direction
+    else 
+        return {0.0, 0.0, 0.0}; // Nop
 }

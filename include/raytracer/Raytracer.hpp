@@ -104,6 +104,7 @@ class Raytracer {
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
+        raytracer::ICamera* getCamera(void) const {return this->_camera;};
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
