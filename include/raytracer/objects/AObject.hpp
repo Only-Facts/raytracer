@@ -33,6 +33,7 @@ class AObject: public raytracer::IObject {
     private:
         std::vector<std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float>> _lightRays;
         std::mutex _lightRaysMutex;
+        mutable const raytracer::Face* _sdfFace = nullptr;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;

@@ -164,6 +164,9 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                     ray->getIntensity()
                     / 255
                 );
+
+                // To counter collision with the same object on the next iteration
+                ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
             }
 
             // Kill conditions
@@ -219,6 +222,9 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                 //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray);
+
+                    // To counter collision with the same object on the next iteration
+                    ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
                 } else {
                     ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));
                     ray->kill();

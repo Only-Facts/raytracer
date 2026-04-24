@@ -40,7 +40,7 @@ cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const 
 
 hot float raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
 {
-    return (point - this->getObjectDescriptor().cframe.position).length() - this->_radius;
+    return (point - this->getObjectDescriptor().cframe.position).length() - (this->_radius / 2);
 }
 
 hot utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point) const

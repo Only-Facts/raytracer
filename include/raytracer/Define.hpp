@@ -32,6 +32,6 @@ File Description:
     #define RENDERED_PATH "./rendered/"
     #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
-    #define DEFAULT_COLOR {0, 0, 0}
+    #define DEFAULT_COLOR {0, 255, 255}
 
 #endif /* DEFINE_H */

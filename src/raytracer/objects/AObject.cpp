@@ -214,6 +214,7 @@ hot static float triangleSDF(const utils::vector::Vector3<double>& point, const 
 hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point) const
 {
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
+    this->_sdfFace = nullptr;
 
     // For each face
     for (const raytracer::Face& face: this->getObjectDescriptor().faces) {
@@ -228,13 +229,43 @@ hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& p
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
         }
 
-        sdf = std::min(sdf, dist);
+        if (dist < sdf) {
+            sdf = dist;
+            this->_sdfFace = &face;
+        }
     }
 
     return std::sqrt(sdf);
 }
 
+hot static utils::vector::Vector3<double> segmentHit(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
+{
+    utils::vector::Vector3<double> ab = b - a;
+    utils::vector::Vector3<double> ap = point - a;
+    utils::vector::Vector3<double> proj = a + ab * (ap.dot(ab) / ab.lengthSquared());
+    return (point - proj).normalize();
+}
+
+hot static utils::vector::Vector3<double> triangleHit(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+{
+    utils::vector::Vector3<double> n = (b - a).cross(c - a);
+    return n.normalize();
+}
+
 hot utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const
 {
-    return {0.0, 0.0, 0.0};
+    // Check if the sdf was already computed
+    if (!this->_sdfFace) unlikely {
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::InvalidAction, "Can't compute the perpendicular vector for the hit point before the sdf");
+    }
+
+    // Dispatch the computing
+    raytracer::Face face = *(this->_sdfFace);
+    switch (face.size()) {
+        case 1: return (point - face[0]).normalize();
+        case 2: return segmentHit(point, face[0], face[1]);
+        case 3: return triangleHit(point, face[0], face[1], face[2]);
+        default:
+            throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
+    }
 }
