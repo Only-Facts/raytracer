@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -19,9 +19,10 @@ File Description:
     /* type */
     #define _Exception
     #define _Vector
-    #include "utils/utils.hpp"          // utils::exception::*, utils::vector::Vector2
+    #define _Attribute
+    #include "utils/utils.hpp"          // utils::exception::*, utils::vector::Vector2, nodiscard
     #include "DynamicLibrary.hpp"       // raytracer::DynamicLibrary
-    #include "Struct.hpp"               // raytracer::ObjectDescriptor
+    #include "Struct.hpp"               // raytracer::ObjectDescriptor, raytracer::Color, raytracer::HugeColor
     #include "Define.hpp"               // values
     #include "special/Sky.hpp"          // raytracer::Sky
     #include "cameras/ICamera.hpp"      // raytracer::ICamera
@@ -92,6 +93,7 @@ class Raytracer {
 
         /* parsing */
         void scene(void); // Load scene file
+        void parseSceneFile(const std::string& path, std::string& content) const; // Parse the cfg file for custom tokens
         raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
@@ -113,28 +115,8 @@ class Raytracer {
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
 
         // -------- Static-Function ------- //
-        static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
-        {
-            // Check existantce
-            if (!node.exists("position"))
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The position field isn't defined for the CFrame");
-            else if (!node.exists("orientation"))
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The orientation field isn't defined for the CFrame");
-
-            // Set values
-            const libconfig::Setting& pos = node["position"];
-            descriptor.cframe.position.x = pos[0];
-            descriptor.cframe.position.y = pos[1];
-            descriptor.cframe.position.z = pos[2];
-            const libconfig::Setting& rot = node["orientation"];
-            descriptor.cframe.orientation.x = rot[0];
-            descriptor.cframe.orientation.y = rot[1];
-            descriptor.cframe.orientation.z = rot[2];
-
-            // Normalize orientation (only if not null)
-            if (descriptor.cframe.orientation >= 1e-8 || descriptor.cframe.orientation <= -1e-8)
-                descriptor.cframe.orientation = descriptor.cframe.orientation.normalize();
-        }
+        static inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0f)
+        {return color1 * color2 * intensity / 255;}
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

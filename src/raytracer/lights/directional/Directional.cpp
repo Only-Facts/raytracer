@@ -22,7 +22,7 @@ void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer,
     raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     double intensity = 1.0f;

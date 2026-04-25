@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Sky.hpp
@@ -29,11 +29,14 @@ namespace raytracer { // namespace start
 class Sky {
     private:
         raytracer::Color _color = DEFAULT_COLOR;
+        bool _enabled = false;
 
     public:
         // ------------ Function ---------- //
         void setColor(raytracer::Color color) {this->_color = color;};
         nodiscard raytracer::Color getColor() const {return this->_color;};
+        void enable(void) {this->_enabled = true;};
+        nodiscard bool isEnabled(void) const {return this->_enabled;};
 
         // ------------ Operator ---------- //
         Sky& operator=(const Sky& object) = delete;
