@@ -1,29 +1,29 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
-##  @file Ambient.hpp
+##  @file Viewer.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef AMBIENT_H
-    #define AMBIENT_H
+#ifndef CAMERA_H
+    #define CAMERA_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
 
     /* type */
-    #include "ALight.hpp"   // raytracer::ALight
+    #include "ACamera.hpp"  // raytracer::ACamera
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Ambient: public raytracer::ALight {
+class Viewer: public raytracer::ACamera {
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
@@ -31,17 +31,17 @@ class Ambient: public raytracer::ALight {
         void reset(void) final;
 
         // ------------ Operator ---------- //
-        Ambient& operator=(const Ambient& object) = delete;
-        Ambient& operator=(Ambient&& object) = delete;
+        Viewer& operator=(const Viewer& object) = delete;
+        Viewer& operator=(Viewer&& object) = delete;
 
         // ---------- Constructor --------- //
-        Ambient() = default;
-        Ambient(const Ambient& object) = delete;
-        Ambient(Ambient&& object) = delete;
+        Viewer() = default;
+        Viewer(const Viewer& object) = delete;
+        Viewer(Viewer&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Ambient() = default;
+        ~Viewer() = default;
 };
 
 } // namespace end
-#endif /* AMBIENT_H */
+#endif /* CAMERA_H */

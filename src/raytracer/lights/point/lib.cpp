@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file lib.cpp
@@ -10,19 +10,19 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#include "raytracer/cameras/Camera.hpp"
+#include "raytracer/lights/Point.hpp"
 #include <memory>
 
 extern "C" {
     // Return the name of the lib
     const char* name(void)
     {
-        return "Camera";
+        return "Point";
     }
 
     // Constructor of the lib
-    raytracer::Camera* factory(void)
+    raytracer::Point* factory(void)
     {
-        return new raytracer::Camera();
+        return new raytracer::Point();
     }
 }

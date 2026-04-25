@@ -15,7 +15,7 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
-#include "raytracer/cameras/Camera.hpp"
+#include "raytracer/cameras/Viewer.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <filesystem>
@@ -323,7 +323,7 @@ void raytracer::Raytracer::render(void)
 cold void raytracer::Raytracer::loadRender(void)
 {
     // Init default camera (to use default camera comportement)
-    this->_camera = new raytracer::Camera();
+    this->_camera = new raytracer::Viewer();
 
     // Try to open the ppm file
     std::ifstream file(this->_settings.ppm_path, std::ios::binary);

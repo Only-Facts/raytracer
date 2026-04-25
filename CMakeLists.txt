@@ -43,6 +43,9 @@ add_compile_options(
 #    -fsanitize=address
 #)
 #add_link_options(-fsanitize=address)
+add_compile_options(
+    -g -O0 -fno-omit-frame-pointer
+)
 
 # =========================
 # Sources
@@ -64,7 +67,7 @@ set(SRC
 
     # Camera (used for the viewer mode)
     src/raytracer/cameras/ACamera.cpp
-    src/raytracer/cameras/camera/Camera.cpp
+    src/raytracer/cameras/viewer/Viewer.cpp
 )
 add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} STATIC ${SRC})
@@ -84,11 +87,23 @@ set(SRC_CAMERAS
     src/raytracer/objects/AObject.cpp
 )
 
-set(SRC_CAMERA
-    src/raytracer/cameras/camera/lib.cpp
-    src/raytracer/cameras/camera/Camera.cpp
+set(SRC_VIEWER
+    src/raytracer/cameras/viewer/lib.cpp
+    src/raytracer/cameras/viewer/Viewer.cpp
 )
-add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
+add_library(camera_viewer SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_VIEWER})
+
+set(SRC_CAMERA2D
+    src/raytracer/cameras/camera2D/lib.cpp
+    src/raytracer/cameras/camera2D/Camera2D.cpp
+)
+add_library(camera_camera2D SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA2D})
+
+set(SRC_CAMERAFOV
+    src/raytracer/cameras/cameraFOV/lib.cpp
+    src/raytracer/cameras/cameraFOV/CameraFOV.cpp
+)
+add_library(camera_cameraFOV SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERAFOV})
 
 # =========================
 # Lights
@@ -101,11 +116,11 @@ set(SRC_LIGHTS
     src/raytracer/objects/AObject.cpp
 )
 
-set(SRC_AMBIENT
-    src/raytracer/lights/ambient/lib.cpp
-    src/raytracer/lights/ambient/Ambient.cpp
+set(SRC_POINT
+    src/raytracer/lights/point/lib.cpp
+    src/raytracer/lights/point/Point.cpp
 )
-add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
+add_library(light_point SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_POINT})
 
 set(SRC_DIRECTIONAL
     src/raytracer/lights/directional/lib.cpp
@@ -176,13 +191,15 @@ add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT})
 # Compilation parameters
 # =========================
 set_target_properties(
-    camera_camera
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/cameras
 )
 set_target_properties(
-    light_ambient
+    light_point
     light_directional
     PROPERTIES
         PREFIX ""
@@ -215,8 +232,10 @@ add_custom_target(generated_exception_header ALL
 )
 add_dependencies(${TARGET} generated_exception_header)
 foreach(target
-    camera_camera
-    light_ambient
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
+    light_point
     light_directional
     object_object
     object_point
@@ -240,8 +259,10 @@ target_include_directories(${TARGET} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${LIBCONFIG_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE sfml-graphics sfml-window sfml-system)
 foreach(target
-    camera_camera
-    light_ambient
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
+    light_point
     light_directional
     object_object
     object_point

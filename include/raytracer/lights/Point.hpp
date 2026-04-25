@@ -1,29 +1,29 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
-##  @file Camera.hpp
+##  @file Point.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef CAMERA_H
-    #define CAMERA_H
+#ifndef AMBIENT_H
+    #define AMBIENT_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
 
     /* type */
-    #include "ACamera.hpp"  // raytracer::ACamera
+    #include "ALight.hpp"   // raytracer::ALight
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Camera: public raytracer::ACamera {
+class Point: public raytracer::ALight {
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
@@ -31,17 +31,17 @@ class Camera: public raytracer::ACamera {
         void reset(void) final;
 
         // ------------ Operator ---------- //
-        Camera& operator=(const Camera& object) = delete;
-        Camera& operator=(Camera&& object) = delete;
+        Point& operator=(const Point& object) = delete;
+        Point& operator=(Point&& object) = delete;
 
         // ---------- Constructor --------- //
-        Camera() = default;
-        Camera(const Camera& object) = delete;
-        Camera(Camera&& object) = delete;
+        Point() = default;
+        Point(const Point& object) = delete;
+        Point(Point&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Camera() = default;
+        ~Point() = default;
 };
 
 } // namespace end
-#endif /* CAMERA_H */
+#endif /* AMBIENT_H */

@@ -3,21 +3,24 @@ Edition:
 ##  @date 25/04/2026 by @author Tsukini
 
 File Name:
-##  @file Directional.cpp
+##  @file Camera2D.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
+#define _Exception
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/lights/Directional.hpp"
-#include "raytracer/Raytracer.hpp"
+#include "raytracer/cameras/Camera2D.hpp"
 #include "raytracer/Struct.hpp"
+#include "raytracer/Raytracer.hpp"
+#include "raytracer/rays/Ray.hpp"
+#include <limits>
 #include <cmath>
 
-void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Camera2D::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -25,54 +28,43 @@ void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer,
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
-    double intensity = 1.0f;
-    if (node.lookupValue("intensity", intensity))
-        this->_intensity = intensity;
-
-    if (node.exists("color")) {
-        const libconfig::Setting& color = node["color"];
-        this->_color = {
-            (int)color[0],
-            (int)color[1],
-            (int)color[2]
-        };
-    }
-
-    double fieldOfLight = 70.0f;
-    if (node.lookupValue("fieldOfLight", fieldOfLight))
-        this->_fieldOfLight = fieldOfLight;
+    if (!node.exists("resolution"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
+    const libconfig::Setting& res = node["resolution"];
+    this->setResolution({(int)res[0], (int)res[1]});
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::Directional::init(void)
+void raytracer::Camera2D::init(void)
 {
-    std::size_t size = LIGHT_RAY;
+    std::size_t size = static_cast<std::size_t>(this->getResolution().x) * this->getResolution().y;
 
     // Clear old data
+    this->_screen.clear();
     this->_rays.clear();
 
     // Resize screen size
+    this->_screen.reserve(size);
     this->_rays.reserve(size);
+    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
-        this->_rays[i] = new raytracer::LightRay();
+        this->_rays[i] = new raytracer::Ray();
 }
 
-void raytracer::Directional::reset(void)
+void raytracer::Camera2D::reset(void)
 {
-    utils::vector::Vector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
+    utils::vector::Vector2<int> resolution;
     raytracer::CFrame cframe;
 
     // For each rays set default light value
-    for (raytracer::LightRay* ray: this->_rays) {
+    for (raytracer::Ray* ray: this->_rays)
         ray->reset();
-        ray->setColor(this->_color);
-        ray->setIntensity(this->_intensity);
-    }
 
     // Set rays init position & orientation
+    resolution = this->getResolution();
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
             // Orientation

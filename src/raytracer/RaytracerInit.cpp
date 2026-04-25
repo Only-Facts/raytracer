@@ -307,7 +307,7 @@ void raytracer::Raytracer::init(void)
             std::cout << utils::write::strong() << path << utils::write::reset() << ": plugin not " << utils::write::color_rgb(255, 0, 0) << "loaded" << utils::write::reset() << std::endl;
         }
     }
-
+    
     // Check camera loading
     if (!this->_camera) unlikely {
         throw utils::exception::ErrorException(utils::exception::Code::NoLoadedCamera);

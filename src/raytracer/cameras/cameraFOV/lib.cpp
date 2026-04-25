@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 20/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file lib.cpp
@@ -10,19 +10,19 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#include "raytracer/lights/Ambient.hpp"
+#include "raytracer/cameras/CameraFOV.hpp"
 #include <memory>
 
 extern "C" {
     // Return the name of the lib
     const char* name(void)
     {
-        return "Ambient";
+        return "CameraFOV";
     }
 
     // Constructor of the lib
-    raytracer::Ambient* factory(void)
+    raytracer::CameraFOV* factory(void)
     {
-        return new raytracer::Ambient();
+        return new raytracer::CameraFOV();
     }
 }

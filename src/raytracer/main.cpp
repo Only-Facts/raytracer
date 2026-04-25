@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file main.cpp
@@ -71,11 +71,8 @@ static cold void printHelp()
     std::cout << utils::write::reset() << std::flush;
 }
 
-static cold void run(int argc, char *argv[])
+static cold void run(raytracer::Raytracer& raytracer, int argc, char *argv[])
 {
-    // Init the raytracer
-    raytracer::Raytracer raytracer;
-
     // Init the settings
     raytracer.load(argc, argv);
     if (!raytracer.isViewer()) raytracer.init();
@@ -91,6 +88,9 @@ static cold void run(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+    // Init the raytracer (in the main to keep the longer the plugins charged)
+    raytracer::Raytracer raytracer;
+
     // Basic flag help detection
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        run(argc, argv);
+        run(raytracer, argc, argv);
     } catch (const utils::exception::IException& e) { // For our own custom error
         if (e.isNone()) return OK; // Intercept exception of type None such as exit
         std::cerr << e.formated() << std::endl;

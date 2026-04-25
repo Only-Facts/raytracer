@@ -1,9 +1,9 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
-##  @file Camera.cpp
+##  @file CameraFOV.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -13,14 +13,14 @@ File Description:
 #define _Exception
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/cameras/Camera.hpp"
+#include "raytracer/cameras/CameraFOV.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
 #include <cmath>
 
-void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::CameraFOV::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -41,7 +41,7 @@ void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, cons
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::Camera::init(void)
+void raytracer::CameraFOV::init(void)
 {
     std::size_t size = static_cast<std::size_t>(this->getResolution().x) * this->getResolution().y;
 
@@ -58,7 +58,7 @@ void raytracer::Camera::init(void)
         this->_rays[i] = new raytracer::Ray();
 }
 
-void raytracer::Camera::reset(void)
+void raytracer::CameraFOV::reset(void)
 {
     utils::vector::Vector2<int> resolution;
     raytracer::CFrame cframe;
@@ -69,7 +69,6 @@ void raytracer::Camera::reset(void)
 
     // Set rays init position & orientation
     resolution = this->getResolution();
-    std::cout << "camera: " << resolution << std::endl;
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
             // Orientation

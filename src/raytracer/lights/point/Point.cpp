@@ -1,9 +1,9 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
-##  @file Ambient.cpp
+##  @file Point.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -12,14 +12,14 @@ File Description:
 
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/lights/Ambient.hpp"
+#include "raytracer/lights/Point.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
 
-void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Point::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -44,7 +44,7 @@ void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, con
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::Ambient::init(void)
+void raytracer::Point::init(void)
 {
     std::size_t size = LIGHT_RAY;
 
@@ -66,7 +66,7 @@ static utils::vector::Vector3<double> randomSphereOrientation(void)
     return {r * std::cos(t), r * std::sin(t), z};
 }
 
-void raytracer::Ambient::reset(void)
+void raytracer::Point::reset(void)
 {
     raytracer::CFrame cframe;
 
