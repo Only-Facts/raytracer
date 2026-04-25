@@ -15,6 +15,7 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/objects/AObject.hpp"
 #include "raytracer/rays/IRay.hpp"
+#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Define.hpp"
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -36,7 +37,7 @@ hot raytracer::Color raytracer::AObject::getPointColor(const utils::vector::Vect
         found = true;
 
         // Fuse the colors
-        pointColor = pointColor * color * intensity / 255;
+        pointColor = raytracer::Raytracer::mergeColor(pointColor, color, intensity);
     }
 
     // No light ray on this hit
