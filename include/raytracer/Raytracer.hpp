@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -92,6 +92,7 @@ class Raytracer {
 
         /* parsing */
         void scene(void); // Load scene file
+        void parseSceneFile(std::string& content) const; // Parse the cfg file for custom tokens
         raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);

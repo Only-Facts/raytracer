@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -19,6 +19,7 @@ File Description:
 #include <filesystem>
 #include <exception>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <string>
@@ -322,13 +323,25 @@ void raytracer::Raytracer::init(void)
 
 void raytracer::Raytracer::scene(void)
 {
+    std::stringstream buffer;
+    std::string content;
     libconfig::Config cfg;
+
+    // Open the file
+    std::ifstream file(this->_settings.cfg_path);
+    if (!file)
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "File IO error");
+
+    // Get the config file content
+    buffer << file.rdbuf();
+    content = buffer.str();
+
+    // Pre parse the config file for custom instruction
+    this->parseSceneFile(content);    
 
     // Try to load the config file
     try {
         cfg.readFile(this->_settings.cfg_path.c_str());
-    } catch (const libconfig::FileIOException&) {
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "File IO error");
     } catch (const libconfig::ParseException& e) {
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, std::string("Parse error at ") + e.getFile() + ":" + std::to_string(e.getLine()) + " - " + e.getError());
     }
@@ -346,7 +359,21 @@ void raytracer::Raytracer::scene(void)
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
         // Dispatch the node constructor
-        if (type == "camera") {
+        if (type == "sky") {
+            if (this->_sky.isEnabled())
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple sky on the scene");
+            this->_sky.enable();
+
+            // Set the sky color, by default: DEFAULT_COLOR
+            if (node.exists("color")) {
+                const libconfig::Setting& color = node["color"];
+                this->_sky.setColor({
+                    (int)color[0],
+                    (int)color[1],
+                    (int)color[2]
+                });
+            }
+        } else if (type == "camera") {
             if (camera)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
             this->_camera->parse(*this, node);
@@ -361,6 +388,11 @@ void raytracer::Raytracer::scene(void)
     }
     if (!camera)
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The camera wasn't set in the scene");
+}
+
+void raytracer::Raytracer::parseSceneFile(std::string& content) const
+{
+
 }
 
 raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const

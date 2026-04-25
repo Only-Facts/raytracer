@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -23,7 +23,7 @@ File Description:
 #include <exception>
 #include <iostream>
 
-hot utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
+hot raytracer::Color raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
 {
     utils::vector::Vector3<std::uint16_t> pointColor = this->getObjectDescriptor().material->getColor();
     bool found = false;
@@ -246,7 +246,7 @@ hot static utils::vector::Vector3<double> segmentHit(const utils::vector::Vector
     return (point - proj).normalize();
 }
 
-hot static utils::vector::Vector3<double> triangleHit(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+hot static utils::vector::Vector3<double> triangleHit(const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
     utils::vector::Vector3<double> n = (b - a).cross(c - a);
     return n.normalize();
@@ -264,7 +264,7 @@ hot utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::v
     switch (face.size()) {
         case 1: return (point - face[0]).normalize();
         case 2: return segmentHit(point, face[0], face[1]);
-        case 3: return triangleHit(point, face[0], face[1], face[2]);
+        case 3: return triangleHit(face[0], face[1], face[2]);
         default:
             throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
     }

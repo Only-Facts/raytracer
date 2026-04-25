@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -100,7 +100,7 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
-            const utils::vector::Vector3<std::uint8_t>& color = pixels[y * resolution.x + x];
+            const raytracer::Color& color = pixels[y * resolution.x + x];
             sf::Vertex point(
                 sf::Vector2f(x, y),
                 sf::Color(color.x, color.y, color.z)
