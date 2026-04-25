@@ -27,7 +27,7 @@ cold void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const l
     descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Get the camera
     this->_camera = raytracer.getCamera();

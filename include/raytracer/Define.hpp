@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -32,6 +32,6 @@ File Description:
     #define RENDERED_PATH "./rendered/"
     #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
-    #define DEFAULT_COLOR {0, 255, 255}
+    #define DEFAULT_COLOR {0, 0, 0}
 
 #endif /* DEFINE_H */

@@ -27,7 +27,7 @@ cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const 
     descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
     
     // Other settings
     if (!node.exists("radius"))

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -100,7 +100,7 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
-            const utils::vector::Vector3<std::uint8_t>& color = pixels[y * resolution.x + x];
+            const raytracer::Color& color = pixels[y * resolution.x + x];
             sf::Vertex point(
                 sf::Vector2f(x, y),
                 sf::Color(color.x, color.y, color.z)
@@ -158,12 +158,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
                 nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef});
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
-                ray->setColor(
-                    nearestObject->getObjectDescriptor().material->getColor() *
-                    ray->getColor() *
-                    ray->getIntensity()
-                    / 255
-                );
+                ray->setColor(raytracer::Raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // To counter collision with the same object on the next iteration
                 ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
@@ -182,7 +177,8 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
-    raytracer::ICamera* camera)
+    raytracer::ICamera* camera,
+    const raytracer::Sky& sky)
 {
     raytracer::IObject* nearestObject = nullptr;
     float sdf = 0.0, actualSDF = 0.0;
@@ -233,6 +229,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 
             // Kill conditions
             if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+                ray->setColor(sky.getColor());
                 ray->kill();
             }
         }
@@ -313,7 +310,8 @@ void raytracer::Raytracer::render(void)
             std::ref(cameraRays),
             start, end,
             std::cref(this->_objects),
-            this->_camera
+            this->_camera,
+            std::cref(this->_sky)
         );
     }
 

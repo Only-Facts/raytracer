@@ -264,7 +264,7 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Release>:-O3 -ffast-math -march=native -funroll-loops -pipe -DNDEBUG>
+    $<$<CONFIG:Optimized>:-O3 -ffast-math -march=native -funroll-loops -pipe -DNDEBUG>
     # -flto
 )
 
