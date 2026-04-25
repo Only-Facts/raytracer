@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IMaterial.hpp
@@ -19,6 +19,7 @@ File Description:
     /* type */
     #define _Vector
     #include "utils/utils.hpp"  // utils::vector::Vector3
+    #include "../Struct.hpp"    // raytracer::Color
     #include <libconfig.h++>    // libconfig::Setting
 
 namespace raytracer { // namespace start
@@ -31,7 +32,7 @@ class IMaterial {
     public:
         // ---------- Pre-Function -------- //
         virtual void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) = 0;
-        virtual utils::vector::Vector3<uint8_t> getColor(void) const = 0;
+        virtual raytracer::Color getColor(void) const = 0;
         virtual float getTransparency(void) const = 0;
         virtual float getLightReflectionCoef(void) const = 0;
         virtual bool isMirror(void) const = 0;

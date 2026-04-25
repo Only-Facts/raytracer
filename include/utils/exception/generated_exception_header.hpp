@@ -33,6 +33,7 @@ enum class Code: std::size_t {
     NoLoadedCamera,
     Parser,
     ppmFile,
+    InvalidAction,
     VectorInvalidIndex,
     ExceptionCodeRestriction,
     Exit,
@@ -68,6 +69,7 @@ constexpr inline const char *Message[] = {
     /* NoLoadedCamera */ "Wasn't able to load any camera",
     /* Parser */ "Error during the parsing",
     /* ppmFile */ "Error during the ppm file writing/reading",
+    /* InvalidAction */ "Can't execute this action",
     /* VectorInvalidIndex */ "Invalid index on a vector",
     /* ExceptionCodeRestriction */ "Error during the setup of an exception",
     /* Exit */ "Exit",
@@ -102,6 +104,7 @@ constexpr inline const char *Info[] = {
     /* NoLoadedCamera */ nullptr,
     /* Parser */ nullptr,
     /* ppmFile */ nullptr,
+    /* InvalidAction */ nullptr,
     /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
     /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
     /* Exit */ "Exit",
@@ -141,6 +144,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
     /* Parser */ 0b1110, // allow: Fatal, Error, Warning
     /* ppmFile */ 0b0110, // allow: Fatal, Error
+    /* InvalidAction */ 0b1110, // allow: Fatal, Error, Warning
     /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
     /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
     /* Exit */ 0b0001, // allow: None

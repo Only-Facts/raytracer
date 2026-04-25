@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 24/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AMaterial.hpp
@@ -31,14 +31,14 @@ namespace raytracer { // namespace start
 
 class AMaterial: public raytracer::IMaterial {
     protected:
-        utils::vector::Vector3<uint8_t> _color = DEFAULT_COLOR; // Material color
+        raytracer::Color _color = DEFAULT_COLOR; // Material color
         float _transparency = 0.0f; // Material transparency
         float _reflection = 0.0f; // Material light reflection
         bool _mirror = false; // Reflect the camera rays
 
     public:
         // ------------ Function ---------- //
-        nodiscard utils::vector::Vector3<std::uint8_t> getColor(void) const final {return this->_color;};
+        nodiscard raytracer::Color getColor(void) const final {return this->_color;};
         nodiscard float getTransparency(void) const final {return this->_transparency;};
         nodiscard float getLightReflectionCoef(void) const final {return this->_reflection;};
         nodiscard bool isMirror(void) const final {return this->_mirror;};

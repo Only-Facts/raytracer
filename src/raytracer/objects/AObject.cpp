@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -15,6 +15,7 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/objects/AObject.hpp"
 #include "raytracer/rays/IRay.hpp"
+#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Define.hpp"
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -23,7 +24,7 @@ File Description:
 #include <exception>
 #include <iostream>
 
-hot utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
+hot raytracer::Color raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
 {
     utils::vector::Vector3<std::uint16_t> pointColor = this->getObjectDescriptor().material->getColor();
     bool found = false;
@@ -36,7 +37,7 @@ hot utils::vector::Vector3<std::uint8_t> raytracer::AObject::getPointColor(const
         found = true;
 
         // Fuse the colors
-        pointColor = pointColor * color * intensity / 255;
+        pointColor = raytracer::Raytracer::mergeColor(pointColor, color, intensity);
     }
 
     // No light ray on this hit
@@ -214,6 +215,7 @@ hot static float triangleSDF(const utils::vector::Vector3<double>& point, const 
 hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point) const
 {
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
+    this->_sdfFace = nullptr;
 
     // For each face
     for (const raytracer::Face& face: this->getObjectDescriptor().faces) {
@@ -228,13 +230,43 @@ hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& p
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
         }
 
-        sdf = std::min(sdf, dist);
+        if (dist < sdf) {
+            sdf = dist;
+            this->_sdfFace = &face;
+        }
     }
 
     return std::sqrt(sdf);
 }
 
+hot static utils::vector::Vector3<double> segmentHit(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
+{
+    utils::vector::Vector3<double> ab = b - a;
+    utils::vector::Vector3<double> ap = point - a;
+    utils::vector::Vector3<double> proj = a + ab * (ap.dot(ab) / ab.lengthSquared());
+    return (point - proj).normalize();
+}
+
+hot static utils::vector::Vector3<double> triangleHit(const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+{
+    utils::vector::Vector3<double> n = (b - a).cross(c - a);
+    return n.normalize();
+}
+
 hot utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const
 {
-    return {0.0, 0.0, 0.0};
+    // Check if the sdf was already computed
+    if (!this->_sdfFace) unlikely {
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::InvalidAction, "Can't compute the perpendicular vector for the hit point before the sdf");
+    }
+
+    // Dispatch the computing
+    raytracer::Face face = *(this->_sdfFace);
+    switch (face.size()) {
+        case 1: return (point - face[0]).normalize();
+        case 2: return segmentHit(point, face[0], face[1]);
+        case 3: return triangleHit(face[0], face[1], face[2]);
+        default:
+            throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
+    }
 }

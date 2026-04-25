@@ -24,7 +24,7 @@ void raytracer::Ambient::parse(unused const raytracer::Raytracer& raytracer, con
     raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     double intensity = 1.0f;

@@ -25,7 +25,7 @@ void raytracer::Camera::parse(unused const raytracer::Raytracer& raytracer, cons
     raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     if (!node.exists("resolution"))

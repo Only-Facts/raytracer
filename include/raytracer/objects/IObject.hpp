@@ -18,12 +18,13 @@ File Description:
 
     /* type */
     #define _Vector
-    #include "utils/utils.hpp"          // utils::vector::Vector3
-    #include "../Struct.hpp"            // raytracer::CFrame, raytracer::ObjectDescriptor
-    #include <libconfig.h++>            // libconfig::Setting
-    #include <cstdint>                  // std::uint8_t
-    #include <memory>                   // std::shared_ptr
-    #include <tuple>                    // std::tuple
+    #include "utils/utils.hpp"              // utils::vector::Vector3
+    #include "../materials/IMaterial.hpp"   // raytracer::IMaterial
+    #include "../Struct.hpp"                // raytracer::CFrame, raytracer::ObjectDescriptor, raytracer::Color
+    #include <libconfig.h++>                // libconfig::Setting
+    #include <cstdint>                      // std::uint8_t
+    #include <memory>                       // std::shared_ptr
+    #include <tuple>                        // std::tuple
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -50,7 +51,7 @@ class IObject {
         virtual void rotate(const utils::vector::Vector3<double>& v) = 0;
 
         /* color handling */
-        virtual utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const = 0;
+        virtual raytracer::Color getPointColor(const utils::vector::Vector3<double>& point) const = 0;
         virtual void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) = 0;
         virtual void clearLightRays(void) = 0;
 

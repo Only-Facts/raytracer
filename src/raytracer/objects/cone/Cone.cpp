@@ -26,7 +26,7 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     double scale = 1.0;

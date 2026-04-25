@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -20,7 +20,7 @@ File Description:
     #define _Vector
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
-    #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor
+    #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor, raytracer::Color
     #include "IObject.hpp"      // raytracer::IObject
     #include <vector>           // std::vector
     #include <mutex>            // std::mutex, std::lock_guard
@@ -33,6 +33,7 @@ class AObject: public raytracer::IObject {
     private:
         std::vector<std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float>> _lightRays;
         std::mutex _lightRaysMutex;
+        mutable const raytracer::Face* _sdfFace = nullptr;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -49,7 +50,7 @@ class AObject: public raytracer::IObject {
         utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const override;
 
         /* color handling */
-        utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const final;
+        raytracer::Color getPointColor(const utils::vector::Vector3<double>& point) const final;
 
         // ------------ Function ---------- //
         /* movement */

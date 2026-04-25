@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 25/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -16,23 +16,27 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include <libconfig.h++>
+#include <unordered_set>
 #include <filesystem>
 #include <exception>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <memory>
 #include <vector>
 #include <string>
+#include <regex>
 
 static void isDirectory(const std::string& path)
 {
     if (!std::filesystem::is_directory(path))
-        throw utils::exception::ErrorException(utils::exception::Code::InvalidFile);
+        throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::InvalidDirectory, path);
 }
 
 static void isFile(const std::string& path, const std::string& extensionWanted = "")
 {
     if (!std::filesystem::is_regular_file(path))
-        throw utils::exception::ErrorException(utils::exception::Code::InvalidFile);
+        throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::InvalidFile, path);
 
     // Check extension
     if (extensionWanted.empty()) return;
@@ -320,17 +324,38 @@ void raytracer::Raytracer::init(void)
         light->init();
 }
 
+static std::string getFileContent(const std::filesystem::path& path)
+{
+    std::ifstream file(path);
+    std::stringstream buffer;
+
+    // Check the file opening
+    if (!file)
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "File IO error");
+
+    // Red the file content
+    buffer << file.rdbuf();
+
+    return buffer.str();
+}
+
 void raytracer::Raytracer::scene(void)
 {
+    std::stringstream buffer;
+    std::string content;
     libconfig::Config cfg;
+
+    // Get the config file content
+    content = getFileContent(this->_settings.cfg_path);
+
+    // Pre parse the config file for custom instruction
+    this->parseSceneFile(this->_settings.cfg_path, content);
 
     // Try to load the config file
     try {
-        cfg.readFile(this->_settings.cfg_path.c_str());
-    } catch (const libconfig::FileIOException&) {
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "File IO error");
+        cfg.readString(content);
     } catch (const libconfig::ParseException& e) {
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, std::string("Parse error at ") + e.getFile() + ":" + std::to_string(e.getLine()) + " - " + e.getError());
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, std::string("Parse error at ") + this->_settings.cfg_path + ":" + std::to_string(e.getLine()) + " - " + e.getError());
     }
 
     // For each node in the config
@@ -346,7 +371,21 @@ void raytracer::Raytracer::scene(void)
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
         // Dispatch the node constructor
-        if (type == "camera") {
+        if (type == "sky") {
+            if (this->_sky.isEnabled())
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple sky on the scene");
+            this->_sky.enable();
+
+            // Set the sky color, by default: DEFAULT_COLOR
+            if (node.exists("color")) {
+                const libconfig::Setting& color = node["color"];
+                this->_sky.setColor({
+                    (int)color[0],
+                    (int)color[1],
+                    (int)color[2]
+                });
+            }
+        } else if (type == "camera") {
             if (camera)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
             this->_camera->parse(*this, node);
@@ -361,6 +400,52 @@ void raytracer::Raytracer::scene(void)
     }
     if (!camera)
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The camera wasn't set in the scene");
+}
+
+void raytracer::Raytracer::parseSceneFile(const std::string& path, std::string& content) const
+{
+    static std::unordered_set<std::string> visited; // Used for infinite include loop detection
+    std::filesystem::path basePath = std::filesystem::absolute(path).parent_path();
+
+    // Regex that match the different possible include
+    std::regex pattern(R"(\$(import|include|paste)\s*\{([^}]*)\})");
+    std::smatch match;
+
+    // For each include match
+    while (std::regex_search(content, match, pattern)) {
+        // Get the match content
+        std::string fullMatch = match[0];
+        std::string filesList = match[2];
+
+        // Setup the var used for the replacement
+        std::stringstream ss(filesList);
+        std::string replacement;
+        std::string file;
+
+        // For each file given to the include
+        while (std::getline(ss, file, ',')) {
+            // Clean the file name, apply trim & remove the '"'
+            file.erase(remove_if(file.begin(), file.end(), ::isspace), file.end());
+            if (file.front() == '"') file.erase(0, 1);
+            if (file.back() == '"') file.pop_back();
+
+            // Set the path to the file to include
+            std::filesystem::path fullPath = basePath / file;
+            fullPath = std::filesystem::absolute(fullPath);
+
+            // Counter infinite include loop
+            if (visited.contains(fullPath.string())) continue;
+            visited.insert(fullPath.string());
+
+            // Get the content
+            std::string subContent = getFileContent(fullPath);
+            this->parseSceneFile(fullPath.string(), subContent); // Check for include of the sub file(s)
+            replacement += "\n" + subContent + "\n"; // Add \n to properly separate the different content
+        }
+
+        // Replace the include with the file(s) content
+        content.replace(match.position(0), match.length(0), replacement);
+    }
 }
 
 raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const
