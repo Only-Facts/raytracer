@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IVector.hpp
@@ -24,15 +24,14 @@ File Description:
     /* INCLUDE */
 
     /* type */
-    #include "../warning/Observer.hpp"  // utils::warning::Observer
-    #include <cstddef>                  // std::size_t
+    #include <cstddef>  // std::size_t
 
 namespace utils::vector { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
 template<typename T>
-class IVector: private utils::warning::Observer {
+class IVector {
     public:
         // ---------- Pre-Function -------- //
         virtual T get(std::size_t index) const = 0;

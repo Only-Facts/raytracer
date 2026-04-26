@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -269,13 +269,13 @@ void raytracer::Raytracer::init(void)
         throw utils::exception::ErrorException(utils::exception::Code::NoPlugins);
     }
     std::cout << utils::write::strong() << plugins.size() << utils::write::reset() << ": plugins where found" << std::endl;
-    
+
     // Load each
     for (const std::filesystem::path& path: plugins) {
         // Try to load the lib
         lib = std::make_shared<raytracer::DynamicLibrary>(path);
 
-        selectedCamera |= (!this->_settings.camera_set || (this->_settings.camera_set && path == this->_settings.camera_path));
+        selectedCamera |= (!this->_settings.camera_set || (this->_settings.camera_set && std::filesystem::equivalent(path, this->_settings.camera_path)));
 
         // Continue only if the lib was succefully loaded
         if (lib->isloaded()) likely {

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Viewer.cpp
@@ -24,7 +24,19 @@ void raytracer::Viewer::parse(unused const raytracer::Raytracer& raytracer, unus
 
 void raytracer::Viewer::init(void)
 {
-    throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Viewer does not support: init");
+    std::size_t size = static_cast<std::size_t>(this->getResolution().x) * this->getResolution().y;
+
+    // Clear old data
+    this->_screen.clear();
+    this->_rays.clear();
+
+    // Resize screen size
+    this->_screen.reserve(size);
+    this->_rays.reserve(size);
+    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_rays.resize(size, nullptr);
+    for (std::size_t i = 0; i < size; ++i)
+        this->_rays[i] = new raytracer::Ray();
 }
 
 void raytracer::Viewer::reset(void)

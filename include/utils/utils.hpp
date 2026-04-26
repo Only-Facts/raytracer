@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file utils.hpp
@@ -18,8 +18,9 @@ File Description:
 #endif
 
 // Disabling of the auto warning for shared other
-#ifdef NO_SHARED_OBJECT_WARNING
-    #warning "Automatic shared other warnings from 'utils/utils.hpp' are disable"
+#if defined(NO_SHARED_OBJECT_WARNING) && !defined(_WARNING_NO_SHARED_OBJECT_WARNING)
+    #define _WARNING_NO_SHARED_OBJECT_WARNING
+    #warning "Automatic shared object warnings from 'utils/utils.hpp' are disable"
 #endif
 
 /* Activate all include */
