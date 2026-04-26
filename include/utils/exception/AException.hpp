@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AException.hpp
@@ -66,8 +66,8 @@ class AException: public utils::exception::IException {
         nodiscard const std::source_location& loc() const noexcept final {return this->_loc;};
     
         // ------------ Operator ---------- //
-        AException& operator=(const AException& object) = delete;
-        AException& operator=(AException&& object) = delete;
+        AException& operator=(const AException& other) = delete;
+        AException& operator=(AException&& other) = delete;
 
         // ---------- Constructor --------- //
         cold AException(std::source_location loc = std::source_location::current(), utils::exception::Type type = utils::exception::Type::None, utils::exception::Code code = utils::exception::Code::Undefined, std::string info = "[None]")
@@ -82,8 +82,8 @@ class AException: public utils::exception::IException {
             this->Restriction.assign(utils::exception::Restriction, utils::exception::Restriction + size);
             this->subinit();
         }
-        AException(const AException& object) = delete;
-        AException(AException&& object) = delete;
+        AException(const AException& other) = delete;
+        AException(AException&& other) = delete;
 
         // ----------- Destructor --------- //
         ~AException() = default;

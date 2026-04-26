@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -458,6 +458,7 @@ raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setti
     // Create the material using factory & call it's parser
     raytracer::IMaterial* material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
     material->parse(*this, node);
+    this->_materials.push_back(material);
     return material;
 }
 
@@ -495,4 +496,6 @@ raytracer::Raytracer::~Raytracer()
         delete light;
     for (raytracer::IObject* object: this->_objects)
         delete object;
+    for (raytracer::IMaterial* material: this->_materials)
+        delete material;
 }

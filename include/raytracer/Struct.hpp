@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -23,7 +23,6 @@ File Description:
     #include <libconfig.h++>    // libconfig::Setting
     #include <cstddef>          // std::size_t
     #include <cstdint>          // std::uint8_t
-    #include <memory>           // std::shared_ptr
     #include <vector>           // std::vector
 
 namespace raytracer { // namespace start

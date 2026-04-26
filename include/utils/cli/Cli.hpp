@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 12/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cli.hpp
@@ -24,16 +24,17 @@ File Description:
     /* INCLUDE */
 
     /* type */
-    #include "Flags.hpp"        // utils::cli::Flag, flag preset macro
-    #include "Middlewares.hpp"  // utils::cli::Middlewares
-    #include <termios.h>        // termios
-    #include <unordered_map>    // std::unordered_map
-    #include <functional>       // std::function
-    #include <cstdint>          // std::uint8_t, std::uint32_t
-    #include <vector>           // std::vector
-    #include <string>           // std::string
-    #include <tuple>            // std::tuple
-    #include <queue>            // std::queue
+    #include "../warning/Observer.hpp"  // utils::warning::Observer
+    #include "Flags.hpp"                // utils::cli::Flag, flag preset macro
+    #include "Middlewares.hpp"          // utils::cli::Middlewares
+    #include <termios.h>                // termios
+    #include <unordered_map>            // std::unordered_map
+    #include <functional>               // std::function
+    #include <cstdint>                  // std::uint8_t, std::uint32_t
+    #include <vector>                   // std::vector
+    #include <string>                   // std::string
+    #include <tuple>                    // std::tuple
+    #include <queue>                    // std::queue
 
 namespace utils::cli { // namespace start
 //----------------------------------------------------------------//
@@ -60,7 +61,7 @@ char defaultGetCHook();
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Cli {
+class Cli: private utils::warning::Observer {
     private:
         /* global data */
         termios _orig;
@@ -140,13 +141,13 @@ class Cli {
         std::vector<std::string> getHistory() const {return this->_history;};
 
         // ------------ Operator ---------- //
-        Cli& operator=(const Cli& object) = default;
-        Cli& operator=(Cli&& object) = default;
+        Cli& operator=(const Cli& other) = default;
+        Cli& operator=(Cli&& other) = default;
 
         // ---------- Constructor --------- //
         Cli();
-        Cli(const Cli& object) = default;
-        Cli(Cli&& object) = default;
+        Cli(const Cli& other) = default;
+        Cli(Cli&& other) = default;
 
         // ----------- Destructor --------- //
         ~Cli();

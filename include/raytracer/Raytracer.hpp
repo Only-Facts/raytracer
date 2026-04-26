@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -72,6 +72,7 @@ class Raytracer {
         raytracer::ICamera* _camera = nullptr;
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
+        mutable std::vector<raytracer::IMaterial*> _materials;
 
         // ------------ Function ---------- //
         template<typename T>
