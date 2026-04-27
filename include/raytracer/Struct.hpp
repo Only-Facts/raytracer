@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -19,19 +19,32 @@ File Description:
     /* type */
     #define _Vector
     #define _Exception
-    #include "utils/utils.hpp"  // utils::exception::*, utils::vector::Vector3, utils::vector::Vector2
+    #define _Attribute
+    #include "utils/utils.hpp"  // utils::exception::*, utils::vector::Vector3, utils::vector::Vector2, hot, nodiscard
+    #include "Define.hpp"       // CHUNK_SIZE
     #include <libconfig.h++>    // libconfig::Setting
     #include <cstddef>          // std::size_t
-    #include <cstdint>          // std::uint8_t
+    #include <cstdint>          // std::uint8_t, std::uint16_t, std::int32_t
     #include <vector>           // std::vector
+    #include <tuple>            // std::tuple
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
-/* CLASS */
+/* CLASS & TYPEDEF */
+
+using Coord = utils::vector::Vector3<double>;
+
+using Chunk = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
+
+using Color = utils::vector::Vector3<std::uint8_t>;
+using HugeColor = utils::vector::Vector3<std::uint16_t>;
+
+using Vertice = utils::vector::Vector3<double>;
+using Face = std::vector<Vertice>;
 
 struct CFrame {
-    utils::vector::Vector3<double> position = {0.0, 0.0, 0.0};
-    utils::vector::Vector3<double> orientation = {0.0, 0.0, 0.0};
+    raytracer::Coord position = {0.0, 0.0, 0.0};
+    raytracer::Coord orientation = {0.0, 0.0, 0.0};
 };
 
 enum class Shape {
@@ -43,11 +56,27 @@ enum class Shape {
     Cone,
 };
 
-using Color = utils::vector::Vector3<std::uint8_t>;
-using HugeColor = utils::vector::Vector3<std::uint16_t>;
+inline hot nodiscard raytracer::Chunk getChunk(const raytracer::Coord& point)
+{
+    return {
+        point.x / CHUNK_SIZE,
+        point.y / CHUNK_SIZE,
+        point.z / CHUNK_SIZE
+    };
+}
 
-using Vertice = utils::vector::Vector3<double>;
-using Face = std::vector<Vertice>;
+struct ChunkHash {
+    std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {
+        auto [x, y, z] = chunk;
+        return (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
+    }
+};
+
+struct ChunkObjectData {
+    std::vector<raytracer::Coord> positions;
+    std::vector<raytracer::Color> colors;
+    std::vector<float> intensitys;
+};
 
 class IMaterial;
 

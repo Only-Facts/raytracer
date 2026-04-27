@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -24,20 +24,26 @@ File Description:
 #include <exception>
 #include <iostream>
 
-hot raytracer::Color raytracer::AObject::getPointColor(const utils::vector::Vector3<double>& point) const
+hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
-    utils::vector::Vector3<std::uint16_t> pointColor = this->getObjectDescriptor().material->getColor();
+    raytracer::HugeColor pointColor = this->getObjectDescriptor().material->getColor();
+    raytracer::Chunk chunk = raytracer::getChunk(point);
     bool found = false;
 
-    // For each light rays
-    for (const auto& [position, color, intensity]: this->_lightRays) {
-        // Check if the point is near the light ray
-        if ((point - position).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
-        //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
-        found = true;
+    // Only if the chunk exist
+    if (this->_lightRays.contains(chunk)) {
+        const raytracer::ChunkObjectData& data = this->_lightRays[chunk];
 
-        // Fuse the colors
-        pointColor = raytracer::Raytracer::mergeColor(pointColor, color, intensity);
+        // For each light rays
+        for (std::size_t i = 0; i < data.positions.size(); ++i) {
+            // Check if the point is near the light ray
+            if ((point - data.positions[i]).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
+            //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
+            found = true;
+
+            // Fuse the colors
+            pointColor = raytracer::Raytracer::mergeColor(pointColor, data.colors[i], data.intensitys[i]);
+        }
     }
 
     // No light ray on this hit
@@ -45,6 +51,15 @@ hot raytracer::Color raytracer::AObject::getPointColor(const utils::vector::Vect
         return DEFAULT_COLOR;
 
     return pointColor;
+}
+
+hot void raytracer::AObject::addLightRay(raytracer::Coord position, raytracer::Color color, float intensity)
+{
+    raytracer::Chunk chunk = raytracer::getChunk(position);
+    std::lock_guard<std::mutex> lock(this->_lockLightRays);
+    this->_lightRays[chunk].positions.push_back(position);
+    this->_lightRays[chunk].colors.push_back(color);
+    this->_lightRays[chunk].intensitys.push_back(intensity);
 }
 
 cold void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor)
@@ -67,14 +82,14 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
     }
 
     // Compute world rotation
-    utils::vector::Vector3<double> orientation = descriptor.cframe.orientation;
+    raytracer::Coord orientation = descriptor.cframe.orientation;
     double len = orientation.dot(orientation);
     if (len < 1e-12) orientation = {0, 0, 1}; // Fallback orientation
-    utils::vector::Vector3<double> forward = orientation.normalize();
-    utils::vector::Vector3<double> worldUp = {0, 1, 0};
+    raytracer::Coord forward = orientation.normalize();
+    raytracer::Coord worldUp = {0, 1, 0};
     if (std::abs(forward.dot(worldUp)) > 0.999) worldUp = {1, 0, 0}; // Edge case, parrallel
-    utils::vector::Vector3<double> right = (worldUp.cross(forward)).normalize();
-    utils::vector::Vector3<double> up = forward.cross(right);
+    raytracer::Coord right = (worldUp.cross(forward)).normalize();
+    raytracer::Coord up = forward.cross(right);
 
     // Get the file content
     const auto& attrib = reader.GetAttrib();
@@ -101,7 +116,7 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
                 vertice.z = attrib.vertices[3 * idx.vertex_index + 2];
 
                 // Apply rotation & offset
-                utils::vector::Vector3<double> rotated = right * vertice.x + up * vertice.y + forward * vertice.z;
+                raytracer::Coord rotated = right * vertice.x + up * vertice.y + forward * vertice.z;
                 rotated *= descriptor.scale;
                 vertice.x = rotated.x + descriptor.cframe.position.x;
                 vertice.y = rotated.y + descriptor.cframe.position.y;
@@ -121,32 +136,32 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
 hot void raytracer::AObject::reflectRay(raytracer::IRay* ray) const
 {
     raytracer::CFrame cframe = ray->getCFrame();
-    utils::vector::Vector3<double> orientation = cframe.orientation.normalize();
-    utils::vector::Vector3<double> hit = this->computeHit(cframe.position).normalize();
+    raytracer::Coord orientation = cframe.orientation.normalize();
+    raytracer::Coord hit = this->computeHit(cframe.position).normalize();
     if (orientation.dot(hit) > 0) hit = -hit;
     orientation = orientation - hit * (2.0 * orientation.dot(hit));
     cframe.orientation = orientation.normalize();
     ray->setCFrame(cframe);
 }
 
-static float segmentSDF(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
+static float segmentSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
 {
-    utils::vector::Vector3<double> ab = b - a;
+    raytracer::Coord ab = b - a;
     double v = ab.dot(ab);
     if (v == 0.0) return (point - a).lengthSquared(); // Security
     double t = (point - a).dot(ab) / v;
     t = std::clamp(t, 0.0, 1.0);
-    utils::vector::Vector3<double> closest = a + t * ab;
+    raytracer::Coord closest = a + t * ab;
     return (point - closest).lengthSquared();
 }
 
 /*
-static float triangleSDF(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+static float triangleSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
-    utils::vector::Vector3<double> ba = b - a, pa = point - a;
-    utils::vector::Vector3<double> cb = c - b, pb = point - b;
-    utils::vector::Vector3<double> ac = a - c, pc = point - c;
-    utils::vector::Vector3<double> nor = ba.cross(ac);
+    raytracer::Coord ba = b - a, pa = point - a;
+    raytracer::Coord cb = c - b, pb = point - b;
+    raytracer::Coord ac = a - c, pc = point - c;
+    raytracer::Coord nor = ba.cross(ac);
 
     return std::sqrt(
         (sign(ba.cross(nor).dot(pa)) +
@@ -168,14 +183,14 @@ static float triangleSDF(const utils::vector::Vector3<double>& point, const rayt
 }
 */
 
-hot static float triangleSDF(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
-    utils::vector::Vector3<double> ab = b - a;
-    utils::vector::Vector3<double> ac = c - a;
-    utils::vector::Vector3<double> ap = point - a;
+    raytracer::Coord ab = b - a;
+    raytracer::Coord ac = c - a;
+    raytracer::Coord ap = point - a;
 
     // normale du triangle
-    utils::vector::Vector3<double> n = ab.cross(ac);
+    raytracer::Coord n = ab.cross(ac);
     double nLen2 = n.dot(n);
 
     // Invalid triangle
@@ -189,14 +204,14 @@ hot static float triangleSDF(const utils::vector::Vector3<double>& point, const 
 
     // Project the point on the triangle
     double distPlane = ap.dot(n);
-    utils::vector::Vector3<double> proj = point - n * (distPlane / nLen2);
+    raytracer::Coord proj = point - n * (distPlane / nLen2);
 
     // Check if the point is inside
-    utils::vector::Vector3<double> bp = proj - b;
-    utils::vector::Vector3<double> cp = proj - c;
+    raytracer::Coord bp = proj - b;
+    raytracer::Coord cp = proj - c;
 
-    utils::vector::Vector3<double> bc = c - b;
-    utils::vector::Vector3<double> ca = a - c;
+    raytracer::Coord bc = c - b;
+    raytracer::Coord ca = a - c;
 
     // Edge case, same orientation
     if ((ab.cross(proj - a)).dot(n) >= 0
@@ -212,7 +227,7 @@ hot static float triangleSDF(const utils::vector::Vector3<double>& point, const 
     });
 }
 
-hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& point) const
+hot float raytracer::AObject::computeSDF(const raytracer::Coord& point) const
 {
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
     this->_sdfFace = nullptr;
@@ -239,21 +254,21 @@ hot float raytracer::AObject::computeSDF(const utils::vector::Vector3<double>& p
     return std::sqrt(sdf);
 }
 
-hot static utils::vector::Vector3<double> segmentHit(const utils::vector::Vector3<double>& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
+hot static raytracer::Coord segmentHit(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
 {
-    utils::vector::Vector3<double> ab = b - a;
-    utils::vector::Vector3<double> ap = point - a;
-    utils::vector::Vector3<double> proj = a + ab * (ap.dot(ab) / ab.lengthSquared());
+    raytracer::Coord ab = b - a;
+    raytracer::Coord ap = point - a;
+    raytracer::Coord proj = a + ab * (ap.dot(ab) / ab.lengthSquared());
     return (point - proj).normalize();
 }
 
-hot static utils::vector::Vector3<double> triangleHit(const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+hot static raytracer::Coord triangleHit(const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
-    utils::vector::Vector3<double> n = (b - a).cross(c - a);
+    raytracer::Coord n = (b - a).cross(c - a);
     return n.normalize();
 }
 
-hot utils::vector::Vector3<double> raytracer::AObject::computeHit(const utils::vector::Vector3<double>& point) const
+hot raytracer::Coord raytracer::AObject::computeHit(const raytracer::Coord& point) const
 {
     // Check if the sdf was already computed
     if (!this->_sdfFace) unlikely {

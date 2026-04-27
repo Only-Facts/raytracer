@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -43,16 +43,16 @@ class IObject {
 
         /* 3D logic */
         virtual void reflectRay(raytracer::IRay* ray) const = 0;
-        virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
-        virtual utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const = 0;
+        virtual float computeSDF(const raytracer::Coord& point) const = 0;
+        virtual raytracer::Coord computeHit(const raytracer::Coord& point) const = 0;
 
         /* movement */
-        virtual void translate(const utils::vector::Vector3<double>& v) = 0;
-        virtual void rotate(const utils::vector::Vector3<double>& v) = 0;
+        virtual void translate(const raytracer::Coord& v) = 0;
+        virtual void rotate(const raytracer::Coord& v) = 0;
 
         /* color handling */
-        virtual raytracer::Color getPointColor(const utils::vector::Vector3<double>& point) const = 0;
-        virtual void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) = 0;
+        virtual raytracer::Color getPointColor(const raytracer::Coord& point) const = 0;
+        virtual void addLightRay(raytracer::Coord position, raytracer::Color color, float intensity) = 0;
         virtual void clearLightRays(void) = 0;
 
         /* getter & setter */

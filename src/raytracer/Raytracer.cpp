@@ -156,7 +156,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 //std::cout << "Collide light" << std::endl;
                 nearestObject->reflectRay(ray);
                 float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
-                nearestObject->addLightRay({ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef});
+                nearestObject->addLightRay(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                 ray->setColor(raytracer::Raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
