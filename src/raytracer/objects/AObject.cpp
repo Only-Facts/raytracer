@@ -267,7 +267,7 @@ hot static raytracer::Coord triangleHit(const raytracer::Vertice& a, const raytr
     return n.normalize();
 }
 
-hot raytracer::Coord raytracer::AObject::computeHit(const raytracer::Coord& point, const raytracer::Face* facePtr) const
+hot raytracer::Direction raytracer::AObject::computeHit(const raytracer::Coord& point, const raytracer::Face* facePtr) const
 {
     // Check if the sdf was already computed
     if (!facePtr) unlikely {

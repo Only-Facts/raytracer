@@ -50,7 +50,7 @@ cold void raytracer::Raytracer::gui(void)
         this->loadRender();
 
     // Open display
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    raytracer::Resolution resolution = this->_camera->getResolution();
     sf::VideoMode mode(resolution.x, resolution.y);
     sf::RenderWindow window(mode, "Raytracer", sf::Style::Titlebar | sf::Style::Close);
 
@@ -96,8 +96,8 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     this->_camera->updateScreen();
 
     // Draw each pixel
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
-    const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
+    raytracer::Resolution resolution = this->_camera->getResolution();
+    const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
             const raytracer::Color& color = pixels[y * resolution.x + x];
@@ -386,7 +386,7 @@ cold void raytracer::Raytracer::saveRender(void)
 
     // Setup header vars
     std::uint8_t magic = PPM_MAGIC;
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    raytracer::Resolution resolution = this->_camera->getResolution();
 
     // Write file header
     file.write(reinterpret_cast<char*>(&magic), sizeof(magic));
@@ -394,7 +394,7 @@ cold void raytracer::Raytracer::saveRender(void)
     file.write(reinterpret_cast<char*>(&resolution.y), sizeof(resolution.y));
 
     // Write pixels
-    const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
+    const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
     std::vector<std::uint8_t> buffer;
     buffer.reserve(pixels.size() * 3);
     buffer.resize(pixels.size() * 3);

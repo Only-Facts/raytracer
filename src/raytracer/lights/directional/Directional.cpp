@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Directional.cpp
@@ -62,7 +62,7 @@ void raytracer::Directional::init(void)
 
 void raytracer::Directional::reset(void)
 {
-    utils::vector::Vector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
+    utils::vector::OVector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
     raytracer::CFrame cframe;
 
     // For each rays set default light value

@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Vector2.hpp
@@ -315,27 +315,27 @@ requires utils::concepts::DivisibleWith<T, U>
 
 // -------- Bitwise-Operator -------- //
 template<typename T, typename U>
-auto operator&(const T& lhs, const Vector2<U>& rhs)
+auto operator&(const T& lhs, const utils::vector::Vector2<U>& rhs)
 requires utils::concepts::BitwiseAndableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector2<R>(lhs & rhs.x, lhs & rhs.y);
+    return utils::vector::Vector2<R>(lhs & rhs.x, lhs & rhs.y);
 }
 
 template<typename T, typename U>
-auto operator|(const T& lhs, const Vector2<U>& rhs)
+auto operator|(const T& lhs, const utils::vector::Vector2<U>& rhs)
 requires utils::concepts::BitwiseOrableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector2<R>(lhs | rhs.x, lhs | rhs.y);
+    return utils::vector::Vector2<R>(lhs | rhs.x, lhs | rhs.y);
 }
 
 template<typename T, typename U>
-auto operator^(const T& lhs, const Vector2<U>& rhs)
+auto operator^(const T& lhs, const utils::vector::Vector2<U>& rhs)
 requires utils::concepts::BitwiseXorableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector2<R>(lhs ^ rhs.x, lhs ^ rhs.y);
+    return utils::vector::Vector2<R>(lhs ^ rhs.x, lhs ^ rhs.y);
 }
 
 // -------- Comparison (reverse) -------- //

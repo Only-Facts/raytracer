@@ -33,7 +33,7 @@ void raytracer::Viewer::init(void)
     // Resize screen size
     this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
         this->_rays[i] = new raytracer::Ray();

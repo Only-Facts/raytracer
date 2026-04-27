@@ -24,14 +24,15 @@ File Description:
     /* INCLUDE */
 
     /* type */
-    #include <cstddef>  // std::size_t
+    #include "../warning/Observer.hpp"  // utils::warning::Observer
+    #include <cstddef>                  // std::size_t
 
 namespace utils::vector { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
 template<typename T>
-class IVector {
+class IVector: private utils::warning::Observer {
     public:
         // ---------- Pre-Function -------- //
         virtual T get(std::size_t index) const = 0;

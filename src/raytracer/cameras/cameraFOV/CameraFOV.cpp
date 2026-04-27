@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file CameraFOV.cpp
@@ -52,7 +52,7 @@ void raytracer::CameraFOV::init(void)
     // Resize screen size
     this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
         this->_rays[i] = new raytracer::Ray();
@@ -60,7 +60,7 @@ void raytracer::CameraFOV::init(void)
 
 void raytracer::CameraFOV::reset(void)
 {
-    utils::vector::Vector2<int> resolution;
+    utils::vector::OVector2<int> resolution;
     raytracer::CFrame cframe;
 
     // For each rays set default light value

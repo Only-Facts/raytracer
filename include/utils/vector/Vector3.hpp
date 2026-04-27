@@ -44,14 +44,14 @@ namespace utils::vector { // namespace start
 /* CLASS */
 
 template<typename T>
-class Vector3 {
+class Vector3: public utils::vector::IVector<T> {
     public:
         T x;
         T y;
         T z;
 
         // ----------- Function ----------- //
-        T get(std::size_t index) const {
+        T get(std::size_t index) const final {
             if (index >= MAX_INDEX_VECTOR3)
                 throw utils::exception::ErrorException(utils::exception::Code::VectorInvalidIndex);
             return (index == 0 ? x : (index == 1 ? y : z));
@@ -62,9 +62,10 @@ class Vector3 {
         // ------- Special-Function ------- //
         template<typename U>
         T dot(const Vector3<U>& v) const
-        {return x * v.x + y * v.y + z * v.z;}
+        requires utils::concepts::MultipliableWith<T, U> && utils::concepts::AddableWith<T, U> {return x * v.x + y * v.y + z * v.z;}
         template<typename U>
         Vector3 cross(const Vector3<U>& v) const
+        requires utils::concepts::MultipliableWith<T, U> && utils::concepts::SubtractableWith<T, U>
         {
             return {
                 y * v.z - z * v.y,
@@ -73,10 +74,11 @@ class Vector3 {
             };
         }
         T length() const
-        {return std::sqrt(x * x + y * y + z * z);}
+        requires utils::concepts::Multipliable<T> {return std::sqrt(x * x + y * y + z * z);}
         T lengthSquared() const
-        {return x * x + y * y + z * z;}
+        requires utils::concepts::Multipliable<T> && utils::concepts::Addable<T> {return x * x + y * y + z * z;}
         Vector3 normalize() const
+        requires utils::concepts::Divisible<T>
         {
             T len = length();
             return Vector3(x / len, y / len, z / len);
@@ -97,6 +99,7 @@ class Vector3 {
         // -------- Basic-Operator -------- //
         template<typename U>
         auto operator+(const U& v) const
+        requires utils::concepts::AddableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x + v, y + v, z + v);
@@ -104,6 +107,7 @@ class Vector3 {
 
         template<typename U>
         auto operator+(const Vector3<U>& v) const
+        requires utils::concepts::AddableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x + v.x, y + v.y, z + v.z);
@@ -111,6 +115,7 @@ class Vector3 {
 
         template<typename U>
         auto operator-(const U& v) const
+        requires utils::concepts::SubtractableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x - v, y - v, z - v);
@@ -118,6 +123,7 @@ class Vector3 {
 
         template<typename U>
         auto operator-(const Vector3<U>& v) const
+        requires utils::concepts::SubtractableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x - v.x, y - v.y, z - v.z);
@@ -125,6 +131,7 @@ class Vector3 {
 
         template<typename U>
         auto operator*(const U& v) const
+        requires utils::concepts::MultipliableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x * v, y * v, z * v);
@@ -132,6 +139,7 @@ class Vector3 {
 
         template<typename U>
         auto operator*(const Vector3<U>& v) const
+        requires utils::concepts::MultipliableWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x * v.x, y * v.y, z * v.z);
@@ -139,6 +147,7 @@ class Vector3 {
 
         template<typename U>
         auto operator/(const U& v) const
+        requires utils::concepts::DivisibleWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x / v, y / v, z / v);
@@ -146,6 +155,7 @@ class Vector3 {
 
         template<typename U>
         auto operator/(const Vector3<U>& v) const
+        requires utils::concepts::DivisibleWith<T, U>
         {
             using R = std::common_type_t<T, U>;
             return Vector3<R>(x / v.x, y / v.y, z / v.z);
@@ -154,6 +164,7 @@ class Vector3 {
         // ----- Assignment-Operator ----- //
         template<typename U>
         Vector3& operator=(const Vector3<U>& v)
+        requires std::assignable_from<T&, U>
         {
             x = v.x;
             y = v.y;
@@ -163,6 +174,7 @@ class Vector3 {
 
         template<typename U>
         Vector3& operator=(Vector3<U>&& v)
+        requires std::assignable_from<T&, U>
         {
             x = std::move(v.x);
             y = std::move(v.y);
@@ -172,79 +184,82 @@ class Vector3 {
 
         template<typename U>
         Vector3& operator+=(const U& v)
-        {x += v; y += v; z += v; return *this;}
+        requires utils::concepts::AddAssignableWith<T, U> {x += v; y += v; z += v; return *this;}
         template<typename U>
         Vector3& operator+=(const Vector3<U>& v)
-        {x += v.x; y += v.y; z += v.z; return *this;}
+        requires utils::concepts::AddAssignableWith<T, U> {x += v.x; y += v.y; z += v.z; return *this;}
         template<typename U>
         Vector3& operator-=(const U& v)
-        {x -= v; y -= v; z -= v; return *this;}
+        requires utils::concepts::SubtractAssignableWith<T, U> {x -= v; y -= v; z -= v; return *this;}
         template<typename U>
         Vector3& operator-=(const Vector3<U>& v)
-        {x -= v.x; y -= v.y; z -= v.z; return *this;}
+        requires utils::concepts::SubtractAssignableWith<T, U> {x -= v.x; y -= v.y; z -= v.z; return *this;}
         template<typename U>
         Vector3& operator*=(const U& v)
-        {x *= v; y *= v; z *= v; return *this;}
+        requires utils::concepts::MultiplyAssignableWith<T, U> {x *= v; y *= v; z *= v; return *this;}
         template<typename U>
         Vector3& operator*=(const Vector3<U>& v)
-        {x *= v.x; y *= v.y; z *= v.z; return *this;}
+        requires utils::concepts::MultiplyAssignableWith<T, U> {x *= v.x; y *= v.y; z *= v.z; return *this;}
         template<typename U>
         Vector3& operator/=(const U& v)
-        {x /= v; y /= v; z /= v; return *this;}
+        requires utils::concepts::DivideAssignableWith<T, U> {x /= v; y /= v; z /= v; return *this;}
         template<typename U>
         Vector3& operator/=(const Vector3<U>& v)
-        {x /= v.x; y /= v.y; z /= v.z; return *this;}
+        requires utils::concepts::DivideAssignableWith<T, U> {x /= v.x; y /= v.y; z /= v.z; return *this;}
 
         // ---------- Comparison ---------- //
         template<typename U>
         bool operator==(const U& v) const
-        {return (x == v && y == v && z == v);}
+        requires utils::concepts::EqualityComparableWith<T, U> {return (x == v && y == v && z == v);}
         template<typename U>
         bool operator==(const Vector3<U>& v) const
-        {return (x == v.x && y == v.y && z == v.z);}
+        requires utils::concepts::EqualityComparableWith<T, U> {return (x == v.x && y == v.y && z == v.z);}
         template<typename U>
         bool operator!=(const U& v) const
-        {return (x != v || y != v || z == v);}
+        requires utils::concepts::EqualityComparableWith<T, U> {return (x != v || y != v || z == v);}
         template<typename U>
         bool operator!=(const Vector3<U>& v) const
-        {return (x != v.x || y != v.y || z == v.z);}
+        requires utils::concepts::EqualityComparableWith<T, U> {return (x != v.x || y != v.y || z == v.z);}
         template<typename U>
         bool operator<(const U& v) const
-        {return (x < v && y < v && z < v);}
+        requires utils::concepts::ComparableWith<T, U> {return (x < v && y < v && z < v);}
         template<typename U>
         bool operator<(const Vector3<U>& v) const
-        {return (x < v.x && y < v.y && z < v.z);}
+        requires utils::concepts::ComparableWith<T, U> {return (x < v.x && y < v.y && z < v.z);}
         template<typename U>
         bool operator<=(const U& v) const
-        {return (x <= v && y <= v && z <= v);}
+        requires utils::concepts::ComparableWith<T, U> {return (x <= v && y <= v && z <= v);}
         template<typename U>
         bool operator<=(const Vector3<U>& v) const
-        {return (x <= v.x && y <= v.y && z <= v.z);}
+        requires utils::concepts::ComparableWith<T, U> {return (x <= v.x && y <= v.y && z <= v.z);}
         template<typename U>
         bool operator>(const U& v) const
-        {return (x > v && y > v && z > v);}
+        requires utils::concepts::ComparableWith<T, U> {return (x > v && y > v && z > v);}
         template<typename U>
         bool operator>(const Vector3<U>& v) const
-        {return (x > v.x && y > v.y && z > v.z);}
+        requires utils::concepts::ComparableWith<T, U> {return (x > v.x && y > v.y && z > v.z);}
         template<typename U>
         bool operator>=(const U& v) const
-        {return (x >= v && y >= v && z >= v);}
+        requires utils::concepts::ComparableWith<T, U> {return (x >= v && y >= v && z >= v);}
         template<typename U>
         bool operator>=(const Vector3<U>& v) const
-        {return (x >= v.x && y >= v.y && z >= v.z);}
+        requires utils::concepts::ComparableWith<T, U> {return (x >= v.x && y >= v.y && z >= v.z);}
 
         // ------------ Unary ------------- //
         Vector3 operator-() const
-        {return Vector3(-x, -y, -z);}
+        requires utils::concepts::Negatable<T> {return Vector3(-x, -y, -z);}
 
         // ---------- Constructor --------- //
         Vector3() = default;
         template<typename U, typename R, typename J>
-        Vector3(U x, R y, J z): x(x), y(y), z(z) {}
+        Vector3(U x, R y, J z)
+        requires std::constructible_from<T, U> && std::constructible_from<T, R> && std::constructible_from<T, J>: x(x), y(y), z(z) {}
         template<typename U>
-        Vector3(const Vector3<U>& v): x(v.x), y(v.y), z(v.z) {}
+        Vector3(const Vector3<U>& v)
+        requires std::constructible_from<T, U>: x(v.x), y(v.y), z(v.z) {}
         template<typename U>
-        Vector3(Vector3<U>&& v): x(std::move(v.x)), y(std::move(v.y)), z(std::move(v.z)) {}
+        Vector3(Vector3<U>&& v)
+        requires std::constructible_from<T, U&&>: x(std::move(v.x)), y(std::move(v.y)), z(std::move(v.z)) {}
 
         // ----------- Destructor --------- //
         ~Vector3() = default;
@@ -253,6 +268,7 @@ class Vector3 {
 // -------- Basic-Operator (reverse) -------- //
 template<typename T, typename U>
 auto operator+(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::AddableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
     return utils::vector::Vector3<R>(lhs + rhs.x, lhs + rhs.y, lhs + rhs.z);
@@ -260,6 +276,7 @@ auto operator+(const T& lhs, const utils::vector::Vector3<U>& rhs)
 
 template<typename T, typename U>
 auto operator-(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::SubtractableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
     return utils::vector::Vector3<R>(lhs - rhs.x, lhs - rhs.y, lhs - rhs.z);
@@ -267,6 +284,7 @@ auto operator-(const T& lhs, const utils::vector::Vector3<U>& rhs)
 
 template<typename T, typename U>
 auto operator*(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::MultipliableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
     return utils::vector::Vector3<R>(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z);
@@ -274,6 +292,7 @@ auto operator*(const T& lhs, const utils::vector::Vector3<U>& rhs)
 
 template<typename T, typename U>
 auto operator/(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::DivisibleWith<T, U>
 {
     using R = std::common_type_t<T, U>;
     return utils::vector::Vector3<R>(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);
@@ -281,49 +300,58 @@ auto operator/(const T& lhs, const utils::vector::Vector3<U>& rhs)
 
 // -------- Bitwise-Operator -------- //
 template<typename T, typename U>
-auto operator&(const T& lhs, const Vector3<U>& rhs)
+auto operator&(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::BitwiseAndableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs & rhs.x, lhs & rhs.y, lhs & rhs.z);
+    return utils::vector::Vector3<R>(lhs & rhs.x, lhs & rhs.y, lhs & rhs.z);
 }
 
 template<typename T, typename U>
-auto operator|(const T& lhs, const Vector3<U>& rhs)
+auto operator|(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::BitwiseOrableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs | rhs.x, lhs | rhs.y, lhs | rhs.z);
+    return utils::vector::Vector3<R>(lhs | rhs.x, lhs | rhs.y, lhs | rhs.z);
 }
 
 template<typename T, typename U>
-auto operator^(const T& lhs, const Vector3<U>& rhs)
+auto operator^(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::BitwiseXorableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs ^ rhs.x, lhs ^ rhs.y, lhs ^ rhs.z);
+    return utils::vector::Vector3<R>(lhs ^ rhs.x, lhs ^ rhs.y, lhs ^ rhs.z);
 }
 
 // -------- Comparison (reverse) -------- //
 template<typename T, typename U>
 bool operator==(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::EqualityComparableWith<T, U>
 {return (lhs == rhs.x && lhs == rhs.y && lhs == rhs.z);}
 
 template<typename T, typename U>
 bool operator!=(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::EqualityComparableWith<T, U>
 {return (lhs != rhs.x || lhs != rhs.y || lhs != rhs.z);}
 
 template<typename T, typename U>
 bool operator<(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::ComparableWith<T, U>
 {return (lhs < rhs.x && lhs < rhs.y && lhs < rhs.z);}
 
 template<typename T, typename U>
 bool operator<=(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::ComparableWith<T, U>
 {return (lhs <= rhs.x && lhs <= rhs.y && lhs <= rhs.z);}
 
 template<typename T, typename U>
 bool operator>(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::ComparableWith<T, U>
 {return (lhs > rhs.x && lhs > rhs.y && lhs > rhs.z);}
 
 template<typename T, typename U>
 bool operator>=(const T& lhs, const utils::vector::Vector3<U>& rhs)
+requires utils::concepts::ComparableWith<T, U>
 {return (lhs >= rhs.x && lhs >= rhs.y && lhs >= rhs.z);}
 
 // -------- Output -------- //

@@ -47,7 +47,7 @@ class AObject: public raytracer::IObject {
         /* 3D logic */
         void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const final;
         std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const override;
-        raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
+        raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
 
         /* color handling */
         raytracer::Color getPointColor(const raytracer::Coord& point) const final;
@@ -56,7 +56,7 @@ class AObject: public raytracer::IObject {
         // ------------ Function ---------- //
         /* movement */
         void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
-        void rotate(const raytracer::Coord& v) final {this->_descriptor.cframe.orientation += v;};
+        void rotate(const raytracer::Direction& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
         void clearLightData(void) final {this->_lightData.clear();};
