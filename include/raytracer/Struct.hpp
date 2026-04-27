@@ -20,7 +20,7 @@ File Description:
     #define _Vector
     #define _Exception
     #define _Attribute
-    #include "utils/utils.hpp"  // utils::exception::*, utils::vector::Vector3, utils::vector::Vector2, hot, nodiscard
+    #include "utils/utils.hpp"  // utils::exception::*, utils::vector::*, hot, nodiscard
     #include "Define.hpp"       // CHUNK_SIZE
     #include <libconfig.h++>    // libconfig::Setting
     #include <cstddef>          // std::size_t
@@ -32,19 +32,22 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS & TYPEDEF */
 
-using Coord = utils::vector::Vector3<double>;
+using Coord = utils::vector::OVector3<double>;
+using Direction = utils::vector::OVector3<double>; // Generaly normalized
 
 using Chunk = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
 
-using Color = utils::vector::Vector3<std::uint8_t>;
-using HugeColor = utils::vector::Vector3<std::uint16_t>;
+using Resolution = utils::vector::OVector2<std::uint16_t>;
 
-using Vertice = utils::vector::Vector3<double>;
+using Color = utils::vector::OVector3<std::uint8_t>;
+using HugeColor = utils::vector::OVector3<std::uint16_t>;
+
+using Vertice = utils::vector::OVector3<double>;
 using Face = std::vector<Vertice>;
 
 struct CFrame {
     raytracer::Coord position = {0.0, 0.0, 0.0};
-    raytracer::Coord orientation = {0.0, 0.0, 0.0};
+    raytracer::Direction orientation = {0.0, 0.0, 0.0};
 };
 
 enum class Shape {

@@ -51,7 +51,7 @@ struct Settings {
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     std::string obj_path = OBJ_PATH; // -o, --obj
-    utils::vector::Vector2<std::size_t> resolution = {0, 0}; // -r, --resolution
+    raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
     bool camera_set = false; // camera_path

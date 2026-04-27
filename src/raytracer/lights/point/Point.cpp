@@ -58,7 +58,7 @@ void raytracer::Point::init(void)
         this->_rays[i] = new raytracer::LightRay();
 }
 
-static utils::vector::Vector3<double> randomSphereOrientation(void)
+static raytracer::Direction randomSphereOrientation(void)
 {
     double z = 2.0 * rand() / RAND_MAX - 1.0;
     double t = 2.0 * M_PI * rand() / RAND_MAX;

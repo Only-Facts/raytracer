@@ -48,7 +48,7 @@ void raytracer::Camera2D::init(void)
     // Resize screen size
     this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
         this->_rays[i] = new raytracer::Ray();
@@ -56,7 +56,7 @@ void raytracer::Camera2D::init(void)
 
 void raytracer::Camera2D::reset(void)
 {
-    utils::vector::Vector2<int> resolution;
+    utils::vector::OVector2<int> resolution;
     raytracer::CFrame cframe;
 
     // For each rays set default light value
