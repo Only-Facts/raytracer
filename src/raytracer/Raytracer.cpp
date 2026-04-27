@@ -119,16 +119,13 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     raytracer::ICamera* camera)
 {
     raytracer::IObject* nearestObject = nullptr;
-    float sdf = 0.0, actualSDF = 0.0;
-    bool first = true, edited = true;
+    const raytracer::Face* faceHit = nullptr;
+    float sdf = 0.0;
+    bool first = true;
 
-    while (edited) {
-        edited = false;
-        for (std::size_t i = start; i < end; ++i) {
-            raytracer::LightRay* ray = rays[i];
-            if (!ray->isAlive()) continue;
-            edited = true;
-
+    for (std::size_t i = start; i < end; ++i) {
+        raytracer::LightRay* ray = rays[i];
+        while (ray->isAlive()) {
             // Kill those with no direction
             if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
                 ray->kill();
@@ -139,12 +136,13 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             sdf = 0.0f;
             first = true;
             for (raytracer::IObject* object: objects) {
-                actualSDF = object->computeSDF(ray->getCFrame().position);
+                auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
                 if (first || actualSDF < sdf) {
                     first = false;
                     sdf = actualSDF;
+                    faceHit = face;
                     nearestObject = object;
-                }
+                  }
             }
             if (first) continue;
 
@@ -154,7 +152,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
                 //std::cout << "Collide light" << std::endl;
-                nearestObject->reflectRay(ray);
+                nearestObject->reflectRay(ray, faceHit);
                 float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
                 nearestObject->addLightRay(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
@@ -181,16 +179,13 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     const raytracer::Sky& sky)
 {
     raytracer::IObject* nearestObject = nullptr;
-    float sdf = 0.0, actualSDF = 0.0;
-    bool first = true, edited = true;
+    const raytracer::Face* faceHit = nullptr;
+    float sdf = 0.0;
+    bool first = true;
 
-    while (edited) {
-        edited = false;
-        for (std::size_t i = start; i < end; ++i) {
-            raytracer::Ray* ray = rays[i];
-            if (!ray->isAlive()) continue;
-            edited = true;
-
+    for (std::size_t i = start; i < end; ++i) {
+        raytracer::Ray* ray = rays[i];
+        while (ray->isAlive()) {
             // Kill those with no direction
             if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
                 ray->kill();
@@ -201,10 +196,11 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             sdf = 0.0f;
             first = true;
             for (raytracer::IObject* object: objects) {
-                actualSDF = object->computeSDF(ray->getCFrame().position);
+                auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
                 if (first || actualSDF < sdf) {
                     first = false;
                     sdf = actualSDF;
+                    faceHit = face;
                     nearestObject = object;
                 }
             }
@@ -217,7 +213,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             if (sdf <= SDF_COLLINDING_LIMIT) {
                 //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
-                    nearestObject->reflectRay(ray);
+                    nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
                     ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));

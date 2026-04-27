@@ -133,11 +133,11 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
     }
 }
 
-hot void raytracer::AObject::reflectRay(raytracer::IRay* ray) const
+hot void raytracer::AObject::reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const
 {
     raytracer::CFrame cframe = ray->getCFrame();
     raytracer::Coord orientation = cframe.orientation.normalize();
-    raytracer::Coord hit = this->computeHit(cframe.position).normalize();
+    raytracer::Coord hit = this->computeHit(cframe.position, face).normalize();
     if (orientation.dot(hit) > 0) hit = -hit;
     orientation = orientation - hit * (2.0 * orientation.dot(hit));
     cframe.orientation = orientation.normalize();
@@ -227,15 +227,13 @@ hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Ver
     });
 }
 
-hot float raytracer::AObject::computeSDF(const raytracer::Coord& point) const
+hot std::pair<float, const raytracer::Face*> raytracer::AObject::computeSDF(const raytracer::Coord& point) const
 {
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
-    this->_sdfFace = nullptr;
+    const raytracer::Face* sdfFace = nullptr;
 
     // For each face
     for (const raytracer::Face& face: this->getObjectDescriptor().faces) {
-        dist = 0.0f;
-
         // Dispatch the computing
         switch (face.size()) {
             case 1: dist = (point - face[0]).lengthSquared();               break;
@@ -245,13 +243,14 @@ hot float raytracer::AObject::computeSDF(const raytracer::Coord& point) const
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Invalid number of vertices for a face on the object to render");
         }
 
+        // Check the distance
         if (dist < sdf) {
             sdf = dist;
-            this->_sdfFace = &face;
+            sdfFace = &face;
         }
     }
 
-    return std::sqrt(sdf);
+    return {std::sqrt(sdf), sdfFace};
 }
 
 hot static raytracer::Coord segmentHit(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
@@ -268,15 +267,15 @@ hot static raytracer::Coord triangleHit(const raytracer::Vertice& a, const raytr
     return n.normalize();
 }
 
-hot raytracer::Coord raytracer::AObject::computeHit(const raytracer::Coord& point) const
+hot raytracer::Coord raytracer::AObject::computeHit(const raytracer::Coord& point, const raytracer::Face* facePtr) const
 {
     // Check if the sdf was already computed
-    if (!this->_sdfFace) unlikely {
+    if (!facePtr) unlikely {
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::InvalidAction, "Can't compute the perpendicular vector for the hit point before the sdf");
     }
 
     // Dispatch the computing
-    raytracer::Face face = *(this->_sdfFace);
+    const raytracer::Face face = *(facePtr);
     switch (face.size()) {
         case 1: return (point - face[0]).normalize();
         case 2: return segmentHit(point, face[0], face[1]);

@@ -33,7 +33,6 @@ namespace raytracer { // namespace start
 class AObject: public raytracer::IObject {
     private:
         mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightRays;
-        mutable const raytracer::Face* _sdfFace = nullptr;
         std::mutex _lockLightRays;
 
     protected:
@@ -46,9 +45,9 @@ class AObject: public raytracer::IObject {
         void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) final;
 
         /* 3D logic */
-        void reflectRay(raytracer::IRay* ray) const final;
-        float computeSDF(const raytracer::Coord& point) const override;
-        raytracer::Coord computeHit(const raytracer::Coord& point) const override;
+        void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const final;
+        std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const override;
+        raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
 
         /* color handling */
         raytracer::Color getPointColor(const raytracer::Coord& point) const final;

@@ -42,9 +42,9 @@ class IObject {
         virtual void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) = 0;
 
         /* 3D logic */
-        virtual void reflectRay(raytracer::IRay* ray) const = 0;
-        virtual float computeSDF(const raytracer::Coord& point) const = 0;
-        virtual raytracer::Coord computeHit(const raytracer::Coord& point) const = 0;
+        virtual void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const = 0;
+        virtual std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const = 0;
+        virtual raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face = nullptr) const = 0;
 
         /* movement */
         virtual void translate(const raytracer::Coord& v) = 0;
