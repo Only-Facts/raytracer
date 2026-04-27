@@ -26,13 +26,13 @@ File Description:
 
 hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
-    raytracer::HugeColor pointColor = this->getObjectDescriptor().material->getColor();
+    raytracer::Color pointColor = this->getObjectDescriptor().material->getColor();
     raytracer::Chunk chunk = raytracer::getChunk(point);
     bool found = false;
 
     // Only if the chunk exist
-    if (this->_lightRays.contains(chunk)) {
-        const raytracer::ChunkObjectData& data = this->_lightRays[chunk];
+    if (this->_lightData.contains(chunk)) {
+        const raytracer::ChunkObjectData& data = this->_lightData[chunk];
 
         // For each light rays
         for (std::size_t i = 0; i < data.positions.size(); ++i) {
@@ -53,13 +53,13 @@ hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& p
     return pointColor;
 }
 
-hot void raytracer::AObject::addLightRay(raytracer::Coord position, raytracer::Color color, float intensity)
+hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::Color color, float intensity)
 {
     raytracer::Chunk chunk = raytracer::getChunk(position);
-    std::lock_guard<std::mutex> lock(this->_lockLightRays);
-    this->_lightRays[chunk].positions.push_back(position);
-    this->_lightRays[chunk].colors.push_back(color);
-    this->_lightRays[chunk].intensitys.push_back(intensity);
+    std::lock_guard<std::mutex> lock(this->_lockLightData);
+    this->_lightData[chunk].positions.push_back(position);
+    this->_lightData[chunk].colors.push_back(color);
+    this->_lightData[chunk].intensitys.push_back(intensity);
 }
 
 cold void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor)

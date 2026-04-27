@@ -52,8 +52,8 @@ class IObject {
 
         /* color handling */
         virtual raytracer::Color getPointColor(const raytracer::Coord& point) const = 0;
-        virtual void addLightRay(raytracer::Coord position, raytracer::Color color, float intensity) = 0;
-        virtual void clearLightRays(void) = 0;
+        virtual void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) = 0;
+        virtual void clearLightData(void) = 0;
 
         /* getter & setter */
         virtual void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) = 0;

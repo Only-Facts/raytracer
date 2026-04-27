@@ -154,7 +154,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 //std::cout << "Collide light" << std::endl;
                 nearestObject->reflectRay(ray, faceHit);
                 float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
-                nearestObject->addLightRay(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
+                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                 ray->setColor(raytracer::Raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
@@ -175,9 +175,10 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
-    raytracer::ICamera* camera,
-    const raytracer::Sky& sky)
+    raytracer::ICamera* camera, const raytracer::Sky& sky,
+    raytracer::Color globalLightColor)
 {
+    raytracer::Color color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
     const raytracer::Face* faceHit = nullptr;
     float sdf = 0.0;
@@ -218,7 +219,10 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                     // To counter collision with the same object on the next iteration
                     ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
                 } else {
-                    ray->setColor(nearestObject->getPointColor(ray->getCFrame().position));
+                    float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
+                    color = nearestObject->getPointColor(ray->getCFrame().position);
+                    color = raytracer::Raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
+                    ray->setColor(color);
                     ray->kill();
                 }
             }
@@ -245,7 +249,8 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
         - Add light rays data (hit point, intensity, color) to the object
     too low intensity -> kill
     too far -> kill
- 3 - Compute camera rays
+ 3 - Compute color from global lights
+ 4 - Compute camera rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
     3 - Check SDF
@@ -257,6 +262,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 */
 void raytracer::Raytracer::render(void)
 {
+    raytracer::Color globalLightColor = {255, 255, 255}; // White to allow any other color
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
@@ -266,10 +272,11 @@ void raytracer::Raytracer::render(void)
     for (raytracer::ILight* light: this->_lights)
         light->reset();
     for (raytracer::IObject* object: this->_objects)
-        object->clearLightRays();
+        object->clearLightData();
 
     // 2 - Compute lights rays
     for (raytracer::ILight* light: this->_lights) {
+        if (light->isGlobal()) continue; // Ignore global light
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
         countThreads = std::thread::hardware_concurrency();
         chunkSize = lightRays.size() / countThreads;
@@ -292,6 +299,12 @@ void raytracer::Raytracer::render(void)
             t.join();
     }
 
+    // 3 - Compute color from global lights
+    for (raytracer::ILight* light: this->_lights) {
+        if (!light->isGlobal()) continue; // Ignore no global light
+        globalLightColor = raytracer::Raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
+    }
+
     // 3 - Compute camera rays
     std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
     countThreads = std::thread::hardware_concurrency();
@@ -306,8 +319,8 @@ void raytracer::Raytracer::render(void)
             std::ref(cameraRays),
             start, end,
             std::cref(this->_objects),
-            this->_camera,
-            std::cref(this->_sky)
+            this->_camera, std::cref(this->_sky),
+            globalLightColor
         );
     }
 

@@ -3,15 +3,15 @@ Edition:
 ##  @date 27/04/2026 by @author Tsukini
 
 File Name:
-##  @file Point.hpp
+##  @file Global.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef POINT_H
-    #define POINT_H
+#ifndef GLOBAL_H
+    #define GLOBAL_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
@@ -23,7 +23,7 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Point: public raytracer::ALight {
+class Global: public raytracer::ALight {
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
@@ -31,17 +31,17 @@ class Point: public raytracer::ALight {
         void reset(void) final;
 
         // ------------ Operator ---------- //
-        Point& operator=(const Point& object) = delete;
-        Point& operator=(Point&& object) = delete;
+        Global& operator=(const Global& object) = delete;
+        Global& operator=(Global&& object) = delete;
 
         // ---------- Constructor --------- //
-        Point() = default;
-        Point(const Point& object) = delete;
-        Point(Point&& object) = delete;
+        Global() = default;
+        Global(const Global& object) = delete;
+        Global(Global&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Point() = default;
+        ~Global() = default;
 };
 
 } // namespace end
-#endif /* POINT_H */
+#endif /* GLOBAL_H */

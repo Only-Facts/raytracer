@@ -3,7 +3,7 @@ Edition:
 ##  @date 27/04/2026 by @author Tsukini
 
 File Name:
-##  @file Point.cpp
+##  @file Global.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -12,19 +12,19 @@ File Description:
 
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/lights/Point.hpp"
+#include "raytracer/lights/Global.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
 
-void raytracer::Point::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Global::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Setup the cframe
-    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
+    // Set the light to global
+    this->enableGlobal();
 
     // Other settings
     double intensity = 1.0f;
@@ -44,7 +44,7 @@ void raytracer::Point::parse(unused const raytracer::Raytracer& raytracer, const
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::Point::init(void)
+void raytracer::Global::init(void)
 {
     std::size_t size = LIGHT_RAY;
 
@@ -58,27 +58,12 @@ void raytracer::Point::init(void)
         this->_rays[i] = new raytracer::LightRay();
 }
 
-static utils::vector::Vector3<double> randomSphereOrientation(void)
+void raytracer::Global::reset(void)
 {
-    double z = 2.0 * rand() / RAND_MAX - 1.0;
-    double t = 2.0 * M_PI * rand() / RAND_MAX;
-    double r = std::sqrt(1.0 - z * z);
-    return {r * std::cos(t), r * std::sin(t), z};
-}
-
-void raytracer::Point::reset(void)
-{
-    raytracer::CFrame cframe;
-
     // For each rays set default light value
     for (raytracer::LightRay* ray: this->_rays) {
         ray->reset();
         ray->setColor(this->_color);
         ray->setIntensity(this->_intensity);
-
-        // Generate random spherical orientation
-        cframe.orientation = randomSphereOrientation().normalize();
-        cframe.position = this->getCFrame().position;
-        ray->setCFrame(cframe);
     }
 }

@@ -32,8 +32,8 @@ namespace raytracer { // namespace start
 
 class AObject: public raytracer::IObject {
     private:
-        mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightRays;
-        std::mutex _lockLightRays;
+        mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightData;
+        std::mutex _lockLightData;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -51,7 +51,7 @@ class AObject: public raytracer::IObject {
 
         /* color handling */
         raytracer::Color getPointColor(const raytracer::Coord& point) const final;
-        void addLightRay(raytracer::Coord position, raytracer::Color color, float intensity) final;
+        void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) final;
 
         // ------------ Function ---------- //
         /* movement */
@@ -59,7 +59,7 @@ class AObject: public raytracer::IObject {
         void rotate(const raytracer::Coord& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
-        void clearLightRays(void) final {this->_lightRays.clear();};
+        void clearLightData(void) final {this->_lightData.clear();};
 
         /* getter & setter */
         void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};

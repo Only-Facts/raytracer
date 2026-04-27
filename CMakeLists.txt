@@ -33,7 +33,7 @@ add_compile_options(
     -Wunused-parameter
     -Wshadow
     -Wuninitialized
-    -Wnan-infinity-disabled
+    -Wno-nan-infinity-disabled
 )
 
 # Sanitizer options
@@ -115,6 +115,12 @@ set(SRC_LIGHTS
     src/raytracer/lights/ALight.cpp
     src/raytracer/objects/AObject.cpp
 )
+
+set(SRC_GLOBAL
+    src/raytracer/lights/global/lib.cpp
+    src/raytracer/lights/global/Global.cpp
+)
+add_library(light_global SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_GLOBAL})
 
 set(SRC_POINT
     src/raytracer/lights/point/lib.cpp
@@ -199,6 +205,7 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/cameras
 )
 set_target_properties(
+    light_global
     light_point
     light_directional
     PROPERTIES
@@ -235,6 +242,7 @@ foreach(target
     camera_viewer
     camera_camera2D
     camera_cameraFOV
+    light_global
     light_point
     light_directional
     object_object
@@ -262,6 +270,7 @@ foreach(target
     camera_viewer
     camera_camera2D
     camera_cameraFOV
+    light_global
     light_point
     light_directional
     object_object

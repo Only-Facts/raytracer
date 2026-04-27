@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ALight.hpp
@@ -34,10 +34,15 @@ class ALight: public raytracer::ILight {
         std::vector<raytracer::LightRay*> _rays;
         utils::vector::Vector3<std::uint8_t> _color = DEFAULT_COLOR;
         float _intensity = 1.0f;
+        bool _global = false;
 
     public:
         // ------------ Function ---------- //
-        std::vector<raytracer::LightRay*> getRays(void) const {return this->_rays;};
+        nodiscard std::vector<raytracer::LightRay*> getRays(void) const {return this->_rays;};
+        nodiscard raytracer::Color getColor(void) const {return this->_color;};
+        nodiscard float getIntensity(void) const {return this->_intensity;};
+        void enableGlobal(void) {this->_global = true;};
+        nodiscard bool isGlobal(void) const {return this->_global;};
 
         // ------------ Operator ---------- //
         ALight& operator=(const ALight& object) = delete;
