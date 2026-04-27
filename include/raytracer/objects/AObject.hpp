@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -20,10 +20,11 @@ File Description:
     #define _Vector
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
-    #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor
+    #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor, raytracer::Color, raytracer::Coord, raytracer::Chunk, raytracer::ChunkObjectData
     #include "IObject.hpp"      // raytracer::IObject
+    #include <unordered_map>    // std::unordered_map
     #include <vector>           // std::vector
-    #include <mutex>            // std::mutex, std::lock_guard
+    #include <mutex>            // std::mutex
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -31,8 +32,8 @@ namespace raytracer { // namespace start
 
 class AObject: public raytracer::IObject {
     private:
-        std::vector<std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float>> _lightRays;
-        std::mutex _lightRaysMutex;
+        mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightData;
+        std::mutex _lockLightData;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -44,21 +45,21 @@ class AObject: public raytracer::IObject {
         void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) final;
 
         /* 3D logic */
-        void reflectRay(raytracer::IRay* ray) const final;
-        float computeSDF(const utils::vector::Vector3<double>& point) const override;
-        utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const override;
+        void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const final;
+        std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const override;
+        raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
 
         /* color handling */
-        utils::vector::Vector3<std::uint8_t> getPointColor(const utils::vector::Vector3<double>& point) const final;
+        raytracer::Color getPointColor(const raytracer::Coord& point) const final;
+        void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) final;
 
         // ------------ Function ---------- //
         /* movement */
-        void translate(const utils::vector::Vector3<double>& v) final {this->_descriptor.cframe.position += v;};
-        void rotate(const utils::vector::Vector3<double>& v) final {this->_descriptor.cframe.orientation += v;};
+        void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
+        void rotate(const raytracer::Coord& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
-        void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) final {std::lock_guard<std::mutex> lock(this->_lightRaysMutex); this->_lightRays.push_back(lightRay);};
-        void clearLightRays(void) final {this->_lightRays.clear();};
+        void clearLightData(void) final {this->_lightData.clear();};
 
         /* getter & setter */
         void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};

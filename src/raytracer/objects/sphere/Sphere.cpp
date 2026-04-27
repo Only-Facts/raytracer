@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.cpp
@@ -27,7 +27,7 @@ cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const 
     descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
     
     // Other settings
     if (!node.exists("radius"))
@@ -38,12 +38,12 @@ cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const 
     this->setObjectDescriptor(descriptor);
 }
 
-hot float raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
+hot std::pair<float, const raytracer::Face*> raytracer::Sphere::computeSDF(const utils::vector::Vector3<double>& point) const
 {
-    return (point - this->getObjectDescriptor().cframe.position).length() - this->_radius;
+    return {(point - this->getObjectDescriptor().cframe.position).length() - (this->_radius / 2), nullptr};
 }
 
-hot utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point) const
+hot utils::vector::Vector3<double> raytracer::Sphere::computeHit(const utils::vector::Vector3<double>& point, unused const raytracer::Face* face) const
 {
     return (point - this->getObjectDescriptor().cframe.position).normalize();
 }

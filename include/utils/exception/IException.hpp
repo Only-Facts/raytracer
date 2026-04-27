@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IException.hpp
@@ -16,17 +16,18 @@ File Description:
     /* INCLUDE */
 
     /* type/class */
-    #include "ExceptionDefine.hpp"  // utils::exception::Code, utils::exception::type
-    #include <source_location>      // std::source_location
-    #include <exception>            // std::exception
-    #include <string>               // std::string
+    #include "../warning/Observer.hpp"  // utils::warning::Observer
+    #include "ExceptionDefine.hpp"      // utils::exception::Code, utils::exception::type
+    #include <source_location>          // std::source_location
+    #include <exception>                // std::exception
+    #include <string>                   // std::string
 
 namespace utils::exception { // namespace start
 
 //----------------------------------------------------------------//
 /* CLASS */
 
-class IException: public std::exception {
+class IException: public std::exception, private utils::warning::Observer {
     public:
         // --------- Pre-Function --------- //
         virtual utils::exception::Type getType() const noexcept = 0;
@@ -39,13 +40,13 @@ class IException: public std::exception {
         virtual std::string formated() const noexcept = 0;
 
         // ------------ Operator ---------- //
-        IException& operator=(const IException& object) = delete;
-        IException& operator=(IException&& object) = delete;
+        IException& operator=(const IException& other) = delete;
+        IException& operator=(IException&& other) = delete;
 
         // ---------- Constructor --------- //
         IException() = default;
-        IException(const IException& object) = delete;
-        IException(IException&& object) = delete;
+        IException(const IException& other) = delete;
+        IException(IException&& other) = delete;
 
         // ----------- Destructor --------- //
         virtual ~IException() = default;

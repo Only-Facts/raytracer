@@ -167,6 +167,14 @@ ppm save file:
 ######################################################
 config file:
 
+$import {"direct or relative path to a file", "...", ...}  // Take the files content and past it here
+$import {"direct or relative path to a file"} // Take the file content and past it here
+// Same as import
+$include {"direct or relative path to a file", "...", ...}
+$include {"direct or relative path to a file"}
+$paste {"direct or relative path to a file", "...", ...}
+$paste {"direct or relative path to a file"}
+
 // Only one allowed
 <camera_name>: {
     type = "camera"; // Case insensitive

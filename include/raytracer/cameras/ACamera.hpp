@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -36,7 +36,6 @@ class ACamera: public raytracer::ICamera {
         std::vector<utils::vector::Vector3<std::uint8_t>> _screen; // Screen pixel
         std::vector<raytracer::Ray*> _rays;
         utils::vector::Vector2<std::uint16_t> _resolution;
-        float _fieldOfView = 70.0f;
 
     public:
         // ---------- Pre-Function -------- //
@@ -47,8 +46,6 @@ class ACamera: public raytracer::ICamera {
         nodiscard std::vector<raytracer::Ray*> getRays(void) const {return this->_rays;};
         void setResolution(utils::vector::Vector2<std::uint16_t> resolution) {this->_resolution = resolution;};
         nodiscard utils::vector::Vector2<std::uint16_t> getResolution(void) const {return this->_resolution;};
-        void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
-        nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
 
         // ------------ Operator ---------- //
         ACamera& operator=(const ACamera& object) = delete;
