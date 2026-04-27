@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -25,7 +25,8 @@ File Description:
     /* values */
     #define RENDER_DISTANCE 250 // Kill the ray if the SDF is above or equal to that valuea
     #define LIGHT_RAY 1000000 // Number of rays by light
-    #define DEFAULT_LIGHT true // Enable or disable seeing object without light
+    #define DEFAULT_LIGHT false // Enable or disable seeing object without light
+    #define CHUNK_SIZE 10 // Size of the chunk used
 
     /* default */
     #define PLUGINS_PATH "./plugins/"

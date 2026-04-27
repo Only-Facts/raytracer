@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.hpp
@@ -18,8 +18,10 @@ File Description:
 
     /* type */
     #define _Vector
-    #include "utils/utils.hpp"          // utils::vector::Vector3
+    #define _Attribute
+    #include "utils/utils.hpp"          // utils::vector::Vector3, nodiscard
     #include "ARay.hpp"                 // raytracer::ARay
+    #include "../Struct.hpp"            // raytracer::Color
     #include <cstdint>                  // std::uint8_t
 
 namespace raytracer { // namespace start
@@ -28,15 +30,15 @@ namespace raytracer { // namespace start
 
 class Ray: public raytracer::ARay {
     private:
-        utils::vector::Vector3<std::uint8_t> _color; // RGB color that what hit, add a percentage of the color from the surface hitted each time
+        raytracer::Color _color; // RGB color that what hit, add a percentage of the color from the surface hitted each time
 
     public:
         // ---------- Pre-Function -------- //
         void reset(void);
 
         // ------------ Function ---------- //
-        void setColor(utils::vector::Vector3<std::uint8_t> color) {this->_color = color;};
-        utils::vector::Vector3<std::uint8_t> getColor(void) const {return this->_color;};
+        void setColor(raytracer::Color color) {this->_color = color;};
+        nodiscard raytracer::Color getColor(void) const {return this->_color;};
 
         // ------------ Operator ---------- //
         Ray& operator=(const Ray& object) = delete;

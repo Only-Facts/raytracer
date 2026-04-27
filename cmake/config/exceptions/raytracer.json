@@ -19,6 +19,11 @@
             "code": "ppmFile",
             "message": "Error during the ppm file writing/reading",
             "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "InvalidAction",
+            "message": "Can't execute this action",
+            "restrictions": ["Fatal", "Error", "Warning"]
         }
     ]
 }

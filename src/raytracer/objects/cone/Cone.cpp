@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.cpp
@@ -26,7 +26,7 @@ void raytracer::Cone::parse(const raytracer::Raytracer& raytracer, const libconf
     descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     double scale = 1.0;

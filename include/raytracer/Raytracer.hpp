@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -19,20 +19,23 @@ File Description:
     /* type */
     #define _Exception
     #define _Vector
-    #include "utils/utils.hpp"      // utils::exception::*, utils::vector::Vector2
-    #include "DynamicLibrary.hpp"   // raytracer::DynamicLibrary
-    #include "Struct.hpp"           // raytracer::ObjectDescriptor
-    #include "Define.hpp"           // values
-    #include "cameras/ICamera.hpp"  // raytracer::ICamera
-    #include "lights/ILight.hpp"    // raytracer::ILight
-    #include "objects/IObject.hpp"  // raytracer::IObject
-    #include <SFML/Graphics.hpp>    // sf::RenderWindow
-    #include <libconfig.h++>        // libconfig::Setting
-    #include <unordered_map>        // std::unordered_map
-    #include <cstddef>              // std::size_t
-    #include <memory>               // std::shared_ptr
-    #include <vector>               // std::vector
-    #include <string>               // std::string
+    #define _Attribute
+    #include "utils/utils.hpp"          // utils::exception::*, utils::vector::Vector2, nodiscard
+    #include "DynamicLibrary.hpp"       // raytracer::DynamicLibrary
+    #include "Struct.hpp"               // raytracer::ObjectDescriptor, raytracer::Color, raytracer::HugeColor
+    #include "Define.hpp"               // values
+    #include "special/Sky.hpp"          // raytracer::Sky
+    #include "cameras/ICamera.hpp"      // raytracer::ICamera
+    #include "materials/IMaterial.hpp"  // raytracer::IMaterial
+    #include "lights/ILight.hpp"        // raytracer::ILight
+    #include "objects/IObject.hpp"      // raytracer::IObject
+    #include <SFML/Graphics.hpp>        // sf::RenderWindow
+    #include <libconfig.h++>            // libconfig::Setting
+    #include <unordered_map>            // std::unordered_map
+    #include <cstddef>                  // std::size_t
+    #include <memory>                   // std::shared_ptr
+    #include <vector>                   // std::vector
+    #include <string>                   // std::string
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -43,7 +46,7 @@ struct Settings {
     std::string ppm_path; // <ppm_file_path>
     std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
-    bool newton = false; // -n, --newton
+    bool newton = false; // -n, --newton (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
@@ -65,9 +68,11 @@ class Raytracer {
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
+        raytracer::Sky _sky;
         raytracer::ICamera* _camera = nullptr;
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
+        mutable std::vector<raytracer::IMaterial*> _materials;
 
         // ------------ Function ---------- //
         template<typename T>
@@ -89,6 +94,7 @@ class Raytracer {
 
         /* parsing */
         void scene(void); // Load scene file
+        void parseSceneFile(const std::string& path, std::string& content) const; // Parse the cfg file for custom tokens
         raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
@@ -110,28 +116,8 @@ class Raytracer {
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
 
         // -------- Static-Function ------- //
-        static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
-        {
-            // Check existantce
-            if (!node.exists("position"))
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The position field isn't defined for the CFrame");
-            else if (!node.exists("orientation"))
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The orientation field isn't defined for the CFrame");
-
-            // Set values
-            const libconfig::Setting& pos = node["position"];
-            descriptor.cframe.position.x = pos[0];
-            descriptor.cframe.position.y = pos[1];
-            descriptor.cframe.position.z = pos[2];
-            const libconfig::Setting& rot = node["orientation"];
-            descriptor.cframe.orientation.x = rot[0];
-            descriptor.cframe.orientation.y = rot[1];
-            descriptor.cframe.orientation.z = rot[2];
-
-            // Normalize orientation (only if not null)
-            if (descriptor.cframe.orientation >= 1e-8 || descriptor.cframe.orientation <= -1e-8)
-                descriptor.cframe.orientation = descriptor.cframe.orientation.normalize();
-        }
+        static inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0f)
+        {return color1 * color2 * intensity / 255;}
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

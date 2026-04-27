@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Directional.cpp
@@ -22,7 +22,7 @@ void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer,
     raytracer::ObjectDescriptor descriptor;
 
     // Setup the cframe
-    raytracer::Raytracer::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
     double intensity = 1.0f;
@@ -73,7 +73,6 @@ void raytracer::Directional::reset(void)
     }
 
     // Set rays init position & orientation
-    std::cout << "light: " << resolution << std::endl;
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
             // Orientation
