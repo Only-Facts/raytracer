@@ -26,6 +26,7 @@ File Description:
 #include <cstdint>
 #include <thread>
 #include <vector>
+#include <cmath>
 
 /*
 gui:
@@ -152,11 +153,9 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
-                //std::cout << "Collide light" << std::endl;
                 nearestObject->reflectRay(ray, faceHit);
-                float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
-                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
-                ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
+                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity());
+                ray->setIntensity(ray->getIntensity() * (nearestObject->getObjectDescriptor().material->isMirror() ? 1.0f : nearestObject->getObjectDescriptor().material->getLightReflectionCoef()));
                 ray->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // To counter collision with the same object on the next iteration
@@ -164,7 +163,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= camera->getRenderDistance()) { // Too far
                 ray->kill();
             } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
                 ray->kill();
@@ -213,14 +212,13 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
-                //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
                     ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
                 } else {
-                    float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
+                    float localIntensityCoef = std::exp(-EXP_K * (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance());
                     color = nearestObject->getPointColor(ray->getCFrame().position);
                     color = raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
                     ray->setColor(color);
@@ -229,7 +227,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= camera->getRenderDistance()) { // Too far
                 ray->setColor(sky.getColor());
                 ray->kill();
             }

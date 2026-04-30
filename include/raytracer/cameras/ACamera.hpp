@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -36,6 +36,7 @@ class ACamera: public raytracer::ICamera {
         std::vector<raytracer::Color> _screen; // Screen pixel
         std::vector<raytracer::Ray*> _rays;
         raytracer::Resolution _resolution;
+        raytracer::Type _renderDistance = RENDER_DISTANCE;
 
     public:
         // ---------- Pre-Function -------- //
@@ -46,6 +47,8 @@ class ACamera: public raytracer::ICamera {
         nodiscard std::vector<raytracer::Ray*> getRays(void) const {return this->_rays;};
         void setResolution(raytracer::Resolution resolution) {this->_resolution = resolution;};
         nodiscard raytracer::Resolution getResolution(void) const {return this->_resolution;};
+        nodiscard raytracer::Type getRenderDistance(void) const {return this->_renderDistance;};
+        void setRenderDistance(raytracer::Type renderDistance) {this->_renderDistance = renderDistance;};
 
         // ------------ Operator ---------- //
         ACamera& operator=(const ACamera& object) = delete;

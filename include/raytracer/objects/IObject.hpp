@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -59,6 +59,7 @@ class IObject {
         virtual void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) = 0;
         virtual void setCFrame(const raytracer::CFrame& cframe) = 0;
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
+        virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;
 
         // ------------ Operator ---------- //
