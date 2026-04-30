@@ -71,8 +71,8 @@ void raytracer::Camera2D::reset(void)
         ray->reset();
 
     // Pre compute x & y angles
-    raytracer::Type angleX = -raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
-    raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+    raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
+    raytracer::Type angleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
 
     // Set rays init position & orientation
     resolution = this->getResolution();
@@ -90,7 +90,6 @@ void raytracer::Camera2D::reset(void)
             cframe.position.y = rotated.y;
             // Apply look vector
             cframe.position = raytracer::rotatePoint3D(position, cframe.position, angleX, angleY);
-            cframe.position.y = -cframe.position.y;
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }
