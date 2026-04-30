@@ -1,17 +1,17 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
-##  @file Directional.hpp
+##  @file Spot.hpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#ifndef DIRECTIONAL_H
-    #define DIRECTIONAL_H
+#ifndef SPOT_H
+    #define SPOT_H
 
     //----------------------------------------------------------------//
     /* INCLUDE */
@@ -23,7 +23,7 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Directional: public raytracer::ALight {
+class Spot: public raytracer::ALight {
     private:
         float _fieldOfLight = 70.0f;
 
@@ -34,17 +34,17 @@ class Directional: public raytracer::ALight {
         void reset(void) final;
 
         // ------------ Operator ---------- //
-        Directional& operator=(const Directional& object) = delete;
-        Directional& operator=(Directional&& object) = delete;
+        Spot& operator=(const Spot& object) = delete;
+        Spot& operator=(Spot&& object) = delete;
 
         // ---------- Constructor --------- //
-        Directional() = default;
-        Directional(const Directional& object) = delete;
-        Directional(Directional&& object) = delete;
+        Spot() = default;
+        Spot(const Spot& object) = delete;
+        Spot(Spot&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Directional() = default;
+        ~Spot() = default;
 };
 
 } // namespace end
-#endif /* DIRECTIONAL_H */
+#endif /* SPOT_H */

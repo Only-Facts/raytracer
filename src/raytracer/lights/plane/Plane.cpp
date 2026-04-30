@@ -1,9 +1,9 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
-##  @file Directional.cpp
+##  @file Plane.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -12,12 +12,13 @@ File Description:
 
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/lights/Directional.hpp"
+#include "raytracer/lights/Plane.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cmath>
 
-void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Plane::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -38,15 +39,11 @@ void raytracer::Directional::parse(unused const raytracer::Raytracer& raytracer,
         };
     }
 
-    double fieldOfLight = 70.0f;
-    if (node.lookupValue("fieldOfLight", fieldOfLight))
-        this->_fieldOfLight = fieldOfLight;
-
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::Directional::init(void)
+void raytracer::Plane::init(void)
 {
     std::size_t size = LIGHT_RAY;
 
@@ -60,10 +57,14 @@ void raytracer::Directional::init(void)
         this->_rays[i] = new raytracer::LightRay();
 }
 
-void raytracer::Directional::reset(void)
+void raytracer::Plane::reset(void)
 {
     utils::vector::OVector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
-    raytracer::CFrame cframe;
+    raytracer::CFrame cframe = this->getCFrame();
+    raytracer::Coord position = cframe.position;
+    raytracer::Direction orientation = cframe.orientation;
+    raytracer::Angle rotation = -cframe.rotation;
+    raytracer::Coord2D rotated;
 
     // For each rays set default light value
     for (raytracer::LightRay* ray: this->_rays) {
@@ -72,15 +73,26 @@ void raytracer::Directional::reset(void)
         ray->setIntensity(this->_intensity);
     }
 
+    // Pre compute x & y angles
+    raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
+    raytracer::Type angleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+    utils::vector::OVector2<float> resolution2 = resolution / 2;
+
     // Set rays init position & orientation
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
-            // Orientation
-            cframe.orientation = this->getCFrame().orientation;
+            // Orientation (2D = same as the look vector)
+            cframe.orientation = orientation;
             // Position
-            cframe.position = this->getCFrame().position;
-            cframe.position.x += (x - resolution.x / 2);
-            cframe.position.y += (y - resolution.y / 2);
+            cframe.position = position;
+            cframe.position.x += (resolution2.x - x);
+            cframe.position.y += (resolution2.y - y);
+            // Apply rotation
+            rotated = raytracer::rotatePoint2D({position.x, position.y}, {cframe.position.x, cframe.position.y}, rotation);
+            cframe.position.x = rotated.x;
+            cframe.position.y = rotated.y;
+            // Apply look vector
+            cframe.position = raytracer::rotatePoint3D(position, cframe.position, angleX, angleY);
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }

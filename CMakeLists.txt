@@ -133,11 +133,17 @@ set(SRC_POINT
 )
 add_library(light_point SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_POINT})
 
-set(SRC_DIRECTIONAL
-    src/raytracer/lights/directional/lib.cpp
-    src/raytracer/lights/directional/Directional.cpp
+set(SRC_SPOT
+    src/raytracer/lights/spot/lib.cpp
+    src/raytracer/lights/spot/Spot.cpp
 )
-add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
+add_library(light_spot SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_SPOT})
+
+set(SRC_PLANE
+    src/raytracer/lights/plane/lib.cpp
+    src/raytracer/lights/plane/Plane.cpp
+)
+add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 
 # =========================
 # Objects
@@ -212,7 +218,8 @@ set_target_properties(
 set_target_properties(
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/lights
@@ -249,7 +256,8 @@ foreach(target
     camera_cameraFOV
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane
@@ -277,7 +285,8 @@ foreach(target
     camera_cameraFOV
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane

@@ -119,7 +119,6 @@ struct ObjectDescriptor {
         // Set values
         const libconfig::Setting& pos = cframe["position"];
         descriptor.cframe.position.x = pos[0];
-        descriptor.cframe.position.x = -descriptor.cframe.position.x; // Invert the x axis
         descriptor.cframe.position.y = pos[1];
         descriptor.cframe.position.z = pos[2];
         const libconfig::Setting& rot = cframe["orientation"];
