@@ -45,16 +45,16 @@ nodiscard raytracer::Coord raytracer::rotatePoint3D(const raytracer::Coord& orig
     // Rotation x
     raytracer::Type cosX = std::cos(radX);
     raytracer::Type sinX = std::sin(radX);
-    raytracer::Type x1 = x * cosX - z * sinX;
-    raytracer::Type z1 = x * sinX + z * cosX;
-    raytracer::Type y1 = y;
+    raytracer::Type y1 = y * cosX - z * sinX;
+    raytracer::Type z1 = y * sinX + z * cosX;
+    raytracer::Type x1 = x;
 
     // Rotation y
     raytracer::Type cosY = std::cos(radY);
     raytracer::Type sinY = std::sin(radY);
-    raytracer::Type y2 = y1 * cosY - z1 * sinY;
-    raytracer::Type z2 = y1 * sinY + z1 * cosY;
-    raytracer::Type x2 = x1;
+    raytracer::Type x2 = x1 * cosY - z1 * sinY;
+    raytracer::Type z2 = x1 * sinY + z1 * cosY;
+    raytracer::Type y2 = y1;
 
     // Re apply the origin
     return {x2 + origin.x, y2 + origin.y, z2 + origin.z};
