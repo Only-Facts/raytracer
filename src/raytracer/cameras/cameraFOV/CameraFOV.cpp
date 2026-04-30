@@ -16,6 +16,7 @@ File Description:
 #include "raytracer/cameras/CameraFOV.hpp"
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
+#include "raytracer/Define.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
@@ -37,6 +38,10 @@ void raytracer::CameraFOV::parse(unused const raytracer::Raytracer& raytracer, c
     double fieldOfView = 70.0f;
     if (node.lookupValue("fieldOfView", fieldOfView))
         this->_fieldOfView = fieldOfView;
+    
+    double renderDistance = RENDER_DISTANCE;
+    if (node.lookupValue("renderDistance", renderDistance))
+        this->_renderDistance = renderDistance;
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);

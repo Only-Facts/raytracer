@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -93,6 +93,7 @@ struct ObjectDescriptor {
 
     /* all */
     raytracer::CFrame cframe;
+    raytracer::CFrame cframeOrigin;
     raytracer::IMaterial* material;
     std::vector<raytracer::Face> faces;
 
@@ -101,7 +102,7 @@ struct ObjectDescriptor {
 
     // ---------- Constructor --------- //
     ObjectDescriptor() = default;
-    ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe} {};
+    ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe}, cframeOrigin{cframe} {};
 
     // -------- Static-Function ------- //
     static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
@@ -118,6 +119,7 @@ struct ObjectDescriptor {
         // Set values
         const libconfig::Setting& pos = cframe["position"];
         descriptor.cframe.position.x = pos[0];
+        descriptor.cframe.position.x = -descriptor.cframe.position.x; // Invert the x axis
         descriptor.cframe.position.y = pos[1];
         descriptor.cframe.position.z = pos[2];
         const libconfig::Setting& rot = cframe["orientation"];
@@ -132,6 +134,8 @@ struct ObjectDescriptor {
         if (descriptor.cframe.orientation.x >= 1e-8 || descriptor.cframe.orientation.y >= 1e-8 || descriptor.cframe.orientation.z >= 1e-8
             || descriptor.cframe.orientation.x <= -1e-8 || descriptor.cframe.orientation.y <= -1e-8 || descriptor.cframe.orientation.z <= -1e-8)
             descriptor.cframe.orientation = descriptor.cframe.orientation.normalize();
+
+        descriptor.cframeOrigin = descriptor.cframe;
     }
 };
 

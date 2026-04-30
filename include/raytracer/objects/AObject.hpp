@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -63,8 +63,9 @@ class AObject: public raytracer::IObject {
 
         /* getter & setter */
         void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
-        void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe;};
+        void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe; this->_descriptor.cframeOrigin = cframe;};
         nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
+        nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
         nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
 
         // ------------ Operator ---------- //

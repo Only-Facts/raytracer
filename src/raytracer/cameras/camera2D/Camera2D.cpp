@@ -16,6 +16,7 @@ File Description:
 #include "raytracer/cameras/Camera2D.hpp"
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
+#include "raytracer/Define.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
@@ -33,6 +34,10 @@ void raytracer::Camera2D::parse(unused const raytracer::Raytracer& raytracer, co
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
     const libconfig::Setting& res = node["resolution"];
     this->setResolution({(int)res[0], (int)res[1]});
+
+    double renderDistance = RENDER_DISTANCE;
+    if (node.lookupValue("renderDistance", renderDistance))
+        this->_renderDistance = renderDistance;
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);

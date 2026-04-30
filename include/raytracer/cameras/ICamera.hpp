@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ICamera.hpp
@@ -39,6 +39,8 @@ class ICamera: public raytracer::AObject {
         virtual std::vector<raytracer::Ray*> getRays(void) const = 0;
         virtual void setResolution(raytracer::Resolution resolution) = 0;
         virtual raytracer::Resolution getResolution(void) const = 0;
+        virtual raytracer::Type getRenderDistance(void) const = 0;
+        virtual void setRenderDistance(raytracer::Type renderDistance) = 0;
 
         // ------------ Operator ---------- //
         ICamera& operator=(const ICamera& object) = delete;
