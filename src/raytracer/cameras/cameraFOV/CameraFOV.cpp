@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file CameraFOV.cpp
@@ -14,6 +14,7 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/cameras/CameraFOV.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
@@ -62,24 +63,44 @@ void raytracer::CameraFOV::init(void)
 
 void raytracer::CameraFOV::reset(void)
 {
-    utils::vector::OVector2<int> resolution;
-    raytracer::CFrame cframe;
+    
+    utils::vector::OVector2<int> resolution = this->getResolution();
+    raytracer::CFrame cframe = this->getCFrame();
+    raytracer::Coord position = cframe.position;
+    raytracer::Direction orientation = cframe.orientation;
+    raytracer::Angle rotation = cframe.rotation;
+    raytracer::Angle angleX = 0.0, angleY = 0.0;
+    raytracer::Coord2D rotated;
 
     // For each rays set default light value
     for (raytracer::Ray* ray: this->_rays)
         ray->reset();
 
+    // Pre compute values
+    float fieldOfViewW = this->_fieldOfView * .5;
+    float fieldOfViewH = (resolution.y / static_cast<float>(resolution.x)) * this->_fieldOfView * .5;
+    raytracer::Type diffAngleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
+    raytracer::Type diffAngleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+    utils::vector::OVector2<float> resolution2 = resolution / 2;
+
     // Set rays init position & orientation
-    resolution = this->getResolution();
     for (int y = 0; y < resolution.y; ++y) {
+        angleX = ((y - resolution2.y) / resolution2.y) * fieldOfViewH;
         for (int x = 0; x < resolution.x; ++x) {
+            angleY = ((x - resolution2.x) / resolution2.x) * fieldOfViewW;
             // Orientation
-            cframe.orientation = this->getCFrame().orientation;
-            // Position
-            cframe.position = this->getCFrame().position;
-            cframe.position.x += (x - resolution.x / 2);
-            cframe.position.y += (y - resolution.y / 2);
-            //this->_rays[y * resolution.x + x]->setCFrame(cframe);
+            cframe.orientation = orientation;
+            // Apply rotation
+            cframe.orientation = raytracer::rotatePoint3D({0.0, 0.0, 0.0}, cframe.orientation, -diffAngleX, -diffAngleY);
+            rotated = raytracer::rotatePoint2D({0.0, 0.0}, {cframe.orientation.x, cframe.orientation.y}, rotation);
+            cframe.orientation.x = rotated.x;
+            cframe.orientation.y = rotated.y;
+            cframe.orientation = raytracer::rotatePoint3D({0.0, 0.0, 0.0}, cframe.orientation, diffAngleX, diffAngleY);
+            // Apply field of view
+            cframe.orientation = raytracer::rotatePoint3D({0.0, 0.0, 0.0}, cframe.orientation, angleX, angleY);
+            // Position (FOV = same as the origin)
+            cframe.position = position;
+            this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }
 }
