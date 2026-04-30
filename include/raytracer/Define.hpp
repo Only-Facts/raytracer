@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -19,7 +19,7 @@ File Description:
     /* limits */
     #define LIGHT_INTENSITY_LIMIT 1e-2 // Kill the ray under this intensity
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
-    #define LIGHT_COLOR_LIMIT 1e-2 // Radius of the circle to take color on a shape pixel hit point
+    #define LIGHT_COLOR_LIMIT 1 // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
 
     /* values */

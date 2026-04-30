@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file lib.cpp
@@ -17,7 +17,7 @@ extern "C" {
     // Return the name of the lib
     const char* name(void)
     {
-        return "Object";
+        return "obj";
     }
 
     // Constructor of the lib
