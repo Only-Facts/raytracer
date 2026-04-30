@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 28/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Viewer.cpp
@@ -28,6 +28,8 @@ void raytracer::Viewer::init(void)
 
     // Clear old data
     this->_screen.clear();
+    for (std::size_t i = 0; i < this->_rays.size(); ++i)
+        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size

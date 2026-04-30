@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -14,6 +14,7 @@ File Description:
 #define _Vector
 #define _Attribute
 #include "utils/utils.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/cameras/Viewer.hpp"
 #include <SFML/Graphics.hpp>
@@ -147,7 +148,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             if (first) continue;
 
             // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+            ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
@@ -156,10 +157,10 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
-                ray->setColor(raytracer::Raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
+                ray->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // To counter collision with the same object on the next iteration
-                ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
+                ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
             }
 
             // Kill conditions
@@ -208,7 +209,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             if (first) continue;
 
             // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+            ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
@@ -217,11 +218,11 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                     nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
-                    ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
+                    ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
                 } else {
                     float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
                     color = nearestObject->getPointColor(ray->getCFrame().position);
-                    color = raytracer::Raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
+                    color = raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
                     ray->setColor(color);
                     ray->kill();
                 }
@@ -302,7 +303,7 @@ void raytracer::Raytracer::render(void)
     // 3 - Compute color from global lights
     for (raytracer::ILight* light: this->_lights) {
         if (!light->isGlobal()) continue; // Ignore no global light
-        globalLightColor = raytracer::Raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
+        globalLightColor = raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
     }
 
     // 3 - Compute camera rays

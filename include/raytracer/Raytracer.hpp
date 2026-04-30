@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 28/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -114,10 +114,6 @@ class Raytracer {
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
-
-        // -------- Static-Function ------- //
-        static inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0f)
-        {return color1 * color2 * intensity / 255;}
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

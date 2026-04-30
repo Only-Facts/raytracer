@@ -58,6 +58,9 @@ set(SRC
     src/raytracer/RaytracerInit.cpp
     src/raytracer/DynamicLibrary.cpp
 
+    # Special
+    src/raytracer/special/Utils.cpp
+
     # Objects
     src/raytracer/objects/AObject.cpp
 
@@ -75,6 +78,7 @@ add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} SHARED ${SRC})
 
 set(SRC_LIBS
+    src/raytracer/special/Utils.cpp
 )
 
 # =========================
