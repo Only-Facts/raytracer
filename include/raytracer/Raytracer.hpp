@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp

@@ -87,8 +87,8 @@ void raytracer::Camera2D::reset(void)
             cframe.orientation = orientation;
             // Position
             cframe.position = position;
-            cframe.position.x += (x - resolution2.x);
-            cframe.position.y += (y - resolution2.y);
+            cframe.position.x += (resolution2.x - x);
+            cframe.position.y += (resolution2.y - y);
             // Apply rotation
             rotated = raytracer::rotatePoint2D({position.x, position.y}, {cframe.position.x, cframe.position.y}, rotation);
             cframe.position.x = rotated.x;

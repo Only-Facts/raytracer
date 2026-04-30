@@ -163,7 +163,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= camera->getRenderDistance()) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->kill();
             } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
                 ray->kill();
@@ -176,7 +176,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
-    raytracer::Color globalLightColor)
+    bool hasGlobalLight, raytracer::Color globalLightColor)
 {
     raytracer::Color color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
@@ -220,14 +220,14 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                 } else {
                     float localIntensityCoef = std::exp(-EXP_K * (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance());
                     color = nearestObject->getPointColor(ray->getCFrame().position);
-                    color = raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
+                    color = raytracer::mergeColor((hasGlobalLight) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
                     ray->setColor(color);
                     ray->kill();
                 }
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= camera->getRenderDistance()) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->setColor(sky.getColor());
                 ray->kill();
             }
@@ -299,9 +299,11 @@ void raytracer::Raytracer::render(void)
     }
 
     // 3 - Compute color from global lights
+    bool hasGlobalLight = false;
     for (raytracer::ILight* light: this->_lights) {
         if (!light->isGlobal()) continue; // Ignore no global light
         globalLightColor = raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
+        hasGlobalLight = true;
     }
 
     // 3 - Compute camera rays
@@ -319,7 +321,7 @@ void raytracer::Raytracer::render(void)
             start, end,
             std::cref(this->_objects),
             this->_camera, std::cref(this->_sky),
-            globalLightColor
+            hasGlobalLight, globalLightColor
         );
     }
 
