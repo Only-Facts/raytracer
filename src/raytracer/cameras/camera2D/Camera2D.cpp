@@ -59,11 +59,11 @@ void raytracer::Camera2D::init(void)
 
 void raytracer::Camera2D::reset(void)
 {
-    utils::vector::OVector2<int> resolution;
+    utils::vector::OVector2<int> resolution = this->getResolution();
     raytracer::CFrame cframe = this->getCFrame();
     raytracer::Coord position = cframe.position;
     raytracer::Direction orientation = cframe.orientation;
-    raytracer::Angle rotation = cframe.rotation;
+    raytracer::Angle rotation = -cframe.rotation;
     raytracer::Coord2D rotated;
 
     // For each rays set default light value
@@ -73,17 +73,17 @@ void raytracer::Camera2D::reset(void)
     // Pre compute x & y angles
     raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
     raytracer::Type angleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+    utils::vector::OVector2<float> resolution2 = resolution / 2;
 
     // Set rays init position & orientation
-    resolution = this->getResolution();
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
             // Orientation (2D = same as the look vector)
             cframe.orientation = orientation;
             // Position
             cframe.position = position;
-            cframe.position.x += (x - resolution.x / 2);
-            cframe.position.y += (y - resolution.y / 2);
+            cframe.position.x += (x - resolution2.x);
+            cframe.position.y += (y - resolution2.y);
             // Apply rotation
             rotated = raytracer::rotatePoint2D({position.x, position.y}, {cframe.position.x, cframe.position.y}, rotation);
             cframe.position.x = rotated.x;
