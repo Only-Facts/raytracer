@@ -155,7 +155,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
                 nearestObject->reflectRay(ray, faceHit);
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity());
-                ray->setIntensity(ray->getIntensity() * (nearestObject->getObjectDescriptor().material->isMirror() ? 1.0f : nearestObject->getObjectDescriptor().material->getLightReflectionCoef()));
+                ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                 ray->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // To counter collision with the same object on the next iteration
