@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -13,6 +13,7 @@ File Description:
 #define _Attribute
 #define _Exception
 #include "utils/utils.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/objects/AObject.hpp"
 #include "raytracer/rays/IRay.hpp"
 #include "raytracer/Raytracer.hpp"
@@ -42,7 +43,7 @@ hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& p
             found = true;
 
             // Fuse the colors
-            pointColor = raytracer::Raytracer::mergeColor(pointColor, data.colors[i], data.intensitys[i]);
+            pointColor = raytracer::mergeColor(pointColor, data.colors[i], data.intensitys[i]);
         }
     }
 
@@ -83,9 +84,9 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
 
     // Compute world rotation
     raytracer::Coord orientation = descriptor.cframe.orientation;
-    double len = orientation.dot(orientation);
+    raytracer::Type len = orientation.dot(orientation);
     if (len < 1e-12) orientation = {0, 0, 1}; // Fallback orientation
-    raytracer::Coord forward = orientation.normalize();
+    raytracer::Coord forward = orientation;
     raytracer::Coord worldUp = {0, 1, 0};
     if (std::abs(forward.dot(worldUp)) > 0.999) worldUp = {1, 0, 0}; // Edge case, parrallel
     raytracer::Coord right = (worldUp.cross(forward)).normalize();
@@ -136,20 +137,20 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
 hot void raytracer::AObject::reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const
 {
     raytracer::CFrame cframe = ray->getCFrame();
-    raytracer::Coord orientation = cframe.orientation.normalize();
+    raytracer::Coord orientation = cframe.orientation;
     raytracer::Coord hit = this->computeHit(cframe.position, face).normalize();
     if (orientation.dot(hit) > 0) hit = -hit;
     orientation = orientation - hit * (2.0 * orientation.dot(hit));
-    cframe.orientation = orientation.normalize();
+    cframe.orientation = orientation;
     ray->setCFrame(cframe);
 }
 
 static float segmentSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
 {
     raytracer::Coord ab = b - a;
-    double v = ab.dot(ab);
+    raytracer::Type v = ab.dot(ab);
     if (v == 0.0) return (point - a).lengthSquared(); // Security
-    double t = (point - a).dot(ab) / v;
+    raytracer::Type t = (point - a).dot(ab) / v;
     t = std::clamp(t, 0.0, 1.0);
     raytracer::Coord closest = a + t * ab;
     return (point - closest).lengthSquared();
@@ -191,7 +192,7 @@ hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Ver
 
     // normale du triangle
     raytracer::Coord n = ab.cross(ac);
-    double nLen2 = n.dot(n);
+    raytracer::Type nLen2 = n.dot(n);
 
     // Invalid triangle
     if (nLen2 == 0.0) {
@@ -203,7 +204,7 @@ hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Ver
     }
 
     // Project the point on the triangle
-    double distPlane = ap.dot(n);
+    raytracer::Type distPlane = ap.dot(n);
     raytracer::Coord proj = point - n * (distPlane / nLen2);
 
     // Check if the point is inside

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -23,7 +23,7 @@ File Description:
     #define MAX_VERTICES 3 // Allow point, segment, triangle
 
     /* values */
-    #define RENDER_DISTANCE 250 // Kill the ray if the SDF is above or equal to that valuea
+    #define RENDER_DISTANCE 300 // Kill the ray if the SDF is above or equal to that valuea
     #define LIGHT_RAY 1000000 // Number of rays by light
     #define DEFAULT_LIGHT false // Enable or disable seeing object without light
     #define CHUNK_SIZE 10 // Size of the chunk used

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 28/04/2026 by @author Tsukini
 
 File Name:
 ##  @file CameraFOV.cpp
@@ -47,6 +47,8 @@ void raytracer::CameraFOV::init(void)
 
     // Clear old data
     this->_screen.clear();
+    for (std::size_t i = 0; i < this->_rays.size(); ++i)
+        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size
@@ -77,7 +79,7 @@ void raytracer::CameraFOV::reset(void)
             cframe.position = this->getCFrame().position;
             cframe.position.x += (x - resolution.x / 2);
             cframe.position.y += (y - resolution.y / 2);
-            this->_rays[y * resolution.x + x]->setCFrame(cframe);
+            //this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }
 }

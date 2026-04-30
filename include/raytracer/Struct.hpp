@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 28/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -32,8 +32,12 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS & TYPEDEF */
 
-using Coord = utils::vector::OVector3<double>;
-using Direction = utils::vector::OVector3<double>; // Generaly normalized
+using Type = double; // Type used everywhere for coord, angle, direction, computing, ...
+
+using Coord2D = utils::vector::OVector2<raytracer::Type>;
+using Coord = utils::vector::OVector3<raytracer::Type>;
+using Direction = utils::vector::OVector3<raytracer::Type>; // Generaly normalized
+using Angle = raytracer::Type;
 
 using Chunk = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
 
@@ -42,12 +46,13 @@ using Resolution = utils::vector::OVector2<std::uint16_t>;
 using Color = utils::vector::OVector3<std::uint8_t>;
 using HugeColor = utils::vector::OVector3<std::uint16_t>;
 
-using Vertice = utils::vector::OVector3<double>;
+using Vertice = utils::vector::OVector3<raytracer::Type>;
 using Face = std::vector<Vertice>;
 
 struct CFrame {
     raytracer::Coord position = {0.0, 0.0, 0.0};
     raytracer::Direction orientation = {0.0, 0.0, 0.0};
+    raytracer::Angle rotation = 0.0;
 };
 
 enum class Shape {
@@ -102,23 +107,30 @@ struct ObjectDescriptor {
     static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
     {
         // Check existantce
-        if (!node.exists("position"))
+        if (!node.exists("cframe"))
+            throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The CFrame field isn't defined");
+        const libconfig::Setting& cframe = node["cframe"];
+        if (!cframe.exists("position"))
             throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The position field isn't defined for the CFrame");
-        else if (!node.exists("orientation"))
+        else if (!cframe.exists("orientation"))
             throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The orientation field isn't defined for the CFrame");
 
         // Set values
-        const libconfig::Setting& pos = node["position"];
+        const libconfig::Setting& pos = cframe["position"];
         descriptor.cframe.position.x = pos[0];
         descriptor.cframe.position.y = pos[1];
         descriptor.cframe.position.z = pos[2];
-        const libconfig::Setting& rot = node["orientation"];
+        const libconfig::Setting& rot = cframe["orientation"];
         descriptor.cframe.orientation.x = rot[0];
         descriptor.cframe.orientation.y = rot[1];
         descriptor.cframe.orientation.z = rot[2];
+        double rotation = 0.0;
+        if (cframe.lookupValue("rotation", rotation))
+            descriptor.cframe.rotation = rotation;
 
         // Normalize orientation (only if not null)
-        if (descriptor.cframe.orientation >= 1e-8 || descriptor.cframe.orientation <= -1e-8)
+        if (descriptor.cframe.orientation.x >= 1e-8 || descriptor.cframe.orientation.y >= 1e-8 || descriptor.cframe.orientation.z >= 1e-8
+            || descriptor.cframe.orientation.x <= -1e-8 || descriptor.cframe.orientation.y <= -1e-8 || descriptor.cframe.orientation.z <= -1e-8)
             descriptor.cframe.orientation = descriptor.cframe.orientation.normalize();
     }
 };

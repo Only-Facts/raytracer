@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera2D.cpp
@@ -14,6 +14,7 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/cameras/Camera2D.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
@@ -43,6 +44,8 @@ void raytracer::Camera2D::init(void)
 
     // Clear old data
     this->_screen.clear();
+    for (std::size_t i = 0; i < this->_rays.size(); ++i)
+        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size
@@ -57,22 +60,37 @@ void raytracer::Camera2D::init(void)
 void raytracer::Camera2D::reset(void)
 {
     utils::vector::OVector2<int> resolution;
-    raytracer::CFrame cframe;
+    raytracer::CFrame cframe = this->getCFrame();
+    raytracer::Coord position = cframe.position;
+    raytracer::Direction orientation = cframe.orientation;
+    raytracer::Angle rotation = cframe.rotation;
+    raytracer::Coord2D rotated;
 
     // For each rays set default light value
     for (raytracer::Ray* ray: this->_rays)
         ray->reset();
 
+    // Pre compute x & y angles
+    raytracer::Type angleX = -raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
+    raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+
     // Set rays init position & orientation
     resolution = this->getResolution();
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
-            // Orientation
-            cframe.orientation = this->getCFrame().orientation;
+            // Orientation (2D = same as the look vector)
+            cframe.orientation = orientation;
             // Position
-            cframe.position = this->getCFrame().position;
+            cframe.position = position;
             cframe.position.x += (x - resolution.x / 2);
             cframe.position.y += (y - resolution.y / 2);
+            // Apply rotation
+            rotated = raytracer::rotatePoint2D({position.x, position.y}, {cframe.position.x, cframe.position.y}, rotation);
+            cframe.position.x = rotated.x;
+            cframe.position.y = rotated.y;
+            // Apply look vector
+            cframe.position = raytracer::rotatePoint3D(position, cframe.position, angleX, angleY);
+            cframe.position.y = -cframe.position.y;
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }
