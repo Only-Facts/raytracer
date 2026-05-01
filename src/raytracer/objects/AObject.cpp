@@ -25,28 +25,40 @@ File Description:
 #include <exception>
 #include <iostream>
 
+static void processChunk(const raytracer::ChunkObjectData& data,
+    const raytracer::Coord& point, raytracer::FColor& pointColor,
+    float& count)
+{
+    for (std::size_t i = 0; i < data.positions.size(); ++i) {
+        // Check if the point is near the light ray
+        if ((point - data.positions[i]).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
+        //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
+        ++count;
+
+        // Fuse the colors
+        pointColor += data.colors[i] * data.intensitys[i];
+        count += data.intensitys[i];
+    }
+}
+
 hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
     raytracer::FColor pointColor = DEFAULT_COLOR;
-    raytracer::Chunk chunk = raytracer::getChunk(point);
+    raytracer::Coord chunkPoint;
+    raytracer::Chunk chunk;
     float count = 0;
 
-    // Only if the chunk exist
-    if (this->_lightData.contains(chunk)) {
+    // For each chunk around the chunk point
+    static int limits = std::ceil(CHUNK_SIZE / LIGHT_COLOR_LIMIT);
+    for (int z = -limits; z <= limits; ++z) {
+    for (int y = -limits; y <= limits; ++y) {
+    for (int x = -limits; x <= limits; ++x) {
+        chunkPoint = {x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE};
+        chunk = raytracer::getChunk(point + chunkPoint);
+        if (!this->_lightData.contains(chunk)) continue;
         const raytracer::ChunkObjectData& data = this->_lightData[chunk];
-
-        // For each light rays
-        for (std::size_t i = 0; i < data.positions.size(); ++i) {
-            // Check if the point is near the light ray
-            if ((point - data.positions[i]).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
-            //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
-            ++count;
-
-            // Fuse the colors
-            pointColor += data.colors[i] * data.intensitys[i];
-            count += data.intensitys[i];
-        }
-    }
+        processChunk(data, point, pointColor, count);
+    }}}
 
     // No light ray on this hit
     if (!DEFAULT_LIGHT && !count)
