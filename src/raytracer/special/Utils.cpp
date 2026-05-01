@@ -131,7 +131,7 @@ static float fbm(const raytracer::Coord& p)
     return total;
 }
 
-void raytracer::noise(const raytracer::Coord& p, raytracer::FColor& v)
+void raytracer::noise(const raytracer::Coord& p, raytracer::FColor& v, float strength, float size)
 {
-    v *= (1.0f + (fbm((p) * NOISE_SIZE) - 0.5f) * NOISE_STRENGTH);
+    v *= (1.0f + (fbm((p) * size) - 0.5f) * strength);
 }

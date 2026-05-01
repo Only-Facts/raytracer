@@ -19,7 +19,7 @@ File Description:
     /* type */
     #define _Vector
     #include "utils/utils.hpp"  // utils::vector::Vector3
-    #include "../Struct.hpp"    // raytracer::Color
+    #include "../Struct.hpp"    // raytracer::* (types)
     #include <libconfig.h++>    // libconfig::Setting
 
 namespace raytracer { // namespace start
@@ -36,6 +36,7 @@ class IMaterial {
         virtual float getTransparency(void) const = 0;
         virtual float getLightReflectionCoef(void) const = 0;
         virtual bool isMirror(void) const = 0;
+        virtual std::pair<float, float> getNoiseSettings(void) const = 0;
         virtual bool hasNoise(void) const = 0;
 
         // ------------ Operator ---------- //

@@ -201,6 +201,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 {
     raytracer::FColor color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
+    raytracer::IMaterial* material = nullptr;
     const raytracer::Face* faceHit = nullptr;
     float sdf = 0.0;
     bool first = true;
@@ -234,8 +235,9 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
+                material = nearestObject->getObjectDescriptor().material;
                 ray->setImmunity(nullptr); // Reset immunity
-                if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
+                if (material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
@@ -245,11 +247,13 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                     float localIntensityCoef = std::exp(-EXP_K * (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance());
                     auto [pointColor, ok] = nearestObject->getPointColor(ray->getCFrame().position);
                     color = pointColor;
-                    if (hasGlobalLight && !ok) color = raytracer::mergeColor(color, raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), globalLightColor, localIntensityCoef));
-                    else if (hasGlobalLight) color = raytracer::moyColor(color, raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), globalLightColor, localIntensityCoef));
+                    if (hasGlobalLight && !ok) color = raytracer::mergeColor(color, raytracer::mergeColor(material->getColor(), globalLightColor, localIntensityCoef));
+                    else if (hasGlobalLight) color = raytracer::moyColor(color, raytracer::mergeColor(material->getColor(), globalLightColor, localIntensityCoef));
                     color = raytracer::mergeColor(ray->getColor(), color);
-                    if (nearestObject->getObjectDescriptor().material->hasNoise())
-                        raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color);
+                    if (material->hasNoise()) {
+                        auto [strength, size] = material->getNoiseSettings();
+                        raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
+                    }
                     ray->setColor(color);
 
                     // Transparency & Refraction
