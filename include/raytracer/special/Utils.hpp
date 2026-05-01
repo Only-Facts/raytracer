@@ -27,7 +27,7 @@ namespace raytracer { // namespace start
 /* PROTOTYPE */
 
 /* color */
-void noise(const raytracer::Coord& p, raytracer::FColor& v);
+void noise(const raytracer::Coord& p, raytracer::FColor& v, float strength = NOISE_STRENGTH, float size = NOISE_SIZE);
 inline nodiscard raytracer::Color moyColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
 {return (color1 + color2 * intensity) / (1 + intensity);};
 inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
