@@ -35,6 +35,7 @@ class AMaterial: public raytracer::IMaterial {
         float _transparency = 0.0f; // Material transparency
         float _reflection = 0.0f; // Material light reflection
         bool _mirror = false; // Reflect the camera rays
+        bool _noise = false; // Enable noise on the surface color
 
     public:
         // ------------ Function ---------- //
@@ -42,6 +43,7 @@ class AMaterial: public raytracer::IMaterial {
         nodiscard float getTransparency(void) const final {return this->_transparency;};
         nodiscard float getLightReflectionCoef(void) const final {return this->_reflection;};
         nodiscard bool isMirror(void) const final {return this->_mirror;};
+        nodiscard bool hasNoise(void) const final {return this->_noise;};
 
         // ------------ Operator ---------- //
         AMaterial& operator=(const AMaterial& object) = delete;

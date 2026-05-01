@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -32,8 +32,9 @@ namespace raytracer { // namespace start
 
 class AObject: public raytracer::IObject {
     private:
+        raytracer::IObject* _immunity = nullptr; // Dosen't comput SDF with this object
         mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightData;
-        std::mutex _lockLightData;
+        std::mutex _lock;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -50,10 +51,14 @@ class AObject: public raytracer::IObject {
         raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
 
         /* color handling */
-        raytracer::Color getPointColor(const raytracer::Coord& point) const final;
+        std::pair<raytracer::Color, bool> getPointColor(const raytracer::Coord& point) const final;
         void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) final;
 
         // ------------ Function ---------- //
+        /* 3D logic */
+        void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
+        raytracer::IObject* getImmunity(void) const final {return this->_immunity;};
+
         /* movement */
         void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
         void rotate(const raytracer::Direction& v) final {this->_descriptor.cframe.orientation += v;};

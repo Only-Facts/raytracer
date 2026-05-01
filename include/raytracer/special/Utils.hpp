@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 28/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Utils.hpp
@@ -20,14 +20,33 @@ File Description:
     #define _Attribute
     #include "utils/utils.hpp"  // nodiscard
     #include "../Struct.hpp"    // raytracer::* (types)
+    #include <cstdint>          // std::uint16_t
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* PROTOTYPE */
 
 /* color */
-inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity)
-{return color1 * color2 * intensity / 255;};
+void noise(const raytracer::Coord& p, raytracer::FColor& v);
+inline nodiscard raytracer::Color moyColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
+{return (color1 + color2 * intensity) / (1 + intensity);};
+inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
+{
+    /*
+    if (color1 == 0 && color2 != 0) return color2;
+    else if (color2 == 0 && color1 != 0) return color1;
+    else if (color1 == 0 && color2 == 0) return {0, 0, 0};
+    else return color1 * color2 * intensity / 255;
+    */
+    //return (color1 + color2 * intensity / 255;
+    //return (color1 + color2 * intensity) / (1 + intensity);
+    raytracer::HugeColor newColor = color1 + (color2 * intensity);
+    return {
+        std::min(newColor.x, (std::uint16_t)255),
+        std::min(newColor.y, (std::uint16_t)255),
+        std::min(newColor.z, (std::uint16_t)255)
+    };
+};
 
 /* computing */
 inline nodiscard raytracer::Type degToRad(raytracer::Angle deg)

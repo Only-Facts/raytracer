@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 26/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IMaterial.hpp
@@ -36,6 +36,7 @@ class IMaterial {
         virtual float getTransparency(void) const = 0;
         virtual float getLightReflectionCoef(void) const = 0;
         virtual bool isMirror(void) const = 0;
+        virtual bool hasNoise(void) const = 0;
 
         // ------------ Operator ---------- //
         IMaterial& operator=(const IMaterial& object) = delete;

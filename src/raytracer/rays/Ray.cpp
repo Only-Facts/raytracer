@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 22/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -11,7 +11,6 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/rays/Ray.hpp"
-#include <limits>
 
 void raytracer::Ray::reset(void)
 {
