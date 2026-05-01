@@ -36,12 +36,12 @@ cold void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const l
     this->setObjectDescriptor(descriptor);
 }
 
-hot std::pair<float, const raytracer::Face*> raytracer::Point::computeSDF(const utils::vector::Vector3<double>& point) const
+hot std::pair<float, const raytracer::Face*> raytracer::Point::computeSDF(const raytracer::Coord& point) const
 {
     return {(point - this->getObjectDescriptor().cframe.position).length(), nullptr};
 }
 
-hot utils::vector::Vector3<double> raytracer::Point::computeHit(const utils::vector::Vector3<double>& point, unused const raytracer::Face* face) const
+hot raytracer::Direction raytracer::Point::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
     if (this->_camera)
         return (this->_camera->getCFrame().position - point).normalize(); // Camera direction

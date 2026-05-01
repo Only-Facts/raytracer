@@ -32,7 +32,7 @@ namespace raytracer { // namespace start
 class ALight: public raytracer::ILight {
     protected:
         std::vector<raytracer::LightRay*> _rays;
-        utils::vector::Vector3<std::uint8_t> _color = DEFAULT_COLOR;
+        raytracer::Color _color = DEFAULT_COLOR;
         float _intensity = 1.0f;
         bool _global = false;
 

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -47,7 +47,7 @@ class AObject: public raytracer::IObject {
         /* 3D logic */
         void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const final;
         std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const override;
-        raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
+        raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const override;
 
         /* color handling */
         raytracer::Color getPointColor(const raytracer::Coord& point) const final;
@@ -56,15 +56,16 @@ class AObject: public raytracer::IObject {
         // ------------ Function ---------- //
         /* movement */
         void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
-        void rotate(const raytracer::Coord& v) final {this->_descriptor.cframe.orientation += v;};
+        void rotate(const raytracer::Direction& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
         void clearLightData(void) final {this->_lightData.clear();};
 
         /* getter & setter */
         void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
-        void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe;};
+        void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe; this->_descriptor.cframeOrigin = cframe;};
         nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
+        nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
         nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
 
         // ------------ Operator ---------- //

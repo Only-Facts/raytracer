@@ -12,6 +12,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}) # TARGET destination
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Moderne compilation -fPIE
 add_definitions(-DFORCED_CXX_STANDARD=14) # Used for the attribute definition
+add_definitions(-D_NoWarning) # Remove warnings from utils
 # Unknow flag -> add_compile_options(-fno-gnu-unique) # Ensure unload from dclose properly
 
 # =========================
@@ -57,6 +58,9 @@ set(SRC
     src/raytracer/RaytracerInit.cpp
     src/raytracer/DynamicLibrary.cpp
 
+    # Special
+    src/raytracer/special/Utils.cpp
+
     # Objects
     src/raytracer/objects/AObject.cpp
 
@@ -74,6 +78,7 @@ add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} SHARED ${SRC})
 
 set(SRC_LIBS
+    src/raytracer/special/Utils.cpp
 )
 
 # =========================
@@ -128,11 +133,17 @@ set(SRC_POINT
 )
 add_library(light_point SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_POINT})
 
-set(SRC_DIRECTIONAL
-    src/raytracer/lights/directional/lib.cpp
-    src/raytracer/lights/directional/Directional.cpp
+set(SRC_SPOT
+    src/raytracer/lights/spot/lib.cpp
+    src/raytracer/lights/spot/Spot.cpp
 )
-add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
+add_library(light_spot SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_SPOT})
+
+set(SRC_PLANE
+    src/raytracer/lights/plane/lib.cpp
+    src/raytracer/lights/plane/Plane.cpp
+)
+add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 
 # =========================
 # Objects
@@ -207,7 +218,8 @@ set_target_properties(
 set_target_properties(
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/lights
@@ -244,7 +256,8 @@ foreach(target
     camera_cameraFOV
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane
@@ -272,7 +285,8 @@ foreach(target
     camera_cameraFOV
     light_global
     light_point
-    light_directional
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane

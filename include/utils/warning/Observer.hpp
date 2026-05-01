@@ -6,8 +6,7 @@ File Name:
 ##  @file Observer.hpp
 
 File Description:
-##  You know, I don t think there are good or bad descriptions,
-##  for me, life is all about functions...
+##  Observer used for the different warning
 \**************************************************************/
 
 #ifndef OBSERVER_H

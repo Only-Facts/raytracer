@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -51,7 +51,7 @@ struct Settings {
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     std::string obj_path = OBJ_PATH; // -o, --obj
-    utils::vector::Vector2<std::size_t> resolution = {0, 0}; // -r, --resolution
+    raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
     bool camera_set = false; // camera_path
@@ -114,10 +114,6 @@ class Raytracer {
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
-
-        // -------- Static-Function ------- //
-        static inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0f)
-        {return color1 * color2 * intensity / 255;}
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

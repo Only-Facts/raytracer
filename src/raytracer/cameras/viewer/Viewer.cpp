@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 28/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Viewer.cpp
@@ -28,12 +28,14 @@ void raytracer::Viewer::init(void)
 
     // Clear old data
     this->_screen.clear();
+    for (std::size_t i = 0; i < this->_rays.size(); ++i)
+        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size
     this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
         this->_rays[i] = new raytracer::Ray();

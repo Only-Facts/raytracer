@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 30/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera2D.cpp
@@ -14,7 +14,9 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/cameras/Camera2D.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
+#include "raytracer/Define.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
@@ -33,6 +35,10 @@ void raytracer::Camera2D::parse(unused const raytracer::Raytracer& raytracer, co
     const libconfig::Setting& res = node["resolution"];
     this->setResolution({(int)res[0], (int)res[1]});
 
+    double renderDistance = RENDER_DISTANCE;
+    if (node.lookupValue("renderDistance", renderDistance))
+        this->_renderDistance = renderDistance;
+
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
 }
@@ -43,12 +49,14 @@ void raytracer::Camera2D::init(void)
 
     // Clear old data
     this->_screen.clear();
+    for (std::size_t i = 0; i < this->_rays.size(); ++i)
+        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size
     this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, utils::vector::Vector3<std::uint8_t>DEFAULT_COLOR);
+    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
         this->_rays[i] = new raytracer::Ray();
@@ -56,23 +64,37 @@ void raytracer::Camera2D::init(void)
 
 void raytracer::Camera2D::reset(void)
 {
-    utils::vector::Vector2<int> resolution;
-    raytracer::CFrame cframe;
+    utils::vector::OVector2<int> resolution = this->getResolution();
+    raytracer::CFrame cframe = this->getCFrame();
+    raytracer::Coord position = cframe.position;
+    raytracer::Direction orientation = cframe.orientation;
+    raytracer::Angle rotation = -cframe.rotation;
+    raytracer::Coord2D rotated;
 
     // For each rays set default light value
     for (raytracer::Ray* ray: this->_rays)
         ray->reset();
 
+    // Pre compute x & y angles
+    raytracer::Type angleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
+    raytracer::Type angleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
+    utils::vector::OVector2<float> resolution2 = resolution / 2;
+
     // Set rays init position & orientation
-    resolution = this->getResolution();
     for (int y = 0; y < resolution.y; ++y) {
         for (int x = 0; x < resolution.x; ++x) {
-            // Orientation
-            cframe.orientation = this->getCFrame().orientation;
+            // Orientation (2D = same as the look vector)
+            cframe.orientation = orientation;
             // Position
-            cframe.position = this->getCFrame().position;
-            cframe.position.x += (x - resolution.x / 2);
-            cframe.position.y += (y - resolution.y / 2);
+            cframe.position = position;
+            cframe.position.x += (resolution2.x - x);
+            cframe.position.y += (resolution2.y - y);
+            // Apply rotation
+            rotated = raytracer::rotatePoint2D({position.x, position.y}, {cframe.position.x, cframe.position.y}, rotation);
+            cframe.position.x = rotated.x;
+            cframe.position.y = rotated.y;
+            // Apply look vector
+            cframe.position = raytracer::rotatePoint3D(position, cframe.position, angleX, angleY);
             this->_rays[y * resolution.x + x]->setCFrame(cframe);
         }
     }

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -14,6 +14,7 @@ File Description:
 #define _Vector
 #define _Attribute
 #include "utils/utils.hpp"
+#include "raytracer/special/Utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include "raytracer/cameras/Viewer.hpp"
 #include <SFML/Graphics.hpp>
@@ -25,6 +26,7 @@ File Description:
 #include <cstdint>
 #include <thread>
 #include <vector>
+#include <cmath>
 
 /*
 gui:
@@ -50,7 +52,7 @@ cold void raytracer::Raytracer::gui(void)
         this->loadRender();
 
     // Open display
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    raytracer::Resolution resolution = this->_camera->getResolution();
     sf::VideoMode mode(resolution.x, resolution.y);
     sf::RenderWindow window(mode, "Raytracer", sf::Style::Titlebar | sf::Style::Close);
 
@@ -96,8 +98,8 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     this->_camera->updateScreen();
 
     // Draw each pixel
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
-    const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
+    raytracer::Resolution resolution = this->_camera->getResolution();
+    const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
             const raytracer::Color& color = pixels[y * resolution.x + x];
@@ -147,23 +149,21 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             if (first) continue;
 
             // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+            ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
-                //std::cout << "Collide light" << std::endl;
                 nearestObject->reflectRay(ray, faceHit);
-                float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
-                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
+                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity());
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
-                ray->setColor(raytracer::Raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
+                ray->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // To counter collision with the same object on the next iteration
-                ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
+                ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->kill();
             } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
                 ray->kill();
@@ -176,7 +176,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
-    raytracer::Color globalLightColor)
+    bool hasGlobalLight, raytracer::Color globalLightColor)
 {
     raytracer::Color color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
@@ -208,27 +208,26 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             if (first) continue;
 
             // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation.normalize() * sdf);
+            ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
-                //std::cout << "Collide camera" << std::endl;
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
-                    ray->translate(ray->getCFrame().orientation.normalize() * (SDF_COLLINDING_LIMIT + 1));
+                    ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
                 } else {
-                    float localIntensityCoef = 1.0f - (ray->getCFrame().position - camera->getCFrame().position).length() / RENDER_DISTANCE;
+                    float localIntensityCoef = std::exp(-EXP_K * (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance());
                     color = nearestObject->getPointColor(ray->getCFrame().position);
-                    color = raytracer::Raytracer::mergeColor((color == 0) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
+                    color = raytracer::mergeColor((hasGlobalLight) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
                     ray->setColor(color);
                     ray->kill();
                 }
             }
 
             // Kill conditions
-            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).length() >= RENDER_DISTANCE) { // Too far
+            if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->setColor(sky.getColor());
                 ray->kill();
             }
@@ -300,9 +299,11 @@ void raytracer::Raytracer::render(void)
     }
 
     // 3 - Compute color from global lights
+    bool hasGlobalLight = false;
     for (raytracer::ILight* light: this->_lights) {
         if (!light->isGlobal()) continue; // Ignore no global light
-        globalLightColor = raytracer::Raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
+        globalLightColor = raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
+        hasGlobalLight = true;
     }
 
     // 3 - Compute camera rays
@@ -320,7 +321,7 @@ void raytracer::Raytracer::render(void)
             start, end,
             std::cref(this->_objects),
             this->_camera, std::cref(this->_sky),
-            globalLightColor
+            hasGlobalLight, globalLightColor
         );
     }
 
@@ -386,7 +387,7 @@ cold void raytracer::Raytracer::saveRender(void)
 
     // Setup header vars
     std::uint8_t magic = PPM_MAGIC;
-    utils::vector::Vector2<std::uint16_t> resolution = this->_camera->getResolution();
+    raytracer::Resolution resolution = this->_camera->getResolution();
 
     // Write file header
     file.write(reinterpret_cast<char*>(&magic), sizeof(magic));
@@ -394,7 +395,7 @@ cold void raytracer::Raytracer::saveRender(void)
     file.write(reinterpret_cast<char*>(&resolution.y), sizeof(resolution.y));
 
     // Write pixels
-    const std::vector<utils::vector::Vector3<std::uint8_t>>& pixels = this->_camera->getScreen();
+    const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
     std::vector<std::uint8_t> buffer;
     buffer.reserve(pixels.size() * 3);
     buffer.resize(pixels.size() * 3);
