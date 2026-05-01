@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -33,6 +33,8 @@ namespace raytracer { // namespace start
 /* CLASS & TYPEDEF */
 
 using Type = double; // Type used everywhere for coord, angle, direction, computing, ...
+using V2Type = utils::vector::OVector2<raytracer::Type>;
+using V3Type = utils::vector::OVector3<raytracer::Type>;
 
 using Coord2D = utils::vector::OVector2<raytracer::Type>;
 using Coord = utils::vector::OVector3<raytracer::Type>;
@@ -45,6 +47,7 @@ using Resolution = utils::vector::OVector2<std::uint16_t>;
 
 using Color = utils::vector::OVector3<std::uint8_t>;
 using HugeColor = utils::vector::OVector3<std::uint16_t>;
+using FColor = utils::vector::OVector3<float>;
 
 using Vertice = utils::vector::OVector3<raytracer::Type>;
 using Face = std::vector<Vertice>;

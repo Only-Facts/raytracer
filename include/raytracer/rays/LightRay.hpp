@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.hpp
@@ -35,6 +35,7 @@ class LightRay: public raytracer::ARay {
 
     public:
         // ---------- Pre-Function -------- //
+        LightRay* clone(void) const; // Clone the ray (used for transparency & refraction)
         void reset(void) final;
 
         // ------------ Function ---------- //

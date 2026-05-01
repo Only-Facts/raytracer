@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -45,13 +45,15 @@ class IObject {
         virtual void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const = 0;
         virtual std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const = 0;
         virtual raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face = nullptr) const = 0;
+        virtual void setImmunity(raytracer::IObject* object) = 0;
+        virtual raytracer::IObject* getImmunity(void) const = 0;
 
         /* movement */
         virtual void translate(const raytracer::Coord& v) = 0;
         virtual void rotate(const raytracer::Coord& v) = 0;
 
         /* color handling */
-        virtual raytracer::Color getPointColor(const raytracer::Coord& point) const = 0;
+        virtual std::pair<raytracer::Color, bool> getPointColor(const raytracer::Coord& point) const = 0;
         virtual void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) = 0;
         virtual void clearLightData(void) = 0;
 

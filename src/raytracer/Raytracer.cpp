@@ -120,8 +120,11 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     const std::vector<raytracer::IObject*>& objects,
     raytracer::ICamera* camera)
 {
+    std::vector<raytracer::LightRay*> raysClones;
     raytracer::IObject* nearestObject = nullptr;
     const raytracer::Face* faceHit = nullptr;
+    raytracer::Direction orientation;
+    raytracer::Angle angle = 0.0;
     float sdf = 0.0;
     bool first = true;
 
@@ -138,6 +141,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             sdf = 0.0f;
             first = true;
             for (raytracer::IObject* object: objects) {
+                if (ray->getImmunity() == object) continue;
                 auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
                 if (first || actualSDF < sdf) {
                     first = false;
@@ -153,8 +157,21 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) { // Collision
+                ray->setImmunity(nullptr); // Reset immunity
+                // Transparency & Refraction
+                if (nearestObject->getObjectDescriptor().material->getTransparency() > 1e8) {
+                    raysClones.push_back(ray->clone());
+                    raysClones.back()->setImmunity(nearestObject);
+                    raysClones.back()->setIntensity(raysClones.back()->getIntensity() * (1.0 - nearestObject->getObjectDescriptor().material->getTransparency()));
+                    raysClones.back()->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), raysClones.back()->getColor(), raysClones.back()->getIntensity()));
+                }
+
+                // Normal computing
+                orientation = ray->getCFrame().orientation;
                 nearestObject->reflectRay(ray, faceHit);
-                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity());
+                angle = raytracer::radToDeg(std::atan2(orientation.dot(ray->getCFrame().orientation), orientation.length() * ray->getCFrame().orientation.length()));
+                float localIntensityCoef = 1.0f - (angle / 180.0f); // 0° = 1.0f, 180° = 0.0f
+                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
                 ray->setIntensity(ray->getIntensity() * nearestObject->getObjectDescriptor().material->getLightReflectionCoef());
                 ray->setColor(raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), ray->getColor(), ray->getIntensity()));
 
@@ -170,6 +187,10 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
             }
         }
     }
+
+    // Rec for the clonned ones
+    if (raysClones.size() > 0)
+        processLightChunk(raysClones, 0, raysClones.size(), objects, camera);
 }
 
 static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
@@ -178,7 +199,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
     bool hasGlobalLight, raytracer::Color globalLightColor)
 {
-    raytracer::Color color = DEFAULT_COLOR;
+    raytracer::FColor color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
     const raytracer::Face* faceHit = nullptr;
     float sdf = 0.0;
@@ -197,6 +218,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
             sdf = 0.0f;
             first = true;
             for (raytracer::IObject* object: objects) {
+                if (ray->getImmunity() == object) continue;
                 auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
                 if (first || actualSDF < sdf) {
                     first = false;
@@ -212,17 +234,30 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 
             // 3 - Check SDF
             if (sdf <= SDF_COLLINDING_LIMIT) {
+                ray->setImmunity(nullptr); // Reset immunity
                 if (nearestObject->getObjectDescriptor().material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray, faceHit);
 
                     // To counter collision with the same object on the next iteration
                     ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
                 } else {
+                    // Normal computing
                     float localIntensityCoef = std::exp(-EXP_K * (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance());
-                    color = nearestObject->getPointColor(ray->getCFrame().position);
-                    color = raytracer::mergeColor((hasGlobalLight) ? nearestObject->getObjectDescriptor().material->getColor() : color, globalLightColor, localIntensityCoef);
+                    auto [pointColor, ok] = nearestObject->getPointColor(ray->getCFrame().position);
+                    color = pointColor;
+                    if (hasGlobalLight && !ok) color = raytracer::mergeColor(color, raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), globalLightColor, localIntensityCoef));
+                    else if (hasGlobalLight) color = raytracer::moyColor(color, raytracer::mergeColor(nearestObject->getObjectDescriptor().material->getColor(), globalLightColor, localIntensityCoef));
+                    color = raytracer::mergeColor(ray->getColor(), color);
+                    if (nearestObject->getObjectDescriptor().material->hasNoise())
+                        raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color);
                     ray->setColor(color);
-                    ray->kill();
+
+                    // Transparency & Refraction
+                    if (nearestObject->getObjectDescriptor().material->getTransparency() > 1e8) {
+                        ray->setImmunity(nearestObject);
+                    } else {
+                        ray->kill();
+                    }
                 }
             }
 
@@ -261,7 +296,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 */
 void raytracer::Raytracer::render(void)
 {
-    raytracer::Color globalLightColor = {255, 255, 255}; // White to allow any other color
+    raytracer::Color globalLightColor = DEFAULT_COLOR;
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;

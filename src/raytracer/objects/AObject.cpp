@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -25,11 +25,11 @@ File Description:
 #include <exception>
 #include <iostream>
 
-hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& point) const
+hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
-    raytracer::Color pointColor = this->getObjectDescriptor().material->getColor();
+    raytracer::FColor pointColor = DEFAULT_COLOR;
     raytracer::Chunk chunk = raytracer::getChunk(point);
-    bool found = false;
+    float count = 0;
 
     // Only if the chunk exist
     if (this->_lightData.contains(chunk)) {
@@ -40,24 +40,25 @@ hot raytracer::Color raytracer::AObject::getPointColor(const raytracer::Coord& p
             // Check if the point is near the light ray
             if ((point - data.positions[i]).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
             //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
-            found = true;
+            ++count;
 
             // Fuse the colors
-            pointColor = raytracer::mergeColor(pointColor, data.colors[i], data.intensitys[i]);
+            pointColor += data.colors[i] * data.intensitys[i];
+            count += data.intensitys[i];
         }
     }
 
     // No light ray on this hit
-    if (!DEFAULT_LIGHT && !found)
-        return DEFAULT_COLOR;
+    if (!DEFAULT_LIGHT && !count)
+        return {DEFAULT_COLOR, false};
 
-    return pointColor;
+    return {raytracer::mergeColor(this->getObjectDescriptor().material->getColor(), pointColor / count), true};
 }
 
 hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::Color color, float intensity)
 {
     raytracer::Chunk chunk = raytracer::getChunk(position);
-    std::lock_guard<std::mutex> lock(this->_lockLightData);
+    std::lock_guard<std::mutex> lock(this->_lock);
     this->_lightData[chunk].positions.push_back(position);
     this->_lightData[chunk].colors.push_back(color);
     this->_lightData[chunk].intensitys.push_back(intensity);
