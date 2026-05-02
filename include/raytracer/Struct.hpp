@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -41,7 +41,7 @@ using Coord = utils::vector::OVector3<raytracer::Type>;
 using Direction = utils::vector::OVector3<raytracer::Type>; // Generaly normalized
 using Angle = raytracer::Type;
 
-using Chunk = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
+using Chunk = utils::vector::OVector3<std::int32_t>;
 
 using Resolution = utils::vector::OVector2<std::uint16_t>;
 
@@ -77,16 +77,17 @@ inline hot nodiscard raytracer::Chunk getChunk(const raytracer::Coord& point)
 }
 
 struct ChunkHash {
-    std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {
-        auto [x, y, z] = chunk;
-        return (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
+    inline nodiscard std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {
+        std::size_t h = chunk.x * 73856093u;
+        h ^= chunk.y * 19349663u + 0x9e3779b9 + (h << 6) + (h >> 2);
+        return h ^ (chunk.z * 83492791u + 0x9e3779b9 + (h << 6) + (h >> 2));
     }
 };
 
-struct ChunkObjectData {
-    std::vector<raytracer::Coord> positions;
-    std::vector<raytracer::Color> colors;
-    std::vector<float> intensitys;
+struct ChunkLightData {
+    raytracer::Coord position;
+    raytracer::Color color;
+    float intensity;
 };
 
 class IMaterial;
@@ -98,9 +99,10 @@ struct ObjectDescriptor {
     raytracer::CFrame cframe;
     raytracer::CFrame cframeOrigin;
     raytracer::IMaterial* material;
-    std::vector<raytracer::Face> faces;
 
-    /* cone & cylinder & plane & sphere */
+    /* obj */
+    std::vector<raytracer::Chunk> chunks;
+    std::vector<raytracer::Face> faces;
     float scale = 1.0f;
 
     // ---------- Constructor --------- //

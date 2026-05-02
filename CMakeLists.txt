@@ -36,6 +36,9 @@ add_compile_options(
     -Wuninitialized
     -Wno-nan-infinity-disabled
 )
+add_compile_options(
+    -g -ggdb3 -fno-omit-frame-pointer
+)
 
 # Sanitizer options
 #add_compile_options(
@@ -308,7 +311,8 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Optimized>:-O3 -ffast-math -march=native -funroll-loops -pipe -DNDEBUG>
+    $<$<CONFIG:Optimized>:-O3 -ffast-math -fvectorize -fslp-vectorize -funroll-loops -march=native -pipe -DNDEBUG>
+    #$<$<CONFIG:optimized>:-O3 -ffast-math -flto -funroll-loops -fvectorize -fslp-vectorize -march=native -fno-plt -pipe -DNDEBUG>
     # -flto
 )
 

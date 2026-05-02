@@ -11,6 +11,11 @@
             "restrictions": ["Fatal", "Error", "Warning"]
         },
         {
+            "code": "Runtime",
+            "message": "Error during the runtime",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
             "code": "Parser",
             "message": "Error during the parsing",
             "restrictions": ["Fatal", "Error", "Warning"]

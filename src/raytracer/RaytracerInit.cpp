@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -322,6 +322,12 @@ void raytracer::Raytracer::init(void)
     this->_camera->init();
     for (raytracer::ILight* light: this->_lights)
         light->init();
+
+    // Init internal optimisation for SDF
+    for (raytracer::IObject* object: this->_objects) {
+        for (const raytracer::Chunk& chunk: object->getObjectDescriptor().chunks)
+            this->_objectsChunks[chunk].push_back(object);
+    }
 }
 
 static std::string getFileContent(const std::filesystem::path& path)
