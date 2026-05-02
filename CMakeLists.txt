@@ -36,9 +36,10 @@ add_compile_options(
     -Wuninitialized
     -Wno-nan-infinity-disabled
 )
-add_compile_options(
-    -g -ggdb3 -fno-omit-frame-pointer
-)
+# Perf debug
+#add_compile_options(
+#    -g -ggdb3 -fno-omit-frame-pointer
+#)
 
 # Sanitizer options
 #add_compile_options(
