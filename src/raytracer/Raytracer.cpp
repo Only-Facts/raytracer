@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -118,6 +118,7 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
+    const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
     raytracer::ICamera* camera)
 {
     std::vector<raytracer::LightRay*> raysClones;
@@ -126,10 +127,10 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
     raytracer::Direction orientation;
     raytracer::Angle angle = 0.0;
     float sdf = 0.0;
-    bool first = true;
 
     for (std::size_t i = start; i < end; ++i) {
         raytracer::LightRay* ray = rays[i];
+        ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
         while (ray->isAlive()) {
             // Kill those with no direction
             if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
@@ -139,20 +140,23 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 
             // 1 - Compute SDF
             sdf = 0.0f;
-            first = true;
-            for (raytracer::IObject* object: objects) {
+            faceHit = nullptr;
+            nearestObject = nullptr;
+            for (raytracer::IObject* object: ray->getObjects()) {
                 if (ray->getImmunity() == object) continue;
                 auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
-                if (first || actualSDF < sdf) {
-                    first = false;
+                if (!nearestObject || actualSDF < sdf) {
                     sdf = actualSDF;
                     faceHit = face;
                     nearestObject = object;
-                  }
+                }
             }
-            if (first) continue;
+            if (!nearestObject) {
+                ray->kill();
+                continue;
+            }
 
-            // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
+            // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
             ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
@@ -169,6 +173,7 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 // Normal computing
                 orientation = ray->getCFrame().orientation;
                 nearestObject->reflectRay(ray, faceHit);
+                ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
                 angle = raytracer::radToDeg(std::atan2(orientation.dot(ray->getCFrame().orientation), orientation.length() * ray->getCFrame().orientation.length()));
                 float localIntensityCoef = 1.0f - (angle / 180.0f); // 0° = 1.0f, 180° = 0.0f
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getIntensity() * localIntensityCoef);
@@ -190,12 +195,13 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
 
     // Rec for the clonned ones
     if (raysClones.size() > 0)
-        processLightChunk(raysClones, 0, raysClones.size(), objects, camera);
+        processLightChunk(raysClones, 0, raysClones.size(), objects, objectsChunks, camera);
 }
 
 static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     size_t start, size_t end,
     const std::vector<raytracer::IObject*>& objects,
+    const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
     bool hasGlobalLight, raytracer::Color globalLightColor)
 {
@@ -204,10 +210,10 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
     raytracer::IMaterial* material = nullptr;
     const raytracer::Face* faceHit = nullptr;
     float sdf = 0.0;
-    bool first = true;
 
     for (std::size_t i = start; i < end; ++i) {
         raytracer::Ray* ray = rays[i];
+        ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
         while (ray->isAlive()) {
             // Kill those with no direction
             if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
@@ -217,20 +223,24 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 
             // 1 - Compute SDF
             sdf = 0.0f;
-            first = true;
-            for (raytracer::IObject* object: objects) {
+            faceHit = nullptr;
+            nearestObject = nullptr;
+            for (raytracer::IObject* object: ray->getObjects()) {
                 if (ray->getImmunity() == object) continue;
                 auto [actualSDF, face] = object->computeSDF(ray->getCFrame().position);
-                if (first || actualSDF < sdf) {
-                    first = false;
+                if (!nearestObject || actualSDF < sdf) {
                     sdf = actualSDF;
                     faceHit = face;
                     nearestObject = object;
                 }
             }
-            if (first) continue;
+            if (!nearestObject) { // No valid SDF
+                ray->setColor(sky.getColor());
+                ray->kill();
+                continue;
+            }
 
-            // 2 - Apply SDF (and aproximative gravity curve, only in newton mode)
+            // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
             ray->translate(ray->getCFrame().orientation * sdf);
 
             // 3 - Check SDF
@@ -239,6 +249,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                 ray->setImmunity(nullptr); // Reset immunity
                 if (material->isMirror()) { // Mirror material
                     nearestObject->reflectRay(ray, faceHit);
+                    ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
 
                     // To counter collision with the same object on the next iteration
                     ray->translate(ray->getCFrame().orientation * (SDF_COLLINDING_LIMIT + 1));
@@ -328,6 +339,7 @@ void raytracer::Raytracer::render(void)
                 std::ref(lightRays),
                 start, end,
                 std::cref(this->_objects),
+                std::cref(this->_objectsChunks),
                 this->_camera
             );
         }
@@ -359,6 +371,7 @@ void raytracer::Raytracer::render(void)
             std::ref(cameraRays),
             start, end,
             std::cref(this->_objects),
+            std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
             hasGlobalLight, globalLightColor
         );

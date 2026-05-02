@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -21,6 +21,7 @@ File Description:
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
     #define LIGHT_COLOR_LIMIT 4 // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
+    #define LOAD_FACTOR 0.5f // Load factor used for the unordered map
 
     /* values */
     #define RENDER_DISTANCE 400 // Kill the ray if the SDF is above or equal to that value (can be redefined in the camera)
@@ -29,7 +30,7 @@ File Description:
     #define NOISE_SIZE 0.1f // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
     #define LIGHT_RAY 1000000 // Number of rays by light
     #define DEFAULT_LIGHT false // Enable or disable seeing object without light
-    #define CHUNK_SIZE 10 // Size of the chunk used
+    #define CHUNK_SIZE 10 // Size of the chunk used (color, face, sdf)
 
     /* default */
     #define PLUGINS_PATH "./plugins/"

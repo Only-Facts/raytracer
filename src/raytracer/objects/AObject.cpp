@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -25,19 +25,28 @@ File Description:
 #include <exception>
 #include <iostream>
 
-static void processChunk(const raytracer::ChunkObjectData& data,
+static void processChunk(const std::vector<raytracer::ChunkLightData>& data,
     const raytracer::Coord& point, raytracer::FColor& pointColor,
     float& count)
 {
-    for (std::size_t i = 0; i < data.positions.size(); ++i) {
+    static raytracer::Type limit = LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT;
+    const raytracer::Type px = point.x;
+    const raytracer::Type py = point.y;
+    const raytracer::Type pz = point.z;
+
+    for (const raytracer::ChunkLightData& s: data) {
         // Check if the point is near the light ray
-        if ((point - data.positions[i]).lengthSquared() > LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT) continue;
-        //if ((point - position).length() > LIGHT_COLOR_LIMIT) continue;
-        ++count;
+        const raytracer::Type dx = px - s.position.x;
+        const raytracer::Type dy = py - s.position.y;
+        const raytracer::Type dz = pz - s.position.z;
+        const raytracer::Type d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 > limit) continue;
 
         // Fuse the colors
-        pointColor += data.colors[i] * data.intensitys[i];
-        count += data.intensitys[i];
+        pointColor.x += s.color.x * s.intensity;
+        pointColor.y += s.color.y * s.intensity;
+        pointColor.z += s.color.z * s.intensity;
+        count += 1 + s.intensity;
     }
 }
 
@@ -50,15 +59,15 @@ hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const ra
 
     // For each chunk around the chunk point
     static int limits = std::ceil(CHUNK_SIZE / LIGHT_COLOR_LIMIT);
-    for (int z = -limits; z <= limits; ++z) {
-    for (int y = -limits; y <= limits; ++y) {
+    for (int z = -limits; z <= limits; ++z)
+    for (int y = -limits; y <= limits; ++y)
     for (int x = -limits; x <= limits; ++x) {
         chunkPoint = {x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE};
         chunk = raytracer::getChunk(point + chunkPoint);
-        if (!this->_lightData.contains(chunk)) continue;
-        const raytracer::ChunkObjectData& data = this->_lightData[chunk];
-        processChunk(data, point, pointColor, count);
-    }}}
+        auto it = this->_lightData.find(chunk);
+        if (it == this->_lightData.end()) continue;
+        processChunk(it->second, point, pointColor, count);
+    }
 
     // No light ray on this hit
     if (!DEFAULT_LIGHT && !count)
@@ -71,24 +80,25 @@ hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::
 {
     raytracer::Chunk chunk = raytracer::getChunk(position);
     std::lock_guard<std::mutex> lock(this->_lock);
-    this->_lightData[chunk].positions.push_back(position);
-    this->_lightData[chunk].colors.push_back(color);
-    this->_lightData[chunk].intensitys.push_back(intensity);
+    this->_lightData[chunk].push_back({position, color, intensity});
 }
 
 cold void raytracer::AObject::loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor)
 {
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig config;
+    raytracer::Chunk chunkMin, chunkMax;
+    raytracer::Chunk chunk;
+    raytracer::Vertice verticeMin, verticeMax;
+    raytracer::Vertice vertice;
     config.triangulate = true;
 
     // Check error & warning
     if (!reader.ParseFromFile(path, config)) {
         std::string err = reader.Error();
         err.pop_back();
-        //utils::exception::CustomException e(utils::exception::Error, utils::exception::Code::Parser, err);
-        //std::cout << e.formated() << std::endl;
-        throw std::runtime_error(err);
+        utils::exception::CustomException e(utils::exception::Error, utils::exception::Code::Parser, err);
+        std::cout << e.formated() << std::endl;
     }
     if (!reader.Warning().empty()) {
         utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::Parser, reader.Warning());
@@ -122,7 +132,6 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
             raytracer::Face face;
             for (std::size_t v = 0; v < verticesCount; ++v) {
                 const tinyobj::index_t& idx = shape.mesh.indices[indexOffset + v];
-                raytracer::Vertice vertice;
 
                 // Get the vertice
                 vertice.x = attrib.vertices[3 * idx.vertex_index + 0];
@@ -136,11 +145,32 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
                 vertice.y = rotated.y + descriptor.cframe.position.y;
                 vertice.z = rotated.z + descriptor.cframe.position.z;
 
+                // Min & Max
+                if (v == 0) {
+                    verticeMin = vertice;
+                    verticeMax = vertice;
+                } else {
+                    verticeMin.x = std::min(verticeMin.x, vertice.x);
+                    verticeMin.y = std::min(verticeMin.y, vertice.y);
+                    verticeMin.z = std::min(verticeMin.z, vertice.z);
+                    verticeMax.x = std::max(verticeMax.x, vertice.x);
+                    verticeMax.y = std::max(verticeMax.y, vertice.y);
+                    verticeMax.z = std::max(verticeMax.z, vertice.z);
+                }
+
                 // Store the vertice
                 face.push_back(vertice);
             }
 
             // Store the face
+            chunkMin = raytracer::getChunk(verticeMin);
+            chunkMax = raytracer::getChunk(verticeMax);
+            for (int z = chunkMin.z; z <= chunkMax.z; ++z)
+            for (int y = chunkMin.y; y <= chunkMax.y; ++y)
+            for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
+                chunk = {x, y, z};
+                descriptor.chunks.push_back(chunk);
+            }
             descriptor.faces.push_back(face);
             indexOffset += verticesCount;
         }

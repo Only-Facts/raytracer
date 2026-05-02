@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IRay.hpp
@@ -28,6 +28,8 @@ class IRay: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
         virtual void reset(void) = 0; // Reset ray values
+        virtual void computeObjects(raytracer::Type renderDistance, const std::vector<raytracer::IObject*>& objects, const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks) = 0;
+        virtual const std::vector<raytracer::IObject*>& getObjects(void) const = 0;
         virtual void kill(void) = 0;
         virtual bool isAlive(void) const = 0;
 

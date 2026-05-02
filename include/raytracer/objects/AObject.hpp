@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -20,7 +20,7 @@ File Description:
     #define _Vector
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
-    #include "../Struct.hpp"    // raytracer::CFrame, raytracer::ObjectDescriptor, raytracer::Color, raytracer::Coord, raytracer::Chunk, raytracer::ChunkObjectData
+    #include "../Struct.hpp"    // raytracer::* (types)
     #include "IObject.hpp"      // raytracer::IObject
     #include <unordered_map>    // std::unordered_map
     #include <vector>           // std::vector
@@ -32,9 +32,9 @@ namespace raytracer { // namespace start
 
 class AObject: public raytracer::IObject {
     private:
-        raytracer::IObject* _immunity = nullptr; // Dosen't comput SDF with this object
-        mutable std::unordered_map<raytracer::Chunk, raytracer::ChunkObjectData, raytracer::ChunkHash> _lightData;
         std::mutex _lock;
+        raytracer::IObject* _immunity = nullptr; // Dosen't comput SDF with this object
+        std::unordered_map<raytracer::Chunk, std::vector<raytracer::ChunkLightData>, raytracer::ChunkHash> _lightData;
 
     protected:
         raytracer::ObjectDescriptor _descriptor;
@@ -67,18 +67,18 @@ class AObject: public raytracer::IObject {
         void clearLightData(void) final {this->_lightData.clear();};
 
         /* getter & setter */
-        void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
-        void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe; this->_descriptor.cframeOrigin = cframe;};
-        nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
-        nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
-        nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
+        inline void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
+        inline void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe; this->_descriptor.cframeOrigin = cframe;};
+        inline nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
+        inline nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
+        inline nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
 
         // ------------ Operator ---------- //
         AObject& operator=(const AObject& object) = delete;
         AObject& operator=(AObject&& object) = delete;
 
         // ---------- Constructor --------- //
-        AObject() = default;
+        AObject() {this->_lightData.max_load_factor(LOAD_FACTOR);};
         AObject(const AObject& object) = delete;
         AObject(AObject&& object) = delete;
 

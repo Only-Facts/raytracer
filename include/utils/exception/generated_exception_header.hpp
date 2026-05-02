@@ -31,6 +31,7 @@ enum class Code: std::size_t {
     Undefined = 0,
     NoPlugins,
     NoLoadedCamera,
+    Runtime,
     Parser,
     ppmFile,
     InvalidAction,
@@ -70,6 +71,7 @@ constexpr inline const char *Message[] = {
     /* Undefined */ "An undefined error has occured",
     /* NoPlugins */ "Wasn't able to find any plugins",
     /* NoLoadedCamera */ "Wasn't able to load any camera",
+    /* Runtime */ "Error during the runtime",
     /* Parser */ "Error during the parsing",
     /* ppmFile */ "Error during the ppm file writing/reading",
     /* InvalidAction */ "Can't execute this action",
@@ -108,6 +110,7 @@ constexpr inline const char *Info[] = {
     /* Undefined */ nullptr,
     /* NoPlugins */ nullptr,
     /* NoLoadedCamera */ nullptr,
+    /* Runtime */ nullptr,
     /* Parser */ nullptr,
     /* ppmFile */ nullptr,
     /* InvalidAction */ nullptr,
@@ -151,6 +154,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Undefined */ 0b0000, // allow: All
     /* NoPlugins */ 0b1110, // allow: Fatal, Error, Warning
     /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
+    /* Runtime */ 0b1110, // allow: Fatal, Error, Warning
     /* Parser */ 0b1110, // allow: Fatal, Error, Warning
     /* ppmFile */ 0b0110, // allow: Fatal, Error
     /* InvalidAction */ 0b1110, // allow: Fatal, Error, Warning

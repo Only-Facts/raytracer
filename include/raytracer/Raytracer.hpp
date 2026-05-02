@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -73,6 +73,9 @@ class Raytracer {
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
         mutable std::vector<raytracer::IMaterial*> _materials;
+
+        /* optimisation */
+        std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
 
         // ------------ Function ---------- //
         template<typename T>
