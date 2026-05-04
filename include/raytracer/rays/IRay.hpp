@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IRay.hpp
@@ -32,6 +32,8 @@ class IRay: public raytracer::AObject {
         virtual const std::vector<raytracer::IObject*>& getObjects(void) const = 0;
         virtual void kill(void) = 0;
         virtual bool isAlive(void) const = 0;
+        virtual void addDistance(raytracer::Type distance) = 0;
+        virtual raytracer::Type getDistance(void) const = 0;
 
         // ------------ Operator ---------- //
         IRay& operator=(const IRay& object) = delete;

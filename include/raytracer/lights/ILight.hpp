@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ILight.hpp
@@ -34,6 +34,7 @@ class ILight: public raytracer::AObject {
         virtual float getIntensity(void) const = 0;
         virtual void enableGlobal(void) = 0;
         virtual bool isGlobal(void) const = 0;
+        virtual float getPower(void) const = 0;
 
         // ------------ Operator ---------- //
         ILight& operator=(const ILight& object) = delete;

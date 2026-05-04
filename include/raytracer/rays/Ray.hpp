@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 03/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.hpp
@@ -31,12 +31,15 @@ namespace raytracer { // namespace start
 class Ray: public raytracer::ARay {
     private:
         raytracer::Color _color; // RGB color that what hit, add a percentage of the color from the surface hitted each time
+        float _coef = 1.0f; // Coef reduced at each color added
 
     public:
         // ---------- Pre-Function -------- //
         void reset(void);
 
         // ------------ Function ---------- //
+        void setCoef(float coef) {this->_coef = coef;};
+        nodiscard float getCoef(void) const {return this->_coef;};
         void setColor(raytracer::Color color) {this->_color = color;};
         nodiscard raytracer::Color getColor(void) const {return this->_color;};
 

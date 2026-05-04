@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -28,9 +28,13 @@ void raytracer::Point::parse(unused const raytracer::Raytracer& raytracer, const
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
-    double intensity = 1.0f;
+    double intensity = 1.0;
     if (node.lookupValue("intensity", intensity))
         this->_intensity = intensity;
+
+    double lumen = 1.0;
+    if (node.lookupValue("lumen", lumen))
+        this->_lumen = lumen;
 
     if (node.exists("color")) {
         const libconfig::Setting& color = node["color"];
@@ -47,7 +51,7 @@ void raytracer::Point::parse(unused const raytracer::Raytracer& raytracer, const
 
 void raytracer::Point::init(void)
 {
-    std::size_t size = LIGHT_RAY;
+    std::size_t size = MAX_LIGHT_RAY;
 
     // Clear old data
     this->_rays.clear();
@@ -61,7 +65,7 @@ void raytracer::Point::init(void)
 
 void raytracer::Point::reset(void)
 {
-    utils::vector::OVector2<int> resolution = {std::sqrt(LIGHT_RAY), std::sqrt(LIGHT_RAY)};
+    utils::vector::OVector2<int> resolution = {std::sqrt(MAX_LIGHT_RAY), std::sqrt(MAX_LIGHT_RAY)};
     raytracer::CFrame cframe = this->getCFrame();
     raytracer::Coord position = cframe.position;
     raytracer::Direction orientation = cframe.orientation;
@@ -74,6 +78,7 @@ void raytracer::Point::reset(void)
         ray->reset();
         ray->setColor(this->_color);
         ray->setIntensity(this->_intensity);
+        ray->setPower(this->_lumen);
     }
 
     // Pre compute values (360 = spherical)
