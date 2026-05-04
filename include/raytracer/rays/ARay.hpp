@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.hpp
@@ -31,6 +31,7 @@ class ARay: public raytracer::IRay {
     protected:
         bool _alive = true;
         std::vector<raytracer::IObject*> _objects; // Future object that will be probably hit
+        raytracer::Type _distance; // Distance traveled
 
     public:
         // ---------- Pre-Function -------- //
@@ -41,6 +42,8 @@ class ARay: public raytracer::IRay {
         nodiscard const std::vector<raytracer::IObject*>& getObjects(void) const {return this->_objects;};
         void kill(void) final {this->_alive = false;};
         nodiscard bool isAlive(void) const final {return this->_alive;};
+        void addDistance(raytracer::Type distance) final {this->_distance += distance;};
+        nodiscard raytracer::Type getDistance(void) const final {return this->_distance;};
 
         // ------------ Operator ---------- //
         ARay& operator=(const ARay& object) = delete;

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 27/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Global.cpp
@@ -46,24 +46,10 @@ void raytracer::Global::parse(unused const raytracer::Raytracer& raytracer, cons
 
 void raytracer::Global::init(void)
 {
-    std::size_t size = LIGHT_RAY;
-
-    // Clear old data
-    this->_rays.clear();
-
-    // Resize screen size
-    this->_rays.reserve(size);
-    this->_rays.resize(size, nullptr);
-    for (std::size_t i = 0; i < size; ++i)
-        this->_rays[i] = new raytracer::LightRay();
+    /* nothing */
 }
 
 void raytracer::Global::reset(void)
 {
-    // For each rays set default light value
-    for (raytracer::LightRay* ray: this->_rays) {
-        ray->reset();
-        ray->setColor(this->_color);
-        ray->setIntensity(this->_intensity);
-    }
+    /* nothing */
 }

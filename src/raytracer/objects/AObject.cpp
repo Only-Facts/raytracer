@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -26,7 +26,7 @@ File Description:
 #include <iostream>
 
 static void processChunk(const std::vector<raytracer::ChunkLightData>& data,
-    const raytracer::Coord& point, raytracer::FColor& pointColor,
+    const raytracer::Coord& point, raytracer::FColor& lightColor,
     float& count)
 {
     static raytracer::Type limit = LIGHT_COLOR_LIMIT * LIGHT_COLOR_LIMIT;
@@ -42,17 +42,20 @@ static void processChunk(const std::vector<raytracer::ChunkLightData>& data,
         const raytracer::Type d2 = dx * dx + dy * dy + dz * dz;
         if (d2 > limit) continue;
 
+        // Compute the coef
+        //float proximityCoef = 1.0f - (d2 / limit);
+
         // Fuse the colors
-        pointColor.x += s.color.x * s.intensity;
-        pointColor.y += s.color.y * s.intensity;
-        pointColor.z += s.color.z * s.intensity;
-        count += 1 + s.intensity;
+        lightColor.x += s.color.x * s.intensity;// * proximityCoef;
+        lightColor.y += s.color.y * s.intensity;// * proximityCoef;
+        lightColor.z += s.color.z * s.intensity;// * proximityCoef;
+        ++count;
     }
 }
 
 hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
-    raytracer::FColor pointColor = DEFAULT_COLOR;
+    raytracer::FColor lightColor = DEFAULT_COLOR;
     raytracer::Coord chunkPoint;
     raytracer::Chunk chunk;
     float count = 0;
@@ -66,14 +69,20 @@ hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const ra
         chunk = raytracer::getChunk(point + chunkPoint);
         auto it = this->_lightData.find(chunk);
         if (it == this->_lightData.end()) continue;
-        processChunk(it->second, point, pointColor, count);
+        processChunk(it->second, point, lightColor, count);
     }
 
     // No light ray on this hit
     if (!DEFAULT_LIGHT && !count)
         return {DEFAULT_COLOR, false};
 
-    return {raytracer::mergeColor(this->getObjectDescriptor().material->getColor(), pointColor / count), true};
+    // Apply the light modifier
+    raytracer::FColor color = this->getObjectDescriptor().material->getColor();
+    if (color.x < 1e-8) color.x = NO_LIGHT_DEFAULT;
+    if (color.y < 1e-8) color.y = NO_LIGHT_DEFAULT;
+    if (color.z < 1e-8) color.z = NO_LIGHT_DEFAULT;
+    color *= lightColor / (count * 255.0f);
+    return {{std::min(color.x, 255.0f), std::min(color.y, 255.0f), std::min(color.z, 255.0f)}, true};
 }
 
 hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::Color color, float intensity)
