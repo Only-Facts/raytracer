@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -36,6 +36,7 @@ File Description:
     #include <memory>                   // std::shared_ptr
     #include <vector>                   // std::vector
     #include <string>                   // std::string
+    #include <mutex>                    // std::mutex
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -46,6 +47,8 @@ struct Settings {
     std::string ppm_path; // <ppm_file_path>
     std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
+    bool debug = false; // -d, --debug
+    bool adv = false; // -a, --advencement | -A, --Advencement
     bool newton = false; // -n, --newton (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
@@ -65,6 +68,14 @@ class Raytracer {
     private:
         /* global data */
         raytracer::Settings _settings;
+
+        /* mutex */
+        std::mutex _advLock;
+
+        /* advencement */
+        std::uint8_t _step = 0; // 0 = light, 1 = camera
+        std::size_t _adv = 0;
+        std::size_t _advMax = 0;
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
@@ -102,10 +113,11 @@ class Raytracer {
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
 
-        /* gui */
+        /* frontend */
         void gui(void); // Handle opening, closing of the gui
         void loop(sf::RenderWindow& window); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
         void display(sf::RenderWindow& window); // Use the camera screen to update the gui render
+        void adv(bool forced = false); // Display advencement of the actual frame
 
         /* global */
         void render(void); // Update camera screen
@@ -113,6 +125,10 @@ class Raytracer {
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
+        void advReset(std::size_t advMax) {this->_step = 0; this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
+        void advNext(std::size_t advMax) {++this->_step; this->_adv = 0; this->_advMax = advMax;}; // Next step
+        void advAddMax(std::size_t adv) {this->_advMax += adv;};
+        void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};
         raytracer::ICamera* getCamera(void) const {return this->_camera;};
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};

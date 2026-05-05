@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -19,17 +19,19 @@ File Description:
     /* limits */
     #define RENDER_DISTANCE 400 // Kill the ray if the SDF is above or equal to that value (can be redefined in the camera)
     #define MAX_LIGHT_RAY 1000000 // Max number of rays by light
-    #define CHUNK_SIZE 10 // Size of the chunk used (color, face, sdf)
+    #define CHUNK_SIZE 10.0f // Size of the chunk used (color, face, sdf)
     #define LIGHT_INTENSITY_LIMIT 1e-5 // Kill the ray under this intensity
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
     #define LIGHT_COLOR_LIMIT 4 // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
     #define LOAD_FACTOR 0.5f // Load factor used for the unordered map
+    #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / CHUNK_SIZE) // Number of useless loop allowed before getting killed
 
     /* convertion */
     #define UNIT_METER_COEF 50.0f // Number of local unit that equal to a meter
 
     /* values */
+    #define ADV_SIZE 75 // Size of the advencement display
     #define NO_LIGHT_DEFAULT 2.5f // Allow the incrementation of light even if the value of r, g or b is at 0
     #define RAY_DISTANCE_COEF 2.0f // Coef of the render distance for the distance live of a ray
     #define EXP_K 1.5 // Exponential coef for light diminution with distance (1 = slow, 10 = fast)

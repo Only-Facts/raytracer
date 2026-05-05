@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Utils.hpp
@@ -30,6 +30,14 @@ namespace raytracer { // namespace start
 void noise(const raytracer::Coord& p, raytracer::FColor& v, float strength = NOISE_STRENGTH, float size = NOISE_SIZE);
 inline nodiscard raytracer::Color moyColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
 {return (color1 + color2 * intensity) / (1 + intensity);};
+inline nodiscard raytracer::Color mergeLight(raytracer::FColor color, raytracer::FColor light, float coef = 1.0)
+{
+    if (color.x < 1e-8) color.x = NO_LIGHT_DEFAULT;
+    if (color.y < 1e-8) color.y = NO_LIGHT_DEFAULT;
+    if (color.z < 1e-8) color.z = NO_LIGHT_DEFAULT;
+    color *= light / (coef * 255.0f);
+    return {std::min(color.x, 255.0f), std::min(color.y, 255.0f), std::min(color.z, 255.0f)};
+};
 inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0)
 {
     /*

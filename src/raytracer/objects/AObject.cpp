@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -56,17 +56,28 @@ static void processChunk(const std::vector<raytracer::ChunkLightData>& data,
 hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const raytracer::Coord& point) const
 {
     raytracer::FColor lightColor = DEFAULT_COLOR;
-    raytracer::Coord chunkPoint;
     raytracer::Chunk chunk;
     float count = 0;
 
+    // Get the min & max chunk
+    raytracer::Coord minPoint = {
+        point.x - LIGHT_COLOR_LIMIT,
+        point.y - LIGHT_COLOR_LIMIT,
+        point.z - LIGHT_COLOR_LIMIT
+    };
+    raytracer::Coord maxPoint = {
+        point.x + LIGHT_COLOR_LIMIT,
+        point.y + LIGHT_COLOR_LIMIT,
+        point.z + LIGHT_COLOR_LIMIT
+    };
+    raytracer::Chunk minChunk = raytracer::getChunk(minPoint);
+    raytracer::Chunk maxChunk = raytracer::getChunk(maxPoint);
+
     // For each chunk around the chunk point
-    static int limits = std::ceil(CHUNK_SIZE / LIGHT_COLOR_LIMIT);
-    for (int z = -limits; z <= limits; ++z)
-    for (int y = -limits; y <= limits; ++y)
-    for (int x = -limits; x <= limits; ++x) {
-        chunkPoint = {x * CHUNK_SIZE, y * CHUNK_SIZE, z * CHUNK_SIZE};
-        chunk = raytracer::getChunk(point + chunkPoint);
+    for (int z = minChunk.z; z <= maxChunk.z; ++z)
+    for (int y = minChunk.y; y <= maxChunk.y; ++y)
+    for (int x = minChunk.x; x <= maxChunk.x; ++x) {
+        chunk = {x, y, z};
         auto it = this->_lightData.find(chunk);
         if (it == this->_lightData.end()) continue;
         processChunk(it->second, point, lightColor, count);
@@ -77,12 +88,7 @@ hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const ra
         return {DEFAULT_COLOR, false};
 
     // Apply the light modifier
-    raytracer::FColor color = this->getObjectDescriptor().material->getColor();
-    if (color.x < 1e-8) color.x = NO_LIGHT_DEFAULT;
-    if (color.y < 1e-8) color.y = NO_LIGHT_DEFAULT;
-    if (color.z < 1e-8) color.z = NO_LIGHT_DEFAULT;
-    color *= lightColor / (count * 255.0f);
-    return {{std::min(color.x, 255.0f), std::min(color.y, 255.0f), std::min(color.z, 255.0f)}, true};
+    return {raytracer::mergeLight(this->getObjectDescriptor().material->getColor(), lightColor, count), true};
 }
 
 hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::Color color, float intensity)
@@ -197,46 +203,16 @@ hot void raytracer::AObject::reflectRay(raytracer::IRay* ray, const raytracer::F
     ray->setCFrame(cframe);
 }
 
-static float segmentSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b)
+hot static float segmentSDF(const raytracer::Coord& p, const raytracer::Vertice& a, const raytracer::Vertice& b)
 {
-    raytracer::Coord ab = b - a;
-    raytracer::Type v = ab.dot(ab);
-    if (v == 0.0) return (point - a).lengthSquared(); // Security
-    raytracer::Type t = (point - a).dot(ab) / v;
-    t = std::clamp(t, 0.0, 1.0);
-    raytracer::Coord closest = a + t * ab;
-    return (point - closest).lengthSquared();
+    raytracer::Coord pa = p - a, ba = b - a;
+    raytracer::Type h = pa.dot(ba) / ba.dot(ba);
+    h = (h < static_cast<raytracer::Type>(0)) ? static_cast<raytracer::Type>(0) : (h > static_cast<raytracer::Type>(1) ? static_cast<raytracer::Type>(1) : h);
+    return (pa - ba * h).lengthSquared();
 }
 
 /*
-static float triangleSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
-{
-    raytracer::Coord ba = b - a, pa = point - a;
-    raytracer::Coord cb = c - b, pb = point - b;
-    raytracer::Coord ac = a - c, pc = point - c;
-    raytracer::Coord nor = ba.cross(ac);
-
-    return std::sqrt(
-        (sign(ba.cross(nor).dot(pa)) +
-         sign(cb.cross(nor).dot(pb)) +
-         sign(ac.cross(nor).dot(pc)) < 2.0)
-        ?
-        std::min(
-            std::min(
-                (ba * std::clamp(ba.dot(pa) / ba.lengthSquared(), 0.0, 1.0)).lengthSquared()
-                ,
-                (cb * std::clamp(cb.dot(pb) / cb.lengthSquared(), 0.0, 1.0)).lengthSquared()
-            )
-            ,
-            (ac * std::clamp(ac.dot(pc) / ac.lengthSquared(), 0.0, 1.0)).lengthSquared()
-        )
-        :
-        nor.dot(pa) * nor.dot(pa) / nor.lengthSquared()
-    );
-}
-*/
-
-hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+hot static float triangleSDF(const raytracer::Coord& p, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
 {
     raytracer::Coord ab = b - a;
     raytracer::Coord ac = c - a;
@@ -278,6 +254,80 @@ hot static float triangleSDF(const raytracer::Coord& point, const raytracer::Ver
         segmentSDF(point, b, c),
         segmentSDF(point, c, a)
     });
+}
+*/
+
+hot static float triangleSDF(const raytracer::Coord& p, const raytracer::Vertice& a, const raytracer::Vertice& b, const raytracer::Vertice& c)
+{
+    // edges
+    const float abx = b.x - a.x;
+    const float aby = b.y - a.y;
+    const float abz = b.z - a.z;
+
+    const float acx = c.x - a.x;
+    const float acy = c.y - a.y;
+    const float acz = c.z - a.z;
+
+    // normal = ab x ac
+    const float nx = aby*acz - abz*acy;
+    const float ny = abz*acx - abx*acz;
+    const float nz = abx*acy - aby*acx;
+
+    const float nLen2 = nx*nx + ny*ny + nz*nz;
+
+    // degenerate triangle
+    if (nLen2 < 1e-12f) {
+        float d0 = segmentSDF(p, a, b);
+        float d1 = segmentSDF(p, b, c);
+        float d2 = segmentSDF(p, c, a);
+        return std::min(d0, std::min(d1, d2));
+    }
+
+    // ap
+    const float apx = p.x - a.x;
+    const float apy = p.y - a.y;
+    const float apz = p.z - a.z;
+
+    // distance to plane
+    const float distPlane = apx*nx + apy*ny + apz*nz;
+
+    // projection
+    const float invN = 1.0f / nLen2;
+
+    const float projx = p.x - nx * distPlane * invN;
+    const float projy = p.y - ny * distPlane * invN;
+    const float projz = p.z - nz * distPlane * invN;
+
+    // edge tests
+    auto edgeTest = [&](const raytracer::Vertice& v0, const raytracer::Vertice& v1, float px, float py, float pz)
+    {
+        const float ex = v1.x - v0.x;
+        const float ey = v1.y - v0.y;
+        const float ez = v1.z - v0.z;
+
+        const float vx = px - v0.x;
+        const float vy = py - v0.y;
+        const float vz = pz - v0.z;
+
+        const float cx = ey*vz - ez*vy;
+        const float cy = ez*vx - ex*vz;
+        const float cz = ex*vy - ey*vx;
+
+        return (cx*nx + cy*ny + cz*nz) >= 0.f;
+    };
+
+    if (edgeTest(a, b, projx, projy, projz) &&
+        edgeTest(b, c, projx, projy, projz) &&
+        edgeTest(c, a, projx, projy, projz)) {
+        return (distPlane * distPlane) * invN;
+    }
+
+    // fallback edges
+    float d0 = segmentSDF(p, a, b);
+    float d1 = segmentSDF(p, b, c);
+    float d2 = segmentSDF(p, c, a);
+
+    return std::min(d0, std::min(d1, d2));
 }
 
 hot std::pair<float, const raytracer::Face*> raytracer::AObject::computeSDF(const raytracer::Coord& point) const

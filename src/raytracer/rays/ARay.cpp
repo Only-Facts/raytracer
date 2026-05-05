@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.cpp
@@ -26,7 +26,7 @@ void raytracer::ARay::computeObjects(raytracer::Type renderDistance, const std::
     raytracer::Type renderDistanceSquared = renderDistance * renderDistance;
     raytracer::CFrame cframe = this->getCFrame();
     raytracer::Coord positionOrigin = cframe.position;
-    raytracer::Direction direction = cframe.orientation * CHUNK_SIZE;
+    raytracer::Direction direction = cframe.orientation * (CHUNK_SIZE / cframe.orientation.length());
     raytracer::Chunk chunk;
     std::unordered_set<IObject*> seen;
     seen.reserve(objects.size());
@@ -53,6 +53,7 @@ void raytracer::ARay::computeObjects(raytracer::Type renderDistance, const std::
         if (it != objectsChunks.end()) {
             for (raytracer::IObject* object: it->second) {
                 if (!seen.insert(object).second) continue;
+                if (!object->willColide(cframe.position, cframe.orientation)) continue; // Check if it will collide in the future at least one
                 this->_objects.push_back(object);
             }
         }

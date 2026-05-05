@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -56,22 +56,23 @@ class AObject: public raytracer::IObject {
 
         // ------------ Function ---------- //
         /* 3D logic */
-        void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
-        raytracer::IObject* getImmunity(void) const final {return this->_immunity;};
+        hot inline void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
+        hot inline nodiscard raytracer::IObject* getImmunity(void) const final {return this->_immunity;};
+        hot inline nodiscard bool willColide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const override {return true;};
 
         /* movement */
-        void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
-        void rotate(const raytracer::Direction& v) final {this->_descriptor.cframe.orientation += v;};
+        hot inline void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
+        inline void rotate(const raytracer::Direction& v) final {this->_descriptor.cframe.orientation += v;};
 
         /* color handling */
-        void clearLightData(void) final {this->_lightData.clear();};
+        inline void clearLightData(void) final {this->_lightData.clear();};
 
         /* getter & setter */
         inline void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
         inline void setCFrame(const raytracer::CFrame& cframe) final {this->_descriptor.cframe = cframe; this->_descriptor.cframeOrigin = cframe;};
-        inline nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
-        inline nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
-        inline nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
+        hot inline nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
+        hot inline nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
+        hot inline nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
 
         // ------------ Operator ---------- //
         AObject& operator=(const AObject& object) = delete;
