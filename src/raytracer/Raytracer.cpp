@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -13,6 +13,7 @@ File Description:
 #define _Exception
 #define _Vector
 #define _Attribute
+#define _Write
 #include "utils/utils.hpp"
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Raytracer.hpp"
@@ -65,6 +66,9 @@ cold void raytracer::Raytracer::gui(void)
 
     // Close display
     window.close();
+
+    // End of the advencement display
+    this->advEnd();
 }
 
 void raytracer::Raytracer::loop(sf::RenderWindow& window)
@@ -115,8 +119,8 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     window.display();
 }
 
-static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
-    size_t start, size_t end,
+static hot void processLightChunk(raytracer::Raytracer& raytracer,
+    std::vector<raytracer::LightRay*>& rays, std::size_t start, std::size_t end,
     const std::vector<raytracer::IObject*>& objects,
     const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
     raytracer::ICamera* camera)
@@ -212,21 +216,22 @@ static hot void processLightChunk(std::vector<raytracer::LightRay*>& rays,
                 ray->kill();
             }
         }
+        raytracer.adv(); // Update advencement
     }
 
     // Rec for the clonned ones
     if (raysClones.size() > 0) {
-        std::cout << "Clones: " << raysClones.size() << std::endl;
-        processLightChunk(raysClones, 0, raysClones.size(), objects, objectsChunks, camera);
+        raytracer.advAddMax(raysClones.size()); // Update advencement max
+        processLightChunk(raytracer, raysClones, 0, raysClones.size(), objects, objectsChunks, camera);
     }
 }
 
-static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
-    size_t start, size_t end,
+static hot void processCameraChunk(raytracer::Raytracer& raytracer,
+    std::vector<raytracer::Ray*>& rays, std::size_t start, std::size_t end,
     const std::vector<raytracer::IObject*>& objects,
     const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
-    bool hasGlobalLight, raytracer::Color globalLightColor)
+    raytracer::FColor globalLightColor, std::size_t globalLightCount)
 {
     raytracer::FColor color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
@@ -285,6 +290,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                     ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
 
                     // To counter collision with the same object on the next iteration
+                    ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
                     ray->setImmunity(nearestObject);
                 } else {
                     // Normal computing
@@ -292,18 +298,27 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                     float localIntensityCoef = std::exp(-EXP_K * d * d * d * d);
                     auto [pointColor, ok] = nearestObject->getPointColor(ray->getCFrame().position);
                     color = pointColor;
-                    if (hasGlobalLight && !ok) color = raytracer::mergeColor(color, raytracer::mergeColor(material->getColor(), globalLightColor));
-                    else if (hasGlobalLight) color = raytracer::moyColor(color, raytracer::mergeColor(material->getColor(), globalLightColor));
+
+                    // Apply the global light modifier
+                    if (globalLightCount > 0 && !ok) color = raytracer::mergeColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
+                    else if (globalLightCount > 0) color = raytracer::moyColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
+
+                    // Generate the noise
                     if (material->hasNoise()) {
                         auto [strength, size] = material->getNoiseSettings();
                         raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
                     }
+
+                    // Set the color
                     color = raytracer::mergeColor(ray->getColor(), color, ray->getCoef() * localIntensityCoef * (1.0f - material->getTransparency()));
                     ray->setColor(color);
 
                     // Transparency & Refraction
                     if (material->getTransparency() > 1e-8) {
                         ray->setCoef(ray->getCoef() * material->getTransparency());
+
+                        // To counter collision with the same object on the next iteration
+                        ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
                         ray->setImmunity(nearestObject);
                     } else {
                         ray->kill();
@@ -319,6 +334,7 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
                 ray->kill();
             }
         }
+        raytracer.adv(); // Update advencement
     }
 }
 
@@ -348,7 +364,8 @@ static hot void processCameraChunk(std::vector<raytracer::Ray*>& rays,
 */
 void raytracer::Raytracer::render(void)
 {
-    raytracer::Color globalLightColor = DEFAULT_COLOR;
+    raytracer::FColor globalLightColor = DEFAULT_COLOR;
+    std::size_t globalLightCount = 0;
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
@@ -361,6 +378,9 @@ void raytracer::Raytracer::render(void)
         object->clearLightData();
 
     // 2 - Compute lights rays
+    this->advReset(0);
+    for (raytracer::ILight* light: this->_lights) this->advAddMax(light->getRays().size());
+    this->adv(true);
     for (raytracer::ILight* light: this->_lights) {
         if (light->isGlobal()) continue; // Ignore global light
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
@@ -373,8 +393,8 @@ void raytracer::Raytracer::render(void)
 
             // Start the thread
             threads.emplace_back(processLightChunk,
-                std::ref(lightRays),
-                start, end,
+                std::ref(*this),
+                std::ref(lightRays), start, end,
                 std::cref(this->_objects),
                 std::cref(this->_objectsChunks),
                 this->_camera
@@ -385,13 +405,13 @@ void raytracer::Raytracer::render(void)
         for (std::thread& t: threads)
             t.join();
     }
+    this->adv(true);
 
     // 3 - Compute color from global lights
-    bool hasGlobalLight = false;
     for (raytracer::ILight* light: this->_lights) {
         if (!light->isGlobal()) continue; // Ignore no global light
-        globalLightColor = raytracer::mergeColor(globalLightColor, light->getColor(), light->getIntensity());
-        hasGlobalLight = true;
+        globalLightColor += light->getColor() * light->getIntensity();
+        ++globalLightCount;
     }
 
     // 3 - Compute camera rays
@@ -399,24 +419,85 @@ void raytracer::Raytracer::render(void)
     countThreads = std::thread::hardware_concurrency();
     chunkSize = cameraRays.size() / countThreads;
     threads.clear();
+    this->advNext(cameraRays.size());
+    this->adv(true);
     for (std::size_t i = 0; i < countThreads; ++i) {
         start = i * chunkSize;
         end = (i == countThreads - 1) ? cameraRays.size() : start + chunkSize;
 
         // Start the thread
         threads.emplace_back(processCameraChunk,
-            std::ref(cameraRays),
-            start, end,
+            std::ref(*this),
+            std::ref(cameraRays), start, end,
             std::cref(this->_objects),
             std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
-            hasGlobalLight, globalLightColor
+            globalLightColor, globalLightCount
         );
     }
 
     // Wait for the threads
     for (std::thread& t: threads)
         t.join();
+    this->adv(true);
+
+    // End of the advencement display
+    if (!this->_settings.gui)
+        this->advEnd();
+}
+
+static hot std::string formatNumber(double n)
+{
+    static const char* const suffixes[] = {"", "K", "M", "B", "T"};
+    std::size_t i = 0;
+
+    // Get the suffixes
+    for (i = 0; n >= 1000.0 && i < 4; ++i)
+        n /= 1000.0;
+
+    // Get the precision
+    std::size_t precision =
+    (n < 2.0)    ? 3 :
+    (n < 10.0)   ? 2 :
+    (n < 100.0)  ? 1 : 0;
+
+    // Format the string
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(precision) << n << suffixes[i];
+    return oss.str();
+}
+
+hot void raytracer::Raytracer::adv(bool forced)
+{
+    static const char *const steps[] = {"Light Rays", "Camera Rays"};
+
+    // Check if the advencement need to be dump
+    if (!this->_settings.adv) return;
+
+    // Update only on each x advencement
+    ++this->_adv;
+    if (!this->_settings.debug && !forced && this->_adv % 101 == 0) return;
+
+    // Try to lock
+    std::unique_lock<std::mutex> lock(this->_advLock, std::try_to_lock);
+    if (!lock.owns_lock()) return;
+
+    // Computing
+    float percent = (this->_advMax == 0) ? 1.0f : (static_cast<float>(this->_adv) / static_cast<float>(this->_advMax));
+    std::size_t done = std::ceil(percent * ADV_SIZE);
+
+    // Advencement display
+    std::cout << utils::write::line() << "\r" << utils::write::reset();
+    std::cout << utils::write::strong() << "[";
+    std::cout << utils::write::color_rgb(0, 255, 0);
+    for (std::size_t i = 0; i < done; ++i) std::cout << "/";
+    std::cout << utils::write::color_rgb(255, 0, 0);
+    for (std::size_t i = done; i < ADV_SIZE; ++i) std::cout << "-";
+    std::cout << utils::write::reset() << utils::write::strong() << "]";
+    if (this->_settings.debug) std::cout << " - " << this->_adv << "/" << this->_advMax;
+    else std::cout << " - " << formatNumber(this->_adv) << "/" << formatNumber(this->_advMax);
+    std::cout << " Step (" << this->_step + 1 << "/2): " << steps[this->_step % 2];
+    std::cout << utils::write::reset() << std::flush;
 }
 
 cold void raytracer::Raytracer::loadRender(void)

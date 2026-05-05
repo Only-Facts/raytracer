@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -101,8 +101,30 @@ void raytracer::Raytracer::load(int argc, char *argv[])
     for (; i < argc; ++i) {
         arg = std::string(argv[i]);
 
+        // -d, --debug
+        if (arg == "-d" || arg == "--debug") {
+            // Check the option argument
+            if (this->_settings.debug) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.debug = true;
+        }
+
+        // -a, --advencement
+        else if (arg == "-a" || arg == "--advencement") {
+            // Check the option argument
+            if (this->_settings.adv) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.adv = true;
+        }
+
         // -n, --newton
-        if (arg == "-n" || arg == "--newton") {
+        else if (arg == "-n" || arg == "--newton") {
             // Check the option argument
             if (this->_settings.newton) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
