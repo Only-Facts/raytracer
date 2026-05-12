@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 06/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -17,5 +17,6 @@ void raytracer::Ray::reset(void)
     this->setImmunity(nullptr);
     this->_alive = true;
     this->_color = DEFAULT_COLOR;
+    this->_distance = 0.0f;
     this->_coef = 1.0f;
 }

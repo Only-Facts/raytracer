@@ -85,6 +85,10 @@ class Raytracer {
         std::vector<raytracer::IObject*> _objects;
         mutable std::vector<raytracer::IMaterial*> _materials;
 
+        /* Light */
+        raytracer::FColor _globalLightColor = DEFAULT_COLOR;
+        std::size_t _globalLightCount = 0;
+
         /* optimisation */
         std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
 

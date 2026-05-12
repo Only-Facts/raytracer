@@ -30,8 +30,8 @@ File Description:
 
 /*
 gui:
-    load gui
     light
+    load gui
     loop:
         input handling
         render
@@ -382,7 +382,11 @@ void raytracer::Raytracer::light(void)
     for (raytracer::ILight* light: this->_lights) this->advAddMax(light->getRays().size());
     this->adv(true, false);
     for (raytracer::ILight* light: this->_lights) {
-        if (light->isGlobal()) continue; // Ignore global light
+        if (light->isGlobal()) { // Handle global light
+            this->_globalLightColor += light->getColor() * light->getIntensity();
+            ++this->_globalLightCount;
+            continue;
+        }
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
         countThreads = std::thread::hardware_concurrency() - 1;
         chunkSize = lightRays.size() / countThreads;
@@ -413,8 +417,7 @@ void raytracer::Raytracer::light(void)
 
 /*
  1 - Reset rays (lights)
- 2 - Compute color from global lights
- 3 - Compute camera rays
+ 2 - Compute camera rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
     3 - Check SDF
@@ -426,8 +429,6 @@ void raytracer::Raytracer::light(void)
 */
 void raytracer::Raytracer::render(void)
 {
-    raytracer::FColor globalLightColor = DEFAULT_COLOR;
-    std::size_t globalLightCount = 0;
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
@@ -435,14 +436,7 @@ void raytracer::Raytracer::render(void)
     // 1 - Reset rays (camera)
     this->_camera->reset();
 
-    // 2 - Compute color from global lights
-    for (raytracer::ILight* light: this->_lights) {
-        if (!light->isGlobal()) continue; // Ignore no global light
-        globalLightColor += light->getColor() * light->getIntensity();
-        ++globalLightCount;
-    }
-
-    // 3 - Compute camera rays
+    // 2 - Compute camera rays
     std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
     countThreads = std::thread::hardware_concurrency() - 1;
     chunkSize = cameraRays.size() / countThreads;
@@ -460,7 +454,7 @@ void raytracer::Raytracer::render(void)
             std::cref(this->_objects),
             std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
-            globalLightColor, globalLightCount
+            this->_globalLightColor, this->_globalLightCount
         );
     }
 
