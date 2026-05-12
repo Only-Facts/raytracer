@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.cpp
@@ -16,7 +16,7 @@ File Description:
 #include "raytracer/rays/ARay.hpp"
 #include <unordered_set>
 
-void raytracer::ARay::parse(unused const raytracer::Raytracer& raytracer, unused const libconfig::Setting& node)
+void raytracer::ARay::parse(unused const libconfig::Setting& node)
 {
     throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Rays does not support: parse");
 }

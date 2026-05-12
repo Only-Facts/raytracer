@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -14,23 +14,14 @@ File Description:
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/Point.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 
-cold void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+cold void raytracer::Point::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Get the object material
-    if (!node.exists("material"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
-    descriptor.material = raytracer.parseMaterial(node["material"]);
-
     // Setup the cframe
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
-
-    // Get the camera
-    this->_camera = raytracer.getCamera();
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
@@ -41,12 +32,9 @@ hot std::pair<float, const raytracer::Face*> raytracer::Point::computeSDF(const 
     return {(point - this->getCFrame().position).length(), nullptr};
 }
 
-hot raytracer::Direction raytracer::Point::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const
+hot raytracer::Direction raytracer::Point::computeHit(unused const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
-    if (this->_camera)
-        return (this->_camera->getCFrame().position - point).normalize(); // Camera direction
-    else 
-        return {0.0, 0.0, 0.0}; // Nop
+    return {0.0, 0.0, 0.0}; // Nop
 }
 
 hot nodiscard bool raytracer::Point::willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const

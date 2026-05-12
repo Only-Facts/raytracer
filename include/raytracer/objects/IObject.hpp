@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -37,7 +37,7 @@ class IObject {
     public:
         // ---------- Pre-Function -------- //
         /* loading */
-        virtual void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) = 0;
+        virtual void parse(const libconfig::Setting& node) = 0;
         virtual void loadObj(const std::string& path) = 0;
         virtual void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) = 0;
 
@@ -61,6 +61,7 @@ class IObject {
         /* getter & setter */
         virtual void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) = 0;
         virtual void setCFrame(const raytracer::CFrame& cframe, bool origin) = 0;
+        virtual raytracer::ObjectDescriptor& getObjectDescriptor(void) = 0;
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
         virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;

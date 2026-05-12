@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.hpp
@@ -30,7 +30,7 @@ namespace raytracer { // namespace start
 class Plane: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
 
         // ------------ Operator ---------- //
         Plane& operator=(const Plane& object) = delete;

@@ -155,8 +155,6 @@ add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 # =========================
 set(SRC_OBJECTS
     src/raytracer/DynamicLibrary.cpp
-    src/raytracer/RaytracerInit.cpp
-    src/raytracer/RaytracerAdv.cpp
     src/raytracer/objects/lib.cpp
     src/raytracer/objects/AObject.cpp
 )

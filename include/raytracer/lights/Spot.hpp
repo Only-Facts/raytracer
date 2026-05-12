@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Spot.hpp
@@ -29,7 +29,7 @@ class Spot: public raytracer::ALight {
 
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
         void init(void) final;
         void reset(void) final;
 

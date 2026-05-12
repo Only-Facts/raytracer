@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Viewer.cpp
@@ -15,9 +15,8 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/cameras/Viewer.hpp"
 #include "raytracer/Struct.hpp"
-#include "raytracer/Raytracer.hpp"
 
-void raytracer::Viewer::parse(unused const raytracer::Raytracer& raytracer, unused const libconfig::Setting& node)
+void raytracer::Viewer::parse(unused const libconfig::Setting& node)
 {
     throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::NotSupportedFunction, "Viewer does not support: parse");
 }

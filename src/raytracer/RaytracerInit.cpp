@@ -422,7 +422,7 @@ void raytracer::Raytracer::scene(void)
         } else if (type == "camera") {
             if (camera)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
-            this->_camera->parse(*this, node);
+            this->_camera->parse(node);
             camera = true;
         } else if (type == "light") {
             this->parseLight(node);
@@ -491,7 +491,7 @@ raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setti
 
     // Create the material using factory & call it's parser
     raytracer::IMaterial* material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
-    material->parse(*this, node);
+    material->parse(node);
     this->_materials.push_back(material);
     return material;
 }
@@ -505,7 +505,7 @@ void raytracer::Raytracer::parseLight(const libconfig::Setting& node)
 
     // Create the light using factory & call it's parser
     raytracer::ILight* light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
-    light->parse(*this, node);
+    light->parse(node);
     this->_lights.push_back(light);
 }
 
@@ -518,7 +518,20 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
 
     // Create the object using factory & call it's parser
     raytracer::IObject* object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
-    object->parse(*this, node);
+    object->parse(node);
+    raytracer::ObjectDescriptor& descriptor = object->getObjectDescriptor();
+
+    // Init the material (mandatory on object)
+    if (!node.exists("material"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
+    descriptor.material = this->parseMaterial(node["material"]);
+
+    // Init the obj if set
+    if (!descriptor.obj.empty())
+        object->loadObj(this->ObjPath(descriptor.obj));
+    else if (node.lookupValue("obj", descriptor.obj))
+        object->loadObj(this->ObjPath(descriptor.obj));
+
     this->_objects.push_back(object);
 }
 

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 06/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Spot.cpp
@@ -14,11 +14,10 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/lights/Spot.hpp"
 #include "raytracer/special/Utils.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cmath>
 
-void raytracer::Spot::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Spot::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 

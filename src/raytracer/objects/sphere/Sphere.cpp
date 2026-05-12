@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.cpp
@@ -14,17 +14,11 @@ File Description:
 #define _Exception
 #include "utils/utils.hpp"
 #include "raytracer/objects/Sphere.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 
-cold void raytracer::Sphere::parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+cold void raytracer::Sphere::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
-
-    // Get the object material
-    if (!node.exists("material"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
-    descriptor.material = raytracer.parseMaterial(node["material"]);
 
     // Setup the cframe
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);

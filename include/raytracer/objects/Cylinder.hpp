@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Cylinder.hpp
@@ -30,7 +30,7 @@ namespace raytracer { // namespace start
 class Cylinder: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
 
         // ------------ Operator ---------- //
         Cylinder& operator=(const Cylinder& object) = delete;

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -121,9 +121,10 @@ struct ObjectDescriptor {
     /* all */
     raytracer::CFrame cframe;
     raytracer::CFrame cframeOrigin;
-    raytracer::IMaterial* material;
+    raytracer::IMaterial* material = nullptr;
 
     /* obj */
+    std::string obj;
     std::vector<raytracer::Chunk> chunks;
     std::vector<raytracer::Face> faces;
     float scale = 1.0f;
