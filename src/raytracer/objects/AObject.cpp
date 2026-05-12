@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -70,8 +70,8 @@ hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const ra
         point.y + LIGHT_COLOR_LIMIT,
         point.z + LIGHT_COLOR_LIMIT
     };
-    raytracer::Chunk minChunk = raytracer::getChunk(minPoint);
-    raytracer::Chunk maxChunk = raytracer::getChunk(maxPoint);
+    raytracer::Chunk minChunk = raytracer::getColorChunk(minPoint);
+    raytracer::Chunk maxChunk = raytracer::getColorChunk(maxPoint);
 
     // For each chunk around the chunk point
     for (int z = minChunk.z; z <= maxChunk.z; ++z)
@@ -93,7 +93,7 @@ hot std::pair<raytracer::Color, bool> raytracer::AObject::getPointColor(const ra
 
 hot void raytracer::AObject::addLightData(raytracer::Coord position, raytracer::Color color, float intensity)
 {
-    raytracer::Chunk chunk = raytracer::getChunk(position);
+    raytracer::Chunk chunk = raytracer::getColorChunk(position);
     std::lock_guard<std::mutex> lock(this->_lock);
     this->_lightData[chunk].push_back({position, color, intensity});
 }
@@ -178,8 +178,8 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
             }
 
             // Store the face
-            chunkMin = raytracer::getChunk(verticeMin);
-            chunkMax = raytracer::getChunk(verticeMax);
+            chunkMin = raytracer::getSpaceChunk(verticeMin);
+            chunkMax = raytracer::getSpaceChunk(verticeMax);
             for (int z = chunkMin.z; z <= chunkMax.z; ++z)
             for (int y = chunkMin.y; y <= chunkMax.y; ++y)
             for (int x = chunkMin.x; x <= chunkMax.x; ++x) {

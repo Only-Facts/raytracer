@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -40,15 +40,16 @@ class ACamera: public raytracer::ICamera {
 
     public:
         // ---------- Pre-Function -------- //
-        void updateScreen(void) final;
-
+        void updateScreen(void) override;
+        void kill(void) final;
+ 
         // ------------ Function ---------- //
-        nodiscard const std::vector<raytracer::Color>& getScreen(void) const {return this->_screen;};
-        nodiscard std::vector<raytracer::Ray*> getRays(void) const {return this->_rays;};
-        void setResolution(raytracer::Resolution resolution) {this->_resolution = resolution;};
-        nodiscard raytracer::Resolution getResolution(void) const {return this->_resolution;};
-        nodiscard raytracer::Type getRenderDistance(void) const {return this->_renderDistance;};
-        void setRenderDistance(raytracer::Type renderDistance) {this->_renderDistance = renderDistance;};
+        nodiscard const std::vector<raytracer::Color>& getScreen(void) const final {return this->_screen;};
+        nodiscard std::vector<raytracer::Ray*> getRays(void) const final {return this->_rays;};
+        void setResolution(raytracer::Resolution resolution) final {this->_resolution = resolution;};
+        nodiscard raytracer::Resolution getResolution(void) const final {return this->_resolution;};
+        nodiscard raytracer::Type getRenderDistance(void) const final {return this->_renderDistance;};
+        void setRenderDistance(raytracer::Type renderDistance) final {this->_renderDistance = renderDistance;};
 
         // ------------ Operator ---------- //
         ACamera& operator=(const ACamera& object) = delete;

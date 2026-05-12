@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 03/05/2026 by @author Tsukini
+##  @date 06/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp

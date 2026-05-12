@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -339,11 +339,17 @@ void raytracer::Raytracer::init(void)
     this->scene();
 
     // Init rays
+    this->advReset(1 + this->_lights.size());
     if (this->_settings.resolution_set)
         this->_camera->setResolution(this->_settings.resolution);
     this->_camera->init();
-    for (raytracer::ILight* light: this->_lights)
+    this->adv(true);
+    for (raytracer::ILight* light: this->_lights) {
         light->init();
+        this->adv(true);
+    }
+    this->advFull();
+    this->advEnd();
 
     // Init internal optimisation for SDF
     for (raytracer::IObject* object: this->_objects) {

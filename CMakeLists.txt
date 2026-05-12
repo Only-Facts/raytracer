@@ -60,6 +60,7 @@ set(SRC
     src/raytracer/main.cpp
     src/raytracer/Raytracer.cpp
     src/raytracer/RaytracerInit.cpp
+    src/raytracer/RaytracerAdv.cpp
     src/raytracer/DynamicLibrary.cpp
 
     # Special
@@ -155,6 +156,7 @@ add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 set(SRC_OBJECTS
     src/raytracer/DynamicLibrary.cpp
     src/raytracer/RaytracerInit.cpp
+    src/raytracer/RaytracerAdv.cpp
     src/raytracer/objects/lib.cpp
     src/raytracer/objects/AObject.cpp
 )
@@ -312,7 +314,7 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Optimized>:-O3 -ffast-math -fvectorize -fslp-vectorize -funroll-loops -march=native -pipe -DNDEBUG>
+    $<$<CONFIG:Optimized>:-O3 -ffast-math -fvectorize -fslp-vectorize -funroll-loops -march=native -mtune=generic -pipe -DNDEBUG>
     #$<$<CONFIG:optimized>:-O3 -ffast-math -flto -funroll-loops -fvectorize -fslp-vectorize -march=native -fno-plt -pipe -DNDEBUG>
     # -flto
 )

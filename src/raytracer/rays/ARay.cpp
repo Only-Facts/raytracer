@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.cpp
@@ -26,7 +26,7 @@ void raytracer::ARay::computeObjects(raytracer::Type renderDistance, const std::
     raytracer::Type renderDistanceSquared = renderDistance * renderDistance;
     raytracer::CFrame cframe = this->getCFrame();
     raytracer::Coord positionOrigin = cframe.position;
-    raytracer::Direction direction = cframe.orientation * (CHUNK_SIZE / cframe.orientation.length());
+    raytracer::Direction direction = cframe.orientation * (SPACE_CHUNK_SIZE / cframe.orientation.length());
     raytracer::Chunk chunk;
     std::unordered_set<IObject*> seen;
     seen.reserve(objects.size());
@@ -47,7 +47,7 @@ void raytracer::ARay::computeObjects(raytracer::Type renderDistance, const std::
 
     // Get the ray chunks (While not out of bounds)
     for (; (cframe.position - positionOrigin).lengthSquared() < renderDistanceSquared; cframe.position += direction) {
-        chunk = raytracer::getChunk(cframe.position);
+        chunk = raytracer::getSpaceChunk(cframe.position);
         // Get the shape that will intersect with the chunk
         auto it = objectsChunks.find(chunk);
         if (it != objectsChunks.end()) {

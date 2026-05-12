@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -19,13 +19,15 @@ File Description:
     /* limits */
     #define RENDER_DISTANCE 400 // Kill the ray if the SDF is above or equal to that value (can be redefined in the camera)
     #define MAX_LIGHT_RAY 1000000 // Max number of rays by light
-    #define CHUNK_SIZE 10.0f // Size of the chunk used (color, face, sdf)
     #define LIGHT_INTENSITY_LIMIT 1e-5 // Kill the ray under this intensity
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
-    #define LIGHT_COLOR_LIMIT 4 // Radius of the circle to take color on a shape pixel hit point
+    #define LIGHT_COLOR_LIMIT 4.0f // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
     #define LOAD_FACTOR 0.5f // Load factor used for the unordered map
-    #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / CHUNK_SIZE) // Number of useless loop allowed before getting killed
+    #define SPACE_CHUNK_SIZE 50.0f // Size of the chunk used (color, face, sdf)
+    #define COLOR_CHUNK_SIZE (LIGHT_COLOR_LIMIT * 2.5) // Size of the chunk used (color, face, sdf)
+    #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / SPACE_CHUNK_SIZE) // Number of useless loop allowed before getting killed
+    #define MAX_STEP 3 // Number of adv max step
 
     /* convertion */
     #define UNIT_METER_COEF 50.0f // Number of local unit that equal to a meter

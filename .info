@@ -243,3 +243,9 @@ input...
 ./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r "wxh"]
 ./raytracer -ppm <ppm_file_path>
 ./raytracer -h
+
+######################################################
+logic:
+
+light()
+

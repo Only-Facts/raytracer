@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -73,7 +73,7 @@ class Raytracer {
         std::mutex _advLock;
 
         /* advencement */
-        std::uint8_t _step = 0; // 0 = light, 1 = camera
+        std::uint8_t _step = 0; // 0 = scene, 1 = light, 2 = camera
         std::size_t _adv = 0;
         std::size_t _advMax = 0;
 
@@ -117,17 +117,19 @@ class Raytracer {
         void gui(void); // Handle opening, closing of the gui
         void loop(sf::RenderWindow& window); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
         void display(sf::RenderWindow& window); // Use the camera screen to update the gui render
-        void adv(bool forced = false); // Display advencement of the actual frame
+        void adv(bool forced = false, bool increment = true); // Display advencement of the actual frame
 
         /* global */
+        void light(void); // Update light
         void render(void); // Update camera screen
         void loadRender(void); // Load the given ppm file
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
-        void advReset(std::size_t advMax) {this->_step = 0; this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
+        void advReset(std::size_t advMax) {this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
         void advNext(std::size_t advMax) {++this->_step; this->_adv = 0; this->_advMax = advMax;}; // Next step
         void advAddMax(std::size_t adv) {this->_advMax += adv;};
+        void advFull(void) {this->_adv = this->_advMax; this->adv(true, false);};
         void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};
         raytracer::ICamera* getCamera(void) const {return this->_camera;};
         bool isViewer(void) const {return this->_settings.viewer;};
