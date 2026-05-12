@@ -1,0 +1,251 @@
+######################################################
+struct CFrame {
+    utils::vector::Vector3<double> position;
+    utils::vector::Vector3<double> orientation;
+};
+
+class enum Shape {
+    None,
+    Point,
+    Plane,
+    Sphere,
+    Cylinder,
+    Cone,
+};
+
+struct ObjectDescriptor {
+    raytracer::Shape id = raytracer::Shape::None;
+
+    /* all */
+    utils::vector::Vector3<double> origin = {0.0, 0.0, 0.0}; // {x, y, z}
+    utils::vector::Vector3<double> orientation = {0.0, 0.0, 0.0}; // {x, y, z}
+    std::shared_ptr<raytracer::IMaterial> material;
+
+    /* plane & cylinder & cone */
+    utils::vector::Vector2<std::size_t> dimension = {0, 0}; // {width, height}
+
+    /* sphere & cylinder & cone */
+    float radius;
+};
+
+######################################################
+IObject
+
+functions ->
+void translate(const utils::vector::Vector3<double>& v); // Apply the translation on the object
+float computeSDF(const utils::vector::Vector3<double>& point) const; // Return the closest norm with the point
+raytracer::CFrame getCFrame(void) const;
+
+######################################################
+AObject
+
+storage ->
+raytracer::CFrame _cframe: position + orientation
+raytracer::ObjectDescriptor _descriptor;
+std::vector<std::pair<utils::vector::Vector3<double>, float>> _lightRays;
+
+functions ->
+void translate(const utils::vector::Vector3<double>& v);
+raytracer::CFrame getCFrame(void) const;
+
+######################################################
+Camera: AObject
+
+storage ->
+std::vector<utils::vector::Vector3<uint8_t>> _screen: Screen pixel
+
+functions ->
+void render(void); // Start rendering steps
+
+######################################################
+IMaterial
+
+functions ->
+float getTransparency(void) const;
+float getLightReflectionCoef(void) const;
+utils::vector::Vector3<uint8_t> getColor(void) const;
+
+######################################################
+AMaterial: IMaterial
+
+storage ->
+float _transparency: Material transparency
+float _reflection: Material light reflection
+utils::vector::Vector3<uint8_t> _color;
+
+functions ->
+float getTransparency(void) const;
+float getLightReflectionCoef(void) const;
+utils::vector::Vector3<uint8_t> getColor(void) const;
+
+######################################################
+RGBMaterial: AMaterial
+// Default material
+
+######################################################
+...: AObject
+
+functions ->
+float computeSDF(const utils::vector::Vector3<double>& point) const;
+
+######################################################
+IRay: AObject
+
+functions ->
+void reset(void); // Reset values
+
+######################################################
+Ray: IRay
+
+storage ->
+utils::vector::Vector3<std::uint8_t> _color: RGB color that what hit, add a percentage of the color from the surface hitted each time
+
+functions ->
+void reset(void);
+
+######################################################
+LightRay: IRay
+
+storage ->
+float _intensity: Intensity of the light: Decrease at each surface hitted
+
+functions ->
+void reset(void);
+
+######################################################
+ILight: AObject
+
+functions ->
+void init(void); // Create default light rays
+void reset(void); // Reset light rays values (don't recreate it)
+
+######################################################
+ALight: ILight
+
+storage ->
+std::vector<std::shared_ptr<raytracer::LightRay>> _rays;
+
+######################################################
+Directional: ALight
+
+functions ->
+void init(void);
+void reset(void);
+
+######################################################
+Ambient: ALight
+
+functions ->
+void init(void);
+void reset(void);
+
+######################################################
+render:
+ ~ - handle input
+ 0 - reset object status
+ 1 - init rays & light rays
+ 2 - compute SDF on light rays
+ 3 - compute SDF on rays
+ 5 - update screen display
+
+######################################################
+shapes:
+ - Point // Used for rays
+ - Plane // Used for camera
+ - Sphere
+ - Cylinder
+ - Cone
+ - ...
+
+######################################################
+ppm save file:
+1 byte (magic uint8_t 0x22)
+2 byte (width uint16_t 0-65535)
+2 byte (height uint16_t 0-65535)
+3 byte (color uint8_t * 3 rgb) * width * height
+
+######################################################
+config file:
+
+$import {"direct or relative path to a file", "...", ...}  // Take the files content and past it here
+$import {"direct or relative path to a file"} // Take the file content and past it here
+// Same as import
+$include {"direct or relative path to a file", "...", ...}
+$include {"direct or relative path to a file"}
+$paste {"direct or relative path to a file", "...", ...}
+$paste {"direct or relative path to a file"}
+
+// Only one allowed
+<camera_name>: {
+    type = "camera"; // Case insensitive
+
+    resolution = [0, 0]; // size_t
+    fieldOfView = 70f; // float
+
+    position = [0.0, 0.0, 0.0]; // Double
+    orientation = [0.0, 0.0, 0.0]; // Double
+};
+
+<light_name>: {
+    type = "light"; // Case insensitive
+    name = "global(not handle for now)"|"ambient"|"directional"; // Case insensitive
+
+    intensity = 1.0f; // Float (100% by default)
+    color = [UINT8_MAX, UINT8_MAX, UINT8_MAX]; // uint8_t (white by default)
+
+    position = [0.0, 0.0, 0.0]; // Double
+    orientation = [0.0, 0.0, 0.0]; // Double
+};
+
+<shape_name>: {
+    type = "object"; // Case insensitive
+    name = "point"|"plane"|"sphere"|"cylinder"|"cone"; // Case insensitive
+    material = {
+        name = "default"; // Case insensitive
+        color = [UINT8_MAX, UINT8_MAX, UINT8_MAX];
+        transparency = 0.0f; // float (transparency by default)
+        reflection = 0.0f; // float (no reflection by default)
+        is_mirror = false; // boolean (false by default)
+    };
+
+    position = [0.0, 0.0, 0.0]; // Double
+    orientation = [0.0, 0.0, 0.0]; // Double
+
+    dimension = [0, 0]; // size_t
+
+    radius = 0.0; // Double
+};
+
+######################################################
+flags:
+
+help (already handle)
+
+basic camera
+plugins directory
+scene used
+gui?
+ppm file? where?
+forced camera resolution (...x...)
+see a ppm file (only display a frame and do no other thing)
+
+input...
+
+-p      --plugins
+-s      --save
+-r      --resolution
+-gui
+-c      --camera
+-ppm
+-h      --help
+
+./raytracer <scene_cfg_path> [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r "wxh"]
+./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-s <ppm_directory_path>] [-r "wxh"]
+./raytracer -ppm <ppm_file_path>
+./raytracer -h
+
+######################################################
+logic:
+
+light()
+

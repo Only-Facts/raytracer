@@ -1,0 +1,10 @@
+{
+    "errors": [
+        {
+            "code": "VectorInvalidIndex",
+            "message": "Invalid index on a vector",
+            "info": "Can't retrieve the value, the VectorX dosen't have this index",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        }
+    ]
+}

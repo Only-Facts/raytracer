@@ -1,0 +1,34 @@
+{
+    "errors": [
+        {
+            "code": "NoPlugins",
+            "message": "Wasn't able to find any plugins",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "NoLoadedCamera",
+            "message": "Wasn't able to load any camera",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "Runtime",
+            "message": "Error during the runtime",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "Parser",
+            "message": "Error during the parsing",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        },
+        {
+            "code": "ppmFile",
+            "message": "Error during the ppm file writing/reading",
+            "restrictions": ["Fatal", "Error"]
+        },
+        {
+            "code": "InvalidAction",
+            "message": "Can't execute this action",
+            "restrictions": ["Fatal", "Error", "Warning"]
+        }
+    ]
+}
