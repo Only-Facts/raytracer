@@ -19,7 +19,7 @@ add_definitions(-D_NoWarning) # Remove warnings from utils
 # Requirement
 # =========================
 find_package(Python3 REQUIRED) # Try to find python for the dependencies
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+#find_package(SFML 3.1.0 COMPONENTS graphics window system REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBCONFIG REQUIRED libconfig++)
 
@@ -57,61 +57,61 @@ add_compile_options(
 # =========================
 set(SRC
     # Global
-    src/raytracer/main.cpp
-    src/raytracer/Raytracer.cpp
-    src/raytracer/RaytracerInit.cpp
-    src/raytracer/RaytracerAdv.cpp
-    src/raytracer/DynamicLibrary.cpp
+    src-cpp/raytracer/main.cpp
+    src-cpp/raytracer/Raytracer.cpp
+    src-cpp/raytracer/RaytracerInit.cpp
+    src-cpp/raytracer/RaytracerAdv.cpp
+    src-cpp/raytracer/DynamicLibrary.cpp
 
     # Special
-    src/raytracer/special/Utils.cpp
+    src-cpp/raytracer/special/Utils.cpp
 
     # Objects
-    src/raytracer/objects/AObject.cpp
+    src-cpp/raytracer/objects/AObject.cpp
 
     # Rays
-    src/raytracer/rays/ARay.cpp
-    src/raytracer/rays/Ray.cpp
-    src/raytracer/rays/LightRay.cpp
+    src-cpp/raytracer/rays/ARay.cpp
+    src-cpp/raytracer/rays/Ray.cpp
+    src-cpp/raytracer/rays/LightRay.cpp
 
     # Camera (used for the viewer mode)
-    src/raytracer/cameras/ACamera.cpp
-    src/raytracer/cameras/viewer/Viewer.cpp
+    src-cpp/raytracer/cameras/ACamera.cpp
+    src-cpp/raytracer/cameras/viewer/Viewer.cpp
 )
 add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} STATIC ${SRC})
 #add_library(${TARGET} SHARED ${SRC})
 
 set(SRC_LIBS
-    src/raytracer/special/Utils.cpp
+    src-cpp/raytracer/special/Utils.cpp
 )
 
 # =========================
 # Cameras
 # =========================
 set(SRC_CAMERAS
-    src/raytracer/rays/ARay.cpp
-    src/raytracer/rays/Ray.cpp
-    src/raytracer/cameras/lib.cpp
-    src/raytracer/cameras/ACamera.cpp
-    src/raytracer/objects/AObject.cpp
+    src-cpp/raytracer/rays/ARay.cpp
+    src-cpp/raytracer/rays/Ray.cpp
+    src-cpp/raytracer/cameras/lib.cpp
+    src-cpp/raytracer/cameras/ACamera.cpp
+    src-cpp/raytracer/objects/AObject.cpp
 )
 
 set(SRC_VIEWER
-    src/raytracer/cameras/viewer/lib.cpp
-    src/raytracer/cameras/viewer/Viewer.cpp
+    src-cpp/raytracer/cameras/viewer/lib.cpp
+    src-cpp/raytracer/cameras/viewer/Viewer.cpp
 )
 add_library(camera_viewer SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_VIEWER})
 
 set(SRC_CAMERA2D
-    src/raytracer/cameras/camera2D/lib.cpp
-    src/raytracer/cameras/camera2D/Camera2D.cpp
+    src-cpp/raytracer/cameras/camera2D/lib.cpp
+    src-cpp/raytracer/cameras/camera2D/Camera2D.cpp
 )
 add_library(camera_camera2D SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA2D})
 
 set(SRC_CAMERAFOV
-    src/raytracer/cameras/cameraFOV/lib.cpp
-    src/raytracer/cameras/cameraFOV/CameraFOV.cpp
+    src-cpp/raytracer/cameras/cameraFOV/lib.cpp
+    src-cpp/raytracer/cameras/cameraFOV/CameraFOV.cpp
 )
 add_library(camera_cameraFOV SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERAFOV})
 
@@ -119,34 +119,34 @@ add_library(camera_cameraFOV SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERAFOV})
 # Lights
 # =========================
 set(SRC_LIGHTS
-    src/raytracer/rays/ARay.cpp
-    src/raytracer/rays/LightRay.cpp
-    src/raytracer/lights/lib.cpp
-    src/raytracer/lights/ALight.cpp
-    src/raytracer/objects/AObject.cpp
+    src-cpp/raytracer/rays/ARay.cpp
+    src-cpp/raytracer/rays/LightRay.cpp
+    src-cpp/raytracer/lights/lib.cpp
+    src-cpp/raytracer/lights/ALight.cpp
+    src-cpp/raytracer/objects/AObject.cpp
 )
 
 set(SRC_GLOBAL
-    src/raytracer/lights/global/lib.cpp
-    src/raytracer/lights/global/Global.cpp
+    src-cpp/raytracer/lights/global/lib.cpp
+    src-cpp/raytracer/lights/global/Global.cpp
 )
 add_library(light_global SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_GLOBAL})
 
 set(SRC_POINT
-    src/raytracer/lights/point/lib.cpp
-    src/raytracer/lights/point/Point.cpp
+    src-cpp/raytracer/lights/point/lib.cpp
+    src-cpp/raytracer/lights/point/Point.cpp
 )
 add_library(light_point SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_POINT})
 
 set(SRC_SPOT
-    src/raytracer/lights/spot/lib.cpp
-    src/raytracer/lights/spot/Spot.cpp
+    src-cpp/raytracer/lights/spot/lib.cpp
+    src-cpp/raytracer/lights/spot/Spot.cpp
 )
 add_library(light_spot SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_SPOT})
 
 set(SRC_PLANE
-    src/raytracer/lights/plane/lib.cpp
-    src/raytracer/lights/plane/Plane.cpp
+    src-cpp/raytracer/lights/plane/lib.cpp
+    src-cpp/raytracer/lights/plane/Plane.cpp
 )
 add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 
@@ -154,46 +154,46 @@ add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 # Objects
 # =========================
 set(SRC_OBJECTS
-    src/raytracer/DynamicLibrary.cpp
-    src/raytracer/RaytracerInit.cpp
-    src/raytracer/RaytracerAdv.cpp
-    src/raytracer/objects/lib.cpp
-    src/raytracer/objects/AObject.cpp
+    src-cpp/raytracer/DynamicLibrary.cpp
+    src-cpp/raytracer/RaytracerInit.cpp
+    src-cpp/raytracer/RaytracerAdv.cpp
+    src-cpp/raytracer/objects/lib.cpp
+    src-cpp/raytracer/objects/AObject.cpp
 )
 
 set(SRC_OBJECT
-    src/raytracer/objects/object/lib.cpp
-    src/raytracer/objects/object/Object.cpp
+    src-cpp/raytracer/objects/object/lib.cpp
+    src-cpp/raytracer/objects/object/Object.cpp
 )
 add_library(object_object SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_OBJECT})
 
 set(SRC_POINT
-    src/raytracer/objects/point/lib.cpp
-    src/raytracer/objects/point/Point.cpp
+    src-cpp/raytracer/objects/point/lib.cpp
+    src-cpp/raytracer/objects/point/Point.cpp
 )
 add_library(object_point SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_POINT})
 
 set(SRC_PLANE
-    src/raytracer/objects/plane/lib.cpp
-    src/raytracer/objects/plane/Plane.cpp
+    src-cpp/raytracer/objects/plane/lib.cpp
+    src-cpp/raytracer/objects/plane/Plane.cpp
 )
 add_library(object_plane SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_PLANE})
 
 set(SRC_SPHERE
-    src/raytracer/objects/sphere/lib.cpp
-    src/raytracer/objects/sphere/Sphere.cpp
+    src-cpp/raytracer/objects/sphere/lib.cpp
+    src-cpp/raytracer/objects/sphere/Sphere.cpp
 )
 add_library(object_sphere SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_SPHERE})
 
 set(SRC_CYLINDER
-    src/raytracer/objects/cylinder/lib.cpp
-    src/raytracer/objects/cylinder/Cylinder.cpp
+    src-cpp/raytracer/objects/cylinder/lib.cpp
+    src-cpp/raytracer/objects/cylinder/Cylinder.cpp
 )
 add_library(object_cylinder SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CYLINDER})
 
 set(SRC_CONE
-    src/raytracer/objects/cone/lib.cpp
-    src/raytracer/objects/cone/Cone.cpp
+    src-cpp/raytracer/objects/cone/lib.cpp
+    src-cpp/raytracer/objects/cone/Cone.cpp
 )
 add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
 
@@ -201,12 +201,12 @@ add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
 # Materials
 # =========================
 set(SRC_MATERIALS
-    src/raytracer/materials/lib.cpp
+    src-cpp/raytracer/materials/lib.cpp
 )
 
 set(SRC_DEFAULT
-    src/raytracer/materials/default/lib.cpp
-    src/raytracer/materials/default/Default.cpp
+    src-cpp/raytracer/materials/default/lib.cpp
+    src-cpp/raytracer/materials/default/Default.cpp
 )
 add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT})
 
@@ -272,7 +272,7 @@ foreach(target
     object_cone
     material_default
 )
-    add_dependencies(${target} generated_exception_header)
+  add_dependencies(${target} generated_exception_header)
 endforeach()
 
 # =========================
@@ -301,12 +301,12 @@ foreach(target
     object_cone
     material_default
 )
-    target_include_directories(${target} PRIVATE include)
-    target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
-    target_link_libraries(${target} PRIVATE utils)
-    target_include_directories(${target} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
-    target_link_libraries(${target} PRIVATE ${LIBCONFIG_LIBRARIES})
-    target_link_libraries(${target} PRIVATE sfml-graphics sfml-window sfml-system)
+  target_include_directories(${target} PRIVATE include)
+  target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
+  target_link_libraries(${target} PRIVATE utils)
+  target_include_directories(${target} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
+  target_link_libraries(${target} PRIVATE ${LIBCONFIG_LIBRARIES})
+  target_link_libraries(${target} PRIVATE sfml-graphics sfml-window sfml-system)
 endforeach()
 
 # =========================

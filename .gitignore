@@ -31,3 +31,10 @@ Doxyfile
 ## Other
 #.info
 perf.*
+
+# Cargo
+/target
+/Cargo.lock
+
+# Clangd
+compile_commands.json
