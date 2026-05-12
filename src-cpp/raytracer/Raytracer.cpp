@@ -56,7 +56,7 @@ cold void raytracer::Raytracer::gui(void)
 
     // Open display
     raytracer::Resolution resolution = this->_camera->getResolution();
-    sf::VideoMode mode(resolution.x, resolution.y);
+    sf::VideoMode mode({resolution.x, resolution.y});
     sf::RenderWindow window(mode, "Raytracer", sf::Style::Titlebar | sf::Style::Close);
 
     // Pre loop (viewer mode)
@@ -84,14 +84,13 @@ static void subLoop(const sf::RenderWindow& window, raytracer::Raytracer& raytra
 void raytracer::Raytracer::loop(sf::RenderWindow& window)
 {
     std::thread subThread(subLoop, std::ref(window), std::ref(*this));
-    sf::Event event;
 
     // Loop while the window is open
     while (window.isOpen()) {
 
         // Listen event
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
                 window.close();
             /* other input handle in gui mode */
         }
@@ -124,7 +123,7 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
                 sf::Vector2f(x, y),
                 sf::Color(color.x, color.y, color.z)
             );
-            window.draw(&point, 1, sf::Points);
+            window.draw(&point, 1, sf::PrimitiveType::Points);
         }
     }
 
