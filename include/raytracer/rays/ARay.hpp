@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.hpp

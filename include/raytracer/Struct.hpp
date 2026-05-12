@@ -27,6 +27,7 @@ File Description:
     #include <cstdint>          // std::uint8_t, std::uint16_t, std::int32_t
     #include <vector>           // std::vector
     #include <tuple>            // std::tuple
+    #include <bit>              // std::bit_cast
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -56,6 +57,32 @@ struct CFrame {
     raytracer::Coord position = {0.0, 0.0, 0.0};
     raytracer::Direction orientation = {0.0, 0.0, 0.0};
     raytracer::Angle rotation = 0.0;
+    inline hot nodiscard bool operator==(const CFrame& other) const noexcept {
+        return (
+            position.x == other.position.x &&
+            position.y == other.position.y &&
+            position.z == other.position.z &&
+            orientation.x == other.orientation.x &&
+            orientation.y == other.orientation.y &&
+            orientation.z == other.orientation.z &&
+            rotation == other.rotation
+        );
+    }
+};
+
+struct CFrameHash {
+    inline hot nodiscard std::size_t operator()(const raytracer::CFrame& cframe) const noexcept {
+        auto bits = [](double v) -> std::uint64_t {
+            return std::bit_cast<std::uint64_t>(v);
+        };
+        std::size_t h = bits(cframe.position.x) * 73856093ull;
+        h ^= bits(cframe.position.y) * 19349663ull;
+        h ^= bits(cframe.position.z) * 83492791ull;
+        h ^= bits(cframe.orientation.x) * 2654435761ull;
+        h ^= bits(cframe.orientation.y) * 2246822519ull;
+        h ^= bits(cframe.orientation.z) * 3266489917ull;
+        return h ^ (bits(cframe.rotation) * 668265263ull);
+    }
 };
 
 enum class Shape {
@@ -73,7 +100,7 @@ inline hot nodiscard raytracer::Chunk getColorChunk(const raytracer::Coord& poin
 {return {point.x / COLOR_CHUNK_SIZE, point.y / COLOR_CHUNK_SIZE, point.z / COLOR_CHUNK_SIZE};}
 
 struct ChunkHash {
-    inline nodiscard std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {
+    inline hot nodiscard std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {
         std::size_t h = chunk.x * 73856093u;
         h ^= chunk.y * 19349663u + 0x9e3779b9 + (h << 6) + (h >> 2);
         return h ^ (chunk.z * 83492791u + 0x9e3779b9 + (h << 6) + (h >> 2));

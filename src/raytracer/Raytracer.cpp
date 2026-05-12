@@ -416,7 +416,8 @@ void raytracer::Raytracer::light(void)
 }
 
 /*
- 1 - Reset rays (lights)
+ 1 - Reset rays (camera)
+ 2.0 - Check for already computed ray
  2 - Compute camera rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
@@ -426,38 +427,52 @@ void raytracer::Raytracer::light(void)
         - Apply color (not for mirror material)
         - kill (not for mirror material)
     too far -> kill
+ 2.2 - Store computed value
 */
 void raytracer::Raytracer::render(void)
 {
     std::vector<std::thread> threads;
+    std::vector<raytracer::Ray*> aliveRays;
+    aliveRays.reserve(this->_camera->getRays().size());
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
 
     // 1 - Reset rays (camera)
     this->_camera->reset();
 
-    // 2 - Compute camera rays
-    std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
+    // 2.0 - Check for already computed ray
+    for (raytracer::Ray* ray: this->_camera->getRays()) {
+        const raytracer::CFrame& cframe = ray->getCFrameOrigin();
+        auto it = this->_rays.find(cframe);
+        if (it != this->_rays.end()) {
+            ray->setColor(it->second);
+            ray->kill();
+        } else {
+            aliveRays.push_back(ray);
+        }
+    }
+
+    // 2.1 - Compute camera rays
     countThreads = std::thread::hardware_concurrency() - 1;
-    chunkSize = cameraRays.size() / countThreads;
+    chunkSize = aliveRays.size() / countThreads;
     threads.clear();
-    this->advReset(cameraRays.size());
+    this->advReset(aliveRays.size());
     this->adv(true, false);
     for (std::size_t i = 0; i < countThreads; ++i) {
         start = i * chunkSize;
-        end = (i == countThreads - 1) ? cameraRays.size() : start + chunkSize;
+        end = (i == countThreads - 1) ? aliveRays.size() : start + chunkSize;
 
         // Start the thread
         threads.emplace_back(processCameraChunk,
             std::ref(*this),
-            std::ref(cameraRays), start, end,
+            std::ref(aliveRays), start, end,
             std::cref(this->_objects),
             std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
             this->_globalLightColor, this->_globalLightCount
         );
     }
-
+ 
     // Wait for the threads
     for (std::thread& t: threads)
         t.join();
@@ -467,6 +482,12 @@ void raytracer::Raytracer::render(void)
     // End of the advencement display
     if (!this->_settings.gui)
         this->advEnd();
+
+    // 2.2 - Store computed value
+    for (raytracer::Ray* ray: aliveRays) {
+        const raytracer::CFrame& cframe = ray->getCFrameOrigin();
+        this->_rays.try_emplace(cframe, ray->getColor());
+    }
 }
 
 cold void raytracer::Raytracer::loadRender(void)

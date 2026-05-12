@@ -54,7 +54,7 @@ hot void raytracer::Raytracer::adv(bool forced, bool increment)
 
     // Update only on each x advencement
     if (increment) ++this->_adv;
-    if (!this->_settings.debug && !forced && this->_adv % 101 == 0) return;
+    if (!this->_settings.debug && !forced && this->_adv % 1000 == 0) return;
 
     // Try to lock
     std::unique_lock<std::mutex> lock(this->_advLock, std::try_to_lock);

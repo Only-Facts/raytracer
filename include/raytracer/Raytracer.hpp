@@ -91,6 +91,7 @@ class Raytracer {
 
         /* optimisation */
         std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
+        std::unordered_map<raytracer::CFrame, raytracer::Color, raytracer::CFrameHash> _rays;
 
         // ------------ Function ---------- //
         template<typename T>
