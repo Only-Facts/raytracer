@@ -60,7 +60,7 @@ class IObject {
 
         /* getter & setter */
         virtual void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) = 0;
-        virtual void setCFrame(const raytracer::CFrame& cframe) = 0;
+        virtual void setCFrame(const raytracer::CFrame& cframe, bool origin) = 0;
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
         virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;

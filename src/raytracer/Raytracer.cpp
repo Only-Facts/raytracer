@@ -22,9 +22,12 @@ File Description:
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 #include <cstddef>
 #include <cstdint>
 #include <thread>
+#include <atomic>
 #include <vector>
 #include <cmath>
 
@@ -77,8 +80,7 @@ cold void raytracer::Raytracer::gui(void)
 static void subLoop(const sf::RenderWindow& window, raytracer::Raytracer& raytracer)
 {
     if (!raytracer.isGui()) return;
-    while (window.isOpen())
-        raytracer.render();
+    while (window.isOpen()) raytracer.render();
 }
 
 void raytracer::Raytracer::loop(sf::RenderWindow& window)
@@ -91,9 +93,71 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
 
         // Listen event
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) // Window killed
                 window.close();
-            /* other input handle in gui mode */
+            if (event.type == sf::Event::KeyPressed) { // Camera movement
+                raytracer::CFrame cframe = this->_camera->getCFrame();
+                switch (event.key.code) {
+                    // Window kill
+                    case sf::Keyboard::Escape:
+                        window.close();
+                        break;
+
+                    // Translation
+                    case sf::Keyboard::Q:
+                        cframe.position.x -= MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::D:
+                        cframe.position.x += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::Z:
+                        cframe.position.z += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::S:
+                        cframe.position.z -= MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::E:
+                        cframe.position.y += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::A:
+                        cframe.position.y -= MOVE_SPEED;
+                        break;
+
+                    // Rotation
+                    case sf::Keyboard::W:
+                        cframe.rotation -= ROTATE_SPEED;
+                        break;
+
+                    case sf::Keyboard::X:
+                        cframe.rotation += ROTATE_SPEED;
+                        break;
+
+                    case sf::Keyboard::Left:
+                        cframe.orientation.x -= ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Right:
+                        cframe.orientation.x += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Up:
+                        cframe.orientation.y += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Down:
+                        cframe.orientation.y -= ORIENTATION_SPEED;
+                        break;
+
+                    default: break;
+                }
+                this->_camera->setCFrame(cframe);
+            }
+
         }
 
         // Update display content (gui mode)
@@ -109,7 +173,7 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
 hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
     // Clear the window
-    //window.clear(sf::Color::Black);
+    window.clear(sf::Color::Black);
 
     // Update screen pixels using rays color
     this->_camera->updateScreen();
@@ -117,15 +181,63 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     // Draw each pixel
     raytracer::Resolution resolution = this->_camera->getResolution();
     const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
+    sf::VertexArray points(sf::Points, resolution.x * resolution.y);
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
             const raytracer::Color& color = pixels[y * resolution.x + x];
-            sf::Vertex point(
-                sf::Vector2f(x, y),
-                sf::Color(color.x, color.y, color.z)
-            );
-            window.draw(&point, 1, sf::Points);
+            points[y * resolution.x + x].position = sf::Vector2f(x, y);
+            points[y * resolution.x + x].color = sf::Color(color.x, color.y, color.z);
         }
+    }
+
+    // Font loading
+    static sf::Font font;
+    static bool loaded = false;
+    if (!loaded) {
+        font.loadFromFile("/usr/share/fonts/liberation-mono/LiberationMono-Regular.ttf");
+        loaded = true;
+    }
+
+    // Setup the string
+    const raytracer::CFrame& cframe = this->_camera->getCFrame();
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Position: ";
+    ss << "(" << cframe.position.x;
+    ss << ", " << cframe.position.y;
+    ss << ", " << cframe.position.z << ")\n";
+    ss << "Orientation: ";
+    ss << "(" << cframe.orientation.x;
+    ss << ", " << cframe.orientation.y;
+    ss << ", " << cframe.orientation.z << ")\n";
+    ss << "Rotation: ";
+    ss << cframe.rotation << " deg";
+
+    // Setup the text
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(12);
+    text.setFillColor(sf::Color::White);
+    text.setString(ss.str());
+    text.setPosition(15.f, 10.f);
+
+    // Setup the text background
+    sf::FloatRect bounds = text.getLocalBounds();
+    sf::RectangleShape background;
+    background.setPosition(8.f, 8.f);
+    background.setSize({
+        bounds.width + 15.0f,
+        bounds.height + 10.0f
+    });
+    background.setFillColor(
+        sf::Color(20, 20, 20, 180)
+    );
+
+    // Draw the window content
+    window.draw(points);
+    if (this->_settings.debug) {
+        window.draw(background);
+        window.draw(text);
     }
 
     // Update the display
