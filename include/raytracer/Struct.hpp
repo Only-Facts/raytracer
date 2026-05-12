@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -21,7 +21,7 @@ File Description:
     #define _Exception
     #define _Attribute
     #include "utils/utils.hpp"  // utils::exception::*, utils::vector::*, hot, nodiscard
-    #include "Define.hpp"       // CHUNK_SIZE
+    #include "Define.hpp"       // SPACE_CHUNK_SIZE, COLOR_CHUNK_SIZE
     #include <libconfig.h++>    // libconfig::Setting
     #include <cstddef>          // std::size_t
     #include <cstdint>          // std::uint8_t, std::uint16_t, std::int32_t
@@ -67,14 +67,10 @@ enum class Shape {
     Cone,
 };
 
-inline hot nodiscard raytracer::Chunk getChunk(const raytracer::Coord& point)
-{
-    return {
-        point.x / CHUNK_SIZE,
-        point.y / CHUNK_SIZE,
-        point.z / CHUNK_SIZE
-    };
-}
+inline hot nodiscard raytracer::Chunk getSpaceChunk(const raytracer::Coord& point)
+{return {point.x / SPACE_CHUNK_SIZE, point.y / SPACE_CHUNK_SIZE, point.z / SPACE_CHUNK_SIZE};}
+inline hot nodiscard raytracer::Chunk getColorChunk(const raytracer::Coord& point)
+{return {point.x / COLOR_CHUNK_SIZE, point.y / COLOR_CHUNK_SIZE, point.z / COLOR_CHUNK_SIZE};}
 
 struct ChunkHash {
     inline nodiscard std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {

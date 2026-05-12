@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file main.cpp
@@ -83,6 +83,7 @@ static cold void run(raytracer::Raytracer& raytracer, int argc, char *argv[])
     if (raytracer.isGui() || raytracer.isViewer()) {
         raytracer.gui(); // Launch gui
     } else {
+        raytracer.light(); // Update light rendering
         raytracer.render(); // Update camera rendering
         raytracer.saveRender(); // Save the updated rendering
     }

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -13,7 +13,6 @@ File Description:
 #define _Exception
 #define _Vector
 #define _Attribute
-#define _Write
 #include "utils/utils.hpp"
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Raytracer.hpp"
@@ -32,6 +31,7 @@ File Description:
 /*
 gui:
     load gui
+    light
     loop:
         input handling
         render
@@ -51,6 +51,8 @@ cold void raytracer::Raytracer::gui(void)
     // Init screen data from save (viewer mode)
     if (this->_settings.viewer)
         this->loadRender();
+    else // Pre light computing
+        this->light();
 
     // Open display
     raytracer::Resolution resolution = this->_camera->getResolution();
@@ -71,8 +73,17 @@ cold void raytracer::Raytracer::gui(void)
     this->advEnd();
 }
 
+// Run in a separated thread
+static void subLoop(const sf::RenderWindow& window, raytracer::Raytracer& raytracer)
+{
+    if (!raytracer.isGui()) return;
+    while (window.isOpen())
+        raytracer.render();
+}
+
 void raytracer::Raytracer::loop(sf::RenderWindow& window)
 {
+    std::thread subThread(subLoop, std::ref(window), std::ref(*this));
     sf::Event event;
 
     // Loop while the window is open
@@ -86,18 +97,20 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
         }
 
         // Update display content (gui mode)
-        if (this->_settings.gui) {
-            this->render();
+        if (this->_settings.gui)
             this->display(window);
-        }
     }
+
+    // Wait for the thread
+    if (subThread.joinable())
+        subThread.join();
 }
 
 hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
     // Clear the window
-    window.clear(sf::Color::Black);
-    
+    //window.clear(sf::Color::Black);
+
     // Update screen pixels using rays color
     this->_camera->updateScreen();
 
@@ -339,7 +352,7 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
 }
 
 /*
- 1 - Reset rays (camera & lights)
+ 1 - Reset rays (lights)
  2 - Compute lights rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
@@ -351,40 +364,27 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
         - Add light rays data (hit point, intensity, color) to the object
     too low intensity -> kill
     too far -> kill
- 3 - Compute color from global lights
- 4 - Compute camera rays
-    1 - Compute SDF
-    2 - Apply SDF (and aproximative gravity curve, only in newton mode)
-    3 - Check SDF
-    collision ->
-        - Reflect (only for mirror material)
-        - Apply color (not for mirror material)
-        - kill (not for mirror material)
-    too far -> kill
 */
-void raytracer::Raytracer::render(void)
+void raytracer::Raytracer::light(void)
 {
-    raytracer::FColor globalLightColor = DEFAULT_COLOR;
-    std::size_t globalLightCount = 0;
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
 
-    // 1 - Reset rays (camera & lights)
-    this->_camera->reset();
+    // 1 - Reset rays (lights)
     for (raytracer::ILight* light: this->_lights)
         light->reset();
     for (raytracer::IObject* object: this->_objects)
         object->clearLightData();
 
     // 2 - Compute lights rays
-    this->advReset(0);
+    this->advNext(0);
     for (raytracer::ILight* light: this->_lights) this->advAddMax(light->getRays().size());
-    this->adv(true);
+    this->adv(true, false);
     for (raytracer::ILight* light: this->_lights) {
         if (light->isGlobal()) continue; // Ignore global light
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
-        countThreads = std::thread::hardware_concurrency();
+        countThreads = std::thread::hardware_concurrency() - 1;
         chunkSize = lightRays.size() / countThreads;
         threads.clear();
         for (std::size_t i = 0; i < countThreads; ++i) {
@@ -405,9 +405,37 @@ void raytracer::Raytracer::render(void)
         for (std::thread& t: threads)
             t.join();
     }
-    this->adv(true);
+    this->adv(true, false);
+    this->advFull();
+    this->advEnd();
+    this->advNext(0);
+}
 
-    // 3 - Compute color from global lights
+/*
+ 1 - Reset rays (lights)
+ 2 - Compute color from global lights
+ 3 - Compute camera rays
+    1 - Compute SDF
+    2 - Apply SDF (and aproximative gravity curve, only in newton mode)
+    3 - Check SDF
+    collision ->
+        - Reflect (only for mirror material)
+        - Apply color (not for mirror material)
+        - kill (not for mirror material)
+    too far -> kill
+*/
+void raytracer::Raytracer::render(void)
+{
+    raytracer::FColor globalLightColor = DEFAULT_COLOR;
+    std::size_t globalLightCount = 0;
+    std::vector<std::thread> threads;
+    std::size_t countThreads = 1, chunkSize = 1;
+    std::size_t start = 0, end = 0;
+
+    // 1 - Reset rays (camera)
+    this->_camera->reset();
+
+    // 2 - Compute color from global lights
     for (raytracer::ILight* light: this->_lights) {
         if (!light->isGlobal()) continue; // Ignore no global light
         globalLightColor += light->getColor() * light->getIntensity();
@@ -416,11 +444,11 @@ void raytracer::Raytracer::render(void)
 
     // 3 - Compute camera rays
     std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
-    countThreads = std::thread::hardware_concurrency();
+    countThreads = std::thread::hardware_concurrency() - 1;
     chunkSize = cameraRays.size() / countThreads;
     threads.clear();
-    this->advNext(cameraRays.size());
-    this->adv(true);
+    this->advReset(cameraRays.size());
+    this->adv(true, false);
     for (std::size_t i = 0; i < countThreads; ++i) {
         start = i * chunkSize;
         end = (i == countThreads - 1) ? cameraRays.size() : start + chunkSize;
@@ -439,65 +467,12 @@ void raytracer::Raytracer::render(void)
     // Wait for the threads
     for (std::thread& t: threads)
         t.join();
-    this->adv(true);
+    this->adv(true, false);
+    this->advFull();
 
     // End of the advencement display
     if (!this->_settings.gui)
         this->advEnd();
-}
-
-static hot std::string formatNumber(double n)
-{
-    static const char* const suffixes[] = {"", "K", "M", "B", "T"};
-    std::size_t i = 0;
-
-    // Get the suffixes
-    for (i = 0; n >= 1000.0 && i < 4; ++i)
-        n /= 1000.0;
-
-    // Get the precision
-    std::size_t precision =
-    (n < 2.0)    ? 3 :
-    (n < 10.0)   ? 2 :
-    (n < 100.0)  ? 1 : 0;
-
-    // Format the string
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(precision) << n << suffixes[i];
-    return oss.str();
-}
-
-hot void raytracer::Raytracer::adv(bool forced)
-{
-    static const char *const steps[] = {"Light Rays", "Camera Rays"};
-
-    // Check if the advencement need to be dump
-    if (!this->_settings.adv) return;
-
-    // Update only on each x advencement
-    ++this->_adv;
-    if (!this->_settings.debug && !forced && this->_adv % 101 == 0) return;
-
-    // Try to lock
-    std::unique_lock<std::mutex> lock(this->_advLock, std::try_to_lock);
-    if (!lock.owns_lock()) return;
-
-    // Computing
-    float percent = (this->_advMax == 0) ? 1.0f : (static_cast<float>(this->_adv) / static_cast<float>(this->_advMax));
-    std::size_t done = std::ceil(percent * ADV_SIZE);
-
-    // Advencement display
-    std::cout << utils::write::line() << "\r" << utils::write::reset();
-    std::cout << utils::write::strong() << "[";
-    std::cout << utils::write::color_rgb(0, 255, 0);
-    for (std::size_t i = 0; i < done; ++i) std::cout << "/";
-    std::cout << utils::write::color_rgb(255, 0, 0);
-    for (std::size_t i = done; i < ADV_SIZE; ++i) std::cout << "-";
-    std::cout << utils::write::reset() << utils::write::strong() << "]";
-    if (this->_settings.debug) std::cout << " - " << this->_adv << "/" << this->_advMax;
-    else std::cout << " - " << formatNumber(this->_adv) << "/" << formatNumber(this->_advMax);
-    std::cout << " Step (" << this->_step + 1 << "/2): " << steps[this->_step % 2];
-    std::cout << utils::write::reset() << std::flush;
 }
 
 cold void raytracer::Raytracer::loadRender(void)
@@ -526,6 +501,7 @@ cold void raytracer::Raytracer::loadRender(void)
     // Set the resolution
     this->_camera->setResolution({width, height});
     this->_camera->init(); // Reload rays
+    this->_camera->kill(); // Kill all rays
 
     // Read pixels
     std::vector<uint8_t> buffer(width * height * 3);
