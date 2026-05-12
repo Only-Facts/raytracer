@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 27/04/2026 by @author Tsukini
 
 File Name:
 ##  @file DynamicLibrary.hpp

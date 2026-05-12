@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -36,6 +36,7 @@ File Description:
     #include <memory>                   // std::shared_ptr
     #include <vector>                   // std::vector
     #include <string>                   // std::string
+    #include <mutex>                    // std::mutex
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
@@ -46,12 +47,14 @@ struct Settings {
     std::string ppm_path; // <ppm_file_path>
     std::string cfg_path; // <scene_cfg_path>
     bool gui = false; // -gui
+    bool debug = false; // -d, --debug
+    bool adv = false; // -a, --advencement | -A, --Advencement
     bool newton = false; // -n, --newton (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     std::string obj_path = OBJ_PATH; // -o, --obj
-    utils::vector::Vector2<std::size_t> resolution = {0, 0}; // -r, --resolution
+    raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
     bool camera_set = false; // camera_path
@@ -66,12 +69,24 @@ class Raytracer {
         /* global data */
         raytracer::Settings _settings;
 
+        /* mutex */
+        std::mutex _advLock;
+
+        /* advencement */
+        std::uint8_t _step = 0; // 0 = scene, 1 = light, 2 = camera
+        std::size_t _adv = 0;
+        std::size_t _advMax = 0;
+
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
         raytracer::Sky _sky;
         raytracer::ICamera* _camera = nullptr;
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
+        mutable std::vector<raytracer::IMaterial*> _materials;
+
+        /* optimisation */
+        std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
 
         // ------------ Function ---------- //
         template<typename T>
@@ -98,25 +113,28 @@ class Raytracer {
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
 
-        /* gui */
+        /* frontend */
         void gui(void); // Handle opening, closing of the gui
         void loop(sf::RenderWindow& window); // Handle loop for the gui (multithreaded, update the render, not in the viewer mode)
         void display(sf::RenderWindow& window); // Use the camera screen to update the gui render
+        void adv(bool forced = false, bool increment = true); // Display advencement of the actual frame
 
         /* global */
+        void light(void); // Update light
         void render(void); // Update camera screen
         void loadRender(void); // Load the given ppm file
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
+        void advReset(std::size_t advMax) {this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
+        void advNext(std::size_t advMax) {++this->_step; this->_adv = 0; this->_advMax = advMax;}; // Next step
+        void advAddMax(std::size_t adv) {this->_advMax += adv;};
+        void advFull(void) {this->_adv = this->_advMax; this->adv(true, false);};
+        void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};
         raytracer::ICamera* getCamera(void) const {return this->_camera;};
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
-
-        // -------- Static-Function ------- //
-        static inline nodiscard raytracer::Color mergeColor(raytracer::HugeColor color1, raytracer::HugeColor color2, float intensity = 1.0f)
-        {return color1 * color2 * intensity / 255;}
 
         // ------------ Operator ---------- //
         Raytracer& operator=(const Raytracer& object) = delete;

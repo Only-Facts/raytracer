@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AMaterial.hpp
@@ -32,9 +32,16 @@ namespace raytracer { // namespace start
 class AMaterial: public raytracer::IMaterial {
     protected:
         raytracer::Color _color = DEFAULT_COLOR; // Material color
+
+        /* surface */
         float _transparency = 0.0f; // Material transparency
         float _reflection = 0.0f; // Material light reflection
         bool _mirror = false; // Reflect the camera rays
+
+        /* noise */
+        bool _noise = false; // Enable noise on the surface color
+        float _strength = NOISE_STRENGTH; // Strength of the noise on the shape color
+        float _size = NOISE_SIZE; // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
 
     public:
         // ------------ Function ---------- //
@@ -42,6 +49,8 @@ class AMaterial: public raytracer::IMaterial {
         nodiscard float getTransparency(void) const final {return this->_transparency;};
         nodiscard float getLightReflectionCoef(void) const final {return this->_reflection;};
         nodiscard bool isMirror(void) const final {return this->_mirror;};
+        nodiscard std::pair<float, float> getNoiseSettings(void) const final {return {this->_strength, this->_size};};
+        nodiscard bool hasNoise(void) const final {return this->_noise;};
 
         // ------------ Operator ---------- //
         AMaterial& operator=(const AMaterial& object) = delete;

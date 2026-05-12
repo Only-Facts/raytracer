@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 29/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Vector3.hpp
@@ -81,7 +81,7 @@ class Vector3: public utils::vector::IVector<T> {
         requires utils::concepts::Divisible<T>
         {
             T len = length();
-            return Vector3(x / len, y / len, z / len);
+            return {x / len, y / len, z / len};
         }
 
         // ------------ Operator ---------- //
@@ -247,7 +247,7 @@ class Vector3: public utils::vector::IVector<T> {
 
         // ------------ Unary ------------- //
         Vector3 operator-() const
-        requires utils::concepts::Negatable<T> {return Vector3(-x, -y, -z);}
+        requires utils::concepts::Negatable<T> {return {-x, -y, -z};}
 
         // ---------- Constructor --------- //
         Vector3() = default;
@@ -300,27 +300,27 @@ requires utils::concepts::DivisibleWith<T, U>
 
 // -------- Bitwise-Operator -------- //
 template<typename T, typename U>
-auto operator&(const T& lhs, const Vector3<U>& rhs)
+auto operator&(const T& lhs, const utils::vector::Vector3<U>& rhs)
 requires utils::concepts::BitwiseAndableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs & rhs.x, lhs & rhs.y, lhs & rhs.z);
+    return utils::vector::Vector3<R>(lhs & rhs.x, lhs & rhs.y, lhs & rhs.z);
 }
 
 template<typename T, typename U>
-auto operator|(const T& lhs, const Vector3<U>& rhs)
+auto operator|(const T& lhs, const utils::vector::Vector3<U>& rhs)
 requires utils::concepts::BitwiseOrableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs | rhs.x, lhs | rhs.y, lhs | rhs.z);
+    return utils::vector::Vector3<R>(lhs | rhs.x, lhs | rhs.y, lhs | rhs.z);
 }
 
 template<typename T, typename U>
-auto operator^(const T& lhs, const Vector3<U>& rhs)
+auto operator^(const T& lhs, const utils::vector::Vector3<U>& rhs)
 requires utils::concepts::BitwiseXorableWith<T, U>
 {
     using R = std::common_type_t<T, U>;
-    return Vector3<R>(lhs ^ rhs.x, lhs ^ rhs.y, lhs ^ rhs.z);
+    return utils::vector::Vector3<R>(lhs ^ rhs.x, lhs ^ rhs.y, lhs ^ rhs.z);
 }
 
 // -------- Comparison (reverse) -------- //

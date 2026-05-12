@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 02/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ILight.hpp
@@ -30,6 +30,11 @@ class ILight: public raytracer::AObject {
         virtual void init(void) = 0; // Create default light rays
         virtual void reset(void) = 0; // Reset light rays values (don't recreate it)
         virtual std::vector<raytracer::LightRay*> getRays(void) const = 0;
+        virtual raytracer::Color getColor(void) const = 0;
+        virtual float getIntensity(void) const = 0;
+        virtual void enableGlobal(void) = 0;
+        virtual bool isGlobal(void) const = 0;
+        virtual float getPower(void) const = 0;
 
         // ------------ Operator ---------- //
         ILight& operator=(const ILight& object) = delete;

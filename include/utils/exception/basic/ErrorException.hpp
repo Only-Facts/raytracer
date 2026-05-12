@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file ErrorException.hpp
@@ -28,13 +28,13 @@ namespace utils::exception { // namespace start
 class ErrorException: public utils::exception::AException {
     public:
         // ------------ Operator ---------- //
-        ErrorException& operator=(const ErrorException& object) = delete;
-        ErrorException& operator=(ErrorException&& object) = delete;
+        ErrorException& operator=(const ErrorException& other) = delete;
+        ErrorException& operator=(ErrorException&& other) = delete;
 
         // ---------- Constructor --------- //
         cold ErrorException(utils::exception::Code code = utils::exception::Code::Undefined, std::source_location loc = std::source_location::current()) : AException(loc, utils::exception::Type::Error | utils::exception::Type::Fatal, code) {};
-        ErrorException(const ErrorException& object) = delete;
-        ErrorException(ErrorException&& object) = delete;
+        ErrorException(const ErrorException& other) = delete;
+        ErrorException(ErrorException&& other) = delete;
 
         // ----------- Destructor --------- //
         ~ErrorException() = default;
