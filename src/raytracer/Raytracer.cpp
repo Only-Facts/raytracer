@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -647,13 +647,22 @@ cold void raytracer::Raytracer::saveRender(void)
     // Update screen pixels using rays color
     this->_camera->updateScreen();
 
-    // Try to open the ppm file
+    // Setup the file path
     std::filesystem::path cfg = this->_settings.cfg_path;
-    std::filesystem::path dir = this->_settings.rendered_path;
+    std::filesystem::path base = this->_settings.rendered_path;
     cfg.replace_extension(".ppm");
-    std::filesystem::path editedPath = dir / cfg.filename();
-    std::filesystem::create_directories(editedPath.parent_path());
-    std::string path = editedPath.string();
+    std::filesystem::path finalPath;
+    if (!base.empty() && base.has_extension()) { // File path given
+        finalPath = base;
+    } else { // Directory path given
+        std::filesystem::path dir = base;
+        finalPath = dir / cfg.filename();
+    }
+
+    // Create directory if needed & try to open the ppm file
+    if (!finalPath.parent_path().empty())
+        std::filesystem::create_directories(finalPath.parent_path());
+    std::string path = finalPath.string();
     std::ofstream file(path, std::ios::binary);
     if (!file)
         throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::ppmFile, std::string("Failed to open file for writing: ") + path);

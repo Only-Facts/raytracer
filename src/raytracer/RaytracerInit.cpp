@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -43,6 +43,40 @@ static void isFile(const std::string& path, const std::string& extensionWanted =
     if (std::filesystem::path(path).extension() != extensionWanted) {
         utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::InvalidFileExtension, std::string("Excepted extension: ") + extensionWanted + ", got: " + std::filesystem::path(path).extension().string());
         std::cout << e.formated() << std::endl;
+    }
+}
+
+static nodiscard bool checkWritablePath(const std::string& rawPath)
+{
+    std::filesystem::path path(rawPath);
+
+    // Explicit directory
+    bool isDirectory = rawPath.back() == '/' || rawPath.back() == '\\';
+    try {
+        // Check if the directory exist
+        if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
+            isDirectory = true;
+
+        // On directory case
+        if (isDirectory) {
+            std::filesystem::create_directories(path);
+            std::filesystem::path testFile = path / ".TO_DELETE-permission_check_auto_generated_file";
+            std::ofstream file(testFile.string());
+            if (!file) return false;
+            file.close();
+            std::filesystem::remove(testFile);
+            return true;
+        }
+
+        // File case
+        std::filesystem::path parent = path.parent_path();
+        if (!parent.empty()) std::filesystem::create_directories(parent);
+        std::ofstream file(path.string(), std::ios::app);
+        if (!file) return false;
+        return true;
+
+    } catch (...) { // Any error same as missing permission
+        return false;
     }
 }
 
@@ -135,10 +169,10 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.newton = true;
         }
 
-        // -c, --camera <used_camera_path>
+        // -c, --camera <camera_file_path>
         else if (arg == "-c" || arg == "--camera") {
             if (i + 1 >= argc)
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-c requires <used_camera_path>");
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-c requires <camera_file_path>");
 
             // Check the option argument
             if (this->_settings.camera_set) {
@@ -186,17 +220,18 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.obj_path = argv[i];
         }
 
-        // -s, --save <ppm_directory_path>
+        // -s, --save (<ppm_directory_path>|<ppm_file_path>)
         else if (arg == "-s" || arg == "--save") {
             if (i + 1 >= argc)
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s requires <ppm_directory_path>");
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s requires <ppm_directory_path> or <ppm_file_path>");
 
             // Check the option argument
             if (this->_settings.rendered_set) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
-            isDirectory(argv[++i]);
+            if (!checkWritablePath(argv[++i]))
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s Invalid path given, can't output a file here");
 
             // Ignored case
             if (this->_settings.gui) {
@@ -206,7 +241,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Set the ppm save path
             this->_settings.rendered_set = true;
-            this->_settings.rendered_path = argv[++i];
+            this->_settings.rendered_path = argv[i];
         }
 
         // -r, --resolution "wxh"
