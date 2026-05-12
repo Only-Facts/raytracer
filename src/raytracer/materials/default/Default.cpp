@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 01/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Default.cpp
@@ -27,6 +27,7 @@ void raytracer::Default::parse(unused const raytracer::Raytracer& raytracer, con
         };
     }
 
+    /* surface */
     double transparency = 0.f;
     if (node.lookupValue("transparency", transparency))
         this->_transparency = transparency;
@@ -36,6 +37,19 @@ void raytracer::Default::parse(unused const raytracer::Raytracer& raytracer, con
         this->_reflection = reflection;
 
     bool mirror = false;
-    if (node.lookupValue("is_mirror", mirror))
+    if (node.lookupValue("mirror", mirror))
         this->_mirror = mirror;
+
+    /* noise */
+    bool noise = false;
+    if (node.lookupValue("noise", noise))
+        this->_noise = noise;
+
+    double strength = 0.0;
+    if (node.lookupValue("strength", strength))
+        this->_strength = strength;
+
+    double size = 0.0;
+    if (node.lookupValue("size", size))
+        this->_size = size;
 }

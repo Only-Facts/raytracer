@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 25/04/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -101,8 +101,30 @@ void raytracer::Raytracer::load(int argc, char *argv[])
     for (; i < argc; ++i) {
         arg = std::string(argv[i]);
 
+        // -d, --debug
+        if (arg == "-d" || arg == "--debug") {
+            // Check the option argument
+            if (this->_settings.debug) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.debug = true;
+        }
+
+        // -a, --advencement
+        else if (arg == "-a" || arg == "--advencement") {
+            // Check the option argument
+            if (this->_settings.adv) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.adv = true;
+        }
+
         // -n, --newton
-        if (arg == "-n" || arg == "--newton") {
+        else if (arg == "-n" || arg == "--newton") {
             // Check the option argument
             if (this->_settings.newton) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
@@ -269,13 +291,13 @@ void raytracer::Raytracer::init(void)
         throw utils::exception::ErrorException(utils::exception::Code::NoPlugins);
     }
     std::cout << utils::write::strong() << plugins.size() << utils::write::reset() << ": plugins where found" << std::endl;
-    
+
     // Load each
     for (const std::filesystem::path& path: plugins) {
         // Try to load the lib
         lib = std::make_shared<raytracer::DynamicLibrary>(path);
 
-        selectedCamera |= (!this->_settings.camera_set || (this->_settings.camera_set && path == this->_settings.camera_path));
+        selectedCamera |= (!this->_settings.camera_set || (this->_settings.camera_set && std::filesystem::equivalent(path, this->_settings.camera_path)));
 
         // Continue only if the lib was succefully loaded
         if (lib->isloaded()) likely {
@@ -307,7 +329,7 @@ void raytracer::Raytracer::init(void)
             std::cout << utils::write::strong() << path << utils::write::reset() << ": plugin not " << utils::write::color_rgb(255, 0, 0) << "loaded" << utils::write::reset() << std::endl;
         }
     }
-
+    
     // Check camera loading
     if (!this->_camera) unlikely {
         throw utils::exception::ErrorException(utils::exception::Code::NoLoadedCamera);
@@ -317,11 +339,23 @@ void raytracer::Raytracer::init(void)
     this->scene();
 
     // Init rays
+    this->advReset(1 + this->_lights.size());
     if (this->_settings.resolution_set)
         this->_camera->setResolution(this->_settings.resolution);
     this->_camera->init();
-    for (raytracer::ILight* light: this->_lights)
+    this->adv(true);
+    for (raytracer::ILight* light: this->_lights) {
         light->init();
+        this->adv(true);
+    }
+    this->advFull();
+    this->advEnd();
+
+    // Init internal optimisation for SDF
+    for (raytracer::IObject* object: this->_objects) {
+        for (const raytracer::Chunk& chunk: object->getObjectDescriptor().chunks)
+            this->_objectsChunks[chunk].push_back(object);
+    }
 }
 
 static std::string getFileContent(const std::filesystem::path& path)
@@ -458,6 +492,7 @@ raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setti
     // Create the material using factory & call it's parser
     raytracer::IMaterial* material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
     material->parse(*this, node);
+    this->_materials.push_back(material);
     return material;
 }
 
@@ -495,4 +530,6 @@ raytracer::Raytracer::~Raytracer()
         delete light;
     for (raytracer::IObject* object: this->_objects)
         delete object;
+    for (raytracer::IMaterial* material: this->_materials)
+        delete material;
 }

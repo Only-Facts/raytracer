@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -36,15 +36,25 @@ cold void raytracer::Point::parse(const raytracer::Raytracer& raytracer, const l
     this->setObjectDescriptor(descriptor);
 }
 
-hot float raytracer::Point::computeSDF(const utils::vector::Vector3<double>& point) const
+hot std::pair<float, const raytracer::Face*> raytracer::Point::computeSDF(const raytracer::Coord& point) const
 {
-    return (point - this->getObjectDescriptor().cframe.position).length();
+    return {(point - this->getCFrame().position).length(), nullptr};
 }
 
-hot utils::vector::Vector3<double> raytracer::Point::computeHit(const utils::vector::Vector3<double>& point) const
+hot raytracer::Direction raytracer::Point::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
     if (this->_camera)
         return (this->_camera->getCFrame().position - point).normalize(); // Camera direction
     else 
         return {0.0, 0.0, 0.0}; // Nop
+}
+
+hot nodiscard bool raytracer::Point::willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const
+{
+    static const raytracer::Type limit = SDF_COLLINDING_LIMIT * SDF_COLLINDING_LIMIT;
+    raytracer::Coord local = point - this->getCFrame().position;
+    raytracer::Type t = local.dot(orientation);
+    if (t < 0) return false;
+    raytracer::Coord closest = this->getCFrame().position + orientation * t;
+    return (closest - point).lengthSquared() <= limit;
 }

@@ -31,6 +31,7 @@ enum class Code: std::size_t {
     Undefined = 0,
     NoPlugins,
     NoLoadedCamera,
+    Runtime,
     Parser,
     ppmFile,
     InvalidAction,
@@ -39,6 +40,9 @@ enum class Code: std::size_t {
     Exit,
     NotSupportedFunction,
     ANSIMouseEvent,
+    IdOverflow,
+    UnknowId,
+    SharedObject,
     CliInternal,
     CliHook,
     CliMiddleware,
@@ -67,6 +71,7 @@ constexpr inline const char *Message[] = {
     /* Undefined */ "An undefined error has occured",
     /* NoPlugins */ "Wasn't able to find any plugins",
     /* NoLoadedCamera */ "Wasn't able to load any camera",
+    /* Runtime */ "Error during the runtime",
     /* Parser */ "Error during the parsing",
     /* ppmFile */ "Error during the ppm file writing/reading",
     /* InvalidAction */ "Can't execute this action",
@@ -75,6 +80,9 @@ constexpr inline const char *Message[] = {
     /* Exit */ "Exit",
     /* NotSupportedFunction */ "This function is not supported by this class",
     /* ANSIMouseEvent */ "Error during the read of the mouse event",
+    /* IdOverflow */ "Can't distribute an id, uint32_t limits are reach",
+    /* UnknowId */ "Try to edit an unknow id",
+    /* SharedObject */ "An object created with dynamic code that was free is still alive",
     /* CliInternal */ "Internal error from the cli",
     /* CliHook */ "Error during a hook call",
     /* CliMiddleware */ "Error during a middleware call",
@@ -102,6 +110,7 @@ constexpr inline const char *Info[] = {
     /* Undefined */ nullptr,
     /* NoPlugins */ nullptr,
     /* NoLoadedCamera */ nullptr,
+    /* Runtime */ nullptr,
     /* Parser */ nullptr,
     /* ppmFile */ nullptr,
     /* InvalidAction */ nullptr,
@@ -110,6 +119,9 @@ constexpr inline const char *Info[] = {
     /* Exit */ "Exit",
     /* NotSupportedFunction */ nullptr,
     /* ANSIMouseEvent */ nullptr,
+    /* IdOverflow */ nullptr,
+    /* UnknowId */ nullptr,
+    /* SharedObject */ nullptr,
     /* CliInternal */ nullptr,
     /* CliHook */ nullptr,
     /* CliMiddleware */ nullptr,
@@ -142,6 +154,7 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Undefined */ 0b0000, // allow: All
     /* NoPlugins */ 0b1110, // allow: Fatal, Error, Warning
     /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
+    /* Runtime */ 0b1110, // allow: Fatal, Error, Warning
     /* Parser */ 0b1110, // allow: Fatal, Error, Warning
     /* ppmFile */ 0b0110, // allow: Fatal, Error
     /* InvalidAction */ 0b1110, // allow: Fatal, Error, Warning
@@ -150,6 +163,9 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* Exit */ 0b0001, // allow: None
     /* NotSupportedFunction */ 0b0110, // allow: Fatal, Error
     /* ANSIMouseEvent */ 0b0110, // allow: Fatal, Error
+    /* IdOverflow */ 0b0110, // allow: Fatal, Error
+    /* UnknowId */ 0b0110, // allow: Fatal, Error
+    /* SharedObject */ 0b1110, // allow: Fatal, Error, Warning
     /* CliInternal */ 0b0110, // allow: Fatal, Error
     /* CliHook */ 0b1110, // allow: Fatal, Error, Warning
     /* CliMiddleware */ 0b1110, // allow: Fatal, Error, Warning

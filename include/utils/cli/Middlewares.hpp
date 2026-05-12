@@ -8,7 +8,7 @@
  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
 
 Edition:
-##  @date 10/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file Middlewares.hpp
@@ -24,6 +24,7 @@ File Description:
     /* INCLUDE */
 
     /* type */
+    #include "../warning/Observer.hpp"                  // utils::warning::Observer
     #include "../exception/ExceptionDefine.hpp"         // utils::exception::Type, utils::exception::Code
     #include "../exception/custom/CustomException.hpp"  // utils::exception::CustomException
     #include <functional>                               // std::function
@@ -47,7 +48,7 @@ template<typename T>
 using Middleware = typename MiddlewareType<T>::type;
 
 template<typename T, typename U>
-class Middlewares {
+class Middlewares: private utils::warning::Observer {
     public:
         std::vector<utils::cli::Middleware<T>> before;
         std::vector<utils::cli::Middleware<U>> after;
@@ -78,20 +79,20 @@ class Middlewares {
         }
 
         // ------------ Operator ---------- //
-        Middlewares& operator=(const Middlewares& object) = default;
-        Middlewares& operator=(Middlewares&& object) = default;
+        Middlewares& operator=(const Middlewares& other) = default;
+        Middlewares& operator=(Middlewares&& other) = default;
 
         // ---------- Constructor --------- //
         Middlewares() = default;
-        Middlewares(const Middlewares& object) = default;
-        Middlewares(Middlewares&& object) = default;
+        Middlewares(const Middlewares& other) = default;
+        Middlewares(Middlewares&& other) = default;
 
         // ----------- Destructor --------- //
         ~Middlewares() = default;
 };
 
 template<typename U>
-class Middlewares<void, U> {
+class Middlewares<void, U>: private utils::warning::Observer {
     public:
         std::vector<utils::cli::Middleware<void>> before;
         std::vector<utils::cli::Middleware<U>> after;
@@ -122,20 +123,20 @@ class Middlewares<void, U> {
         }
 
         // ------------ Operator ---------- //
-        Middlewares& operator=(const Middlewares& object) = default;
-        Middlewares& operator=(Middlewares&& object) = default;
+        Middlewares& operator=(const Middlewares& other) = default;
+        Middlewares& operator=(Middlewares&& other) = default;
 
         // ---------- Constructor --------- //
         Middlewares() = default;
-        Middlewares(const Middlewares& object) = default;
-        Middlewares(Middlewares&& object) = default;
+        Middlewares(const Middlewares& other) = default;
+        Middlewares(Middlewares&& other) = default;
 
         // ----------- Destructor --------- //
         ~Middlewares() = default;
 };
 
 template<typename T>
-class Middlewares<T, void> {
+class Middlewares<T, void>: private utils::warning::Observer {
     public:
         std::vector<utils::cli::Middleware<T>> before;
         std::vector<utils::cli::Middleware<void>> after;
@@ -166,20 +167,20 @@ class Middlewares<T, void> {
         }
 
         // ------------ Operator ---------- //
-        Middlewares& operator=(const Middlewares& object) = default;
-        Middlewares& operator=(Middlewares&& object) = default;
+        Middlewares& operator=(const Middlewares& other) = default;
+        Middlewares& operator=(Middlewares&& other) = default;
 
         // ---------- Constructor --------- //
         Middlewares() = default;
-        Middlewares(const Middlewares& object) = default;
-        Middlewares(Middlewares&& object) = default;
+        Middlewares(const Middlewares& other) = default;
+        Middlewares(Middlewares&& other) = default;
 
         // ----------- Destructor --------- //
         ~Middlewares() = default;
 };
 
 template<>
-class Middlewares<void, void> {
+class Middlewares<void, void>: private utils::warning::Observer {
     public:
         std::vector<utils::cli::Middleware<void>> before;
         std::vector<utils::cli::Middleware<void>> after;
@@ -210,13 +211,13 @@ class Middlewares<void, void> {
         }
 
         // ------------ Operator ---------- //
-        Middlewares& operator=(const Middlewares& object) = default;
-        Middlewares& operator=(Middlewares&& object) = default;
+        Middlewares& operator=(const Middlewares& other) = default;
+        Middlewares& operator=(Middlewares&& other) = default;
 
         // ---------- Constructor --------- //
         Middlewares() = default;
-        Middlewares(const Middlewares& object) = default;
-        Middlewares(Middlewares&& object) = default;
+        Middlewares(const Middlewares& other) = default;
+        Middlewares(Middlewares&& other) = default;
 
         // ----------- Destructor --------- //
         ~Middlewares() = default;

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 04/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.hpp
@@ -17,6 +17,8 @@ File Description:
     /* INCLUDE */
 
     /* type */
+    #define _Attribute
+    #include "utils/utils.hpp"          // nodiscard
     #include "../objects/AObject.hpp"   // raytracer::AObject
     #include "../Define.hpp"            // values
     #include "IRay.hpp"                 // raytracer::IRay
@@ -28,14 +30,20 @@ namespace raytracer { // namespace start
 class ARay: public raytracer::IRay {
     protected:
         bool _alive = true;
+        std::vector<raytracer::IObject*> _objects; // Future object that will be probably hit
+        raytracer::Type _distance; // Distance traveled
 
     public:
         // ---------- Pre-Function -------- //
         void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void computeObjects(raytracer::Type renderDistance, const std::vector<raytracer::IObject*>& objects, const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks); // Call on init & each direction changement
 
         // ------------ Function ---------- //
+        nodiscard const std::vector<raytracer::IObject*>& getObjects(void) const {return this->_objects;};
         void kill(void) final {this->_alive = false;};
-        bool isAlive(void) const final {return this->_alive;};
+        nodiscard bool isAlive(void) const final {return this->_alive;};
+        void addDistance(raytracer::Type distance) final {this->_distance += distance;};
+        nodiscard raytracer::Type getDistance(void) const final {return this->_distance;};
 
         // ------------ Operator ---------- //
         ARay& operator=(const ARay& object) = delete;

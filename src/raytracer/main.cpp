@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file main.cpp
@@ -27,7 +27,7 @@ static cold void printHelp()
 
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
-    std::cout << "\t./raytracer <scene_cfg_path> [-c <used_camera_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> [-a]  [-c <used_camera_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s <ppm_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <scene_cfg_path> -gui [-c <used_camera_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
@@ -42,6 +42,8 @@ static cold void printHelp()
     std::cout << "\t\tWrite the informations of the executable" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-gui" << utils::write::reset() << std::endl;
     std::cout << "\t\tActivate the render at runtime" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-a, --advencement" << utils::write::reset() << std::endl;
+    std::cout << "\t\tEnable the advencement display of the actual frame rendering " << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-n, --newton " << utils::write::reset() << "(" << utils::write::color(utils::write::Color::Red) << "Not Working" << utils::write::reset() << ")" << std::endl;
     std::cout << "\t\tActivate the newton mode, apply aproximative gravity on rays" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-c, --camera " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "used_camera_path" << utils::write::reset() << ">" << std::endl;
@@ -71,11 +73,8 @@ static cold void printHelp()
     std::cout << utils::write::reset() << std::flush;
 }
 
-static cold void run(int argc, char *argv[])
+static cold void run(raytracer::Raytracer& raytracer, int argc, char *argv[])
 {
-    // Init the raytracer
-    raytracer::Raytracer raytracer;
-
     // Init the settings
     raytracer.load(argc, argv);
     if (!raytracer.isViewer()) raytracer.init();
@@ -84,6 +83,7 @@ static cold void run(int argc, char *argv[])
     if (raytracer.isGui() || raytracer.isViewer()) {
         raytracer.gui(); // Launch gui
     } else {
+        raytracer.light(); // Update light rendering
         raytracer.render(); // Update camera rendering
         raytracer.saveRender(); // Save the updated rendering
     }
@@ -91,6 +91,9 @@ static cold void run(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+    // Init the raytracer (in the main to keep the longer the plugins charged)
+    raytracer::Raytracer raytracer;
+
     // Basic flag help detection
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -101,7 +104,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        run(argc, argv);
+        run(raytracer, argc, argv);
     } catch (const utils::exception::IException& e) { // For our own custom error
         if (e.isNone()) return OK; // Intercept exception of type None such as exit
         std::cerr << e.formated() << std::endl;

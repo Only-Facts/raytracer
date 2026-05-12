@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 23/04/2026 by @author Tsukini
+##  @date 26/04/2026 by @author Tsukini
 
 File Name:
 ##  @file NoneException.hpp
@@ -28,13 +28,13 @@ namespace utils::exception { // namespace start
 class NoneException: public utils::exception::AException {
     public:
         // ------------ Operator ---------- //
-        NoneException& operator=(const NoneException& object) = delete;
-        NoneException& operator=(NoneException&& object) = delete;
+        NoneException& operator=(const NoneException& other) = delete;
+        NoneException& operator=(NoneException&& other) = delete;
 
         // ---------- Constructor --------- //
         cold NoneException(utils::exception::Code code = utils::exception::Code::Undefined, std::source_location loc = std::source_location::current()) : AException(loc, utils::exception::Type::None, code) {};
-        NoneException(const NoneException& object) = delete;
-        NoneException(NoneException&& object) = delete;
+        NoneException(const NoneException& other) = delete;
+        NoneException(NoneException&& other) = delete;
 
         // ----------- Destructor --------- //
         ~NoneException() = default;

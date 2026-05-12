@@ -12,6 +12,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}) # TARGET destination
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # Moderne compilation -fPIE
 add_definitions(-DFORCED_CXX_STANDARD=14) # Used for the attribute definition
+add_definitions(-D_NoWarning) # Remove warnings from utils
 # Unknow flag -> add_compile_options(-fno-gnu-unique) # Ensure unload from dclose properly
 
 # =========================
@@ -33,7 +34,11 @@ add_compile_options(
     -Wunused-parameter
     -Wshadow
     -Wuninitialized
-    -Wnan-infinity-disabled
+    -Wno-nan-infinity-disabled
+)
+# Perf debug
+add_compile_options(
+    -g -ggdb3 -fno-omit-frame-pointer
 )
 
 # Sanitizer options
@@ -43,6 +48,9 @@ add_compile_options(
 #    -fsanitize=address
 #)
 #add_link_options(-fsanitize=address)
+add_compile_options(
+    -g -O0 -fno-omit-frame-pointer
+)
 
 # =========================
 # Sources
@@ -52,7 +60,11 @@ set(SRC
     src/raytracer/main.cpp
     src/raytracer/Raytracer.cpp
     src/raytracer/RaytracerInit.cpp
+    src/raytracer/RaytracerAdv.cpp
     src/raytracer/DynamicLibrary.cpp
+
+    # Special
+    src/raytracer/special/Utils.cpp
 
     # Objects
     src/raytracer/objects/AObject.cpp
@@ -64,13 +76,14 @@ set(SRC
 
     # Camera (used for the viewer mode)
     src/raytracer/cameras/ACamera.cpp
-    src/raytracer/cameras/camera/Camera.cpp
+    src/raytracer/cameras/viewer/Viewer.cpp
 )
 add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} STATIC ${SRC})
 #add_library(${TARGET} SHARED ${SRC})
 
 set(SRC_LIBS
+    src/raytracer/special/Utils.cpp
 )
 
 # =========================
@@ -84,11 +97,23 @@ set(SRC_CAMERAS
     src/raytracer/objects/AObject.cpp
 )
 
-set(SRC_CAMERA
-    src/raytracer/cameras/camera/lib.cpp
-    src/raytracer/cameras/camera/Camera.cpp
+set(SRC_VIEWER
+    src/raytracer/cameras/viewer/lib.cpp
+    src/raytracer/cameras/viewer/Viewer.cpp
 )
-add_library(camera_camera SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA})
+add_library(camera_viewer SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_VIEWER})
+
+set(SRC_CAMERA2D
+    src/raytracer/cameras/camera2D/lib.cpp
+    src/raytracer/cameras/camera2D/Camera2D.cpp
+)
+add_library(camera_camera2D SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERA2D})
+
+set(SRC_CAMERAFOV
+    src/raytracer/cameras/cameraFOV/lib.cpp
+    src/raytracer/cameras/cameraFOV/CameraFOV.cpp
+)
+add_library(camera_cameraFOV SHARED ${SRC_LIBS} ${SRC_CAMERAS} ${SRC_CAMERAFOV})
 
 # =========================
 # Lights
@@ -101,17 +126,29 @@ set(SRC_LIGHTS
     src/raytracer/objects/AObject.cpp
 )
 
-set(SRC_AMBIENT
-    src/raytracer/lights/ambient/lib.cpp
-    src/raytracer/lights/ambient/Ambient.cpp
+set(SRC_GLOBAL
+    src/raytracer/lights/global/lib.cpp
+    src/raytracer/lights/global/Global.cpp
 )
-add_library(light_ambient SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_AMBIENT})
+add_library(light_global SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_GLOBAL})
 
-set(SRC_DIRECTIONAL
-    src/raytracer/lights/directional/lib.cpp
-    src/raytracer/lights/directional/Directional.cpp
+set(SRC_POINT
+    src/raytracer/lights/point/lib.cpp
+    src/raytracer/lights/point/Point.cpp
 )
-add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL})
+add_library(light_point SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_POINT})
+
+set(SRC_SPOT
+    src/raytracer/lights/spot/lib.cpp
+    src/raytracer/lights/spot/Spot.cpp
+)
+add_library(light_spot SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_SPOT})
+
+set(SRC_PLANE
+    src/raytracer/lights/plane/lib.cpp
+    src/raytracer/lights/plane/Plane.cpp
+)
+add_library(light_plane SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_PLANE})
 
 # =========================
 # Objects
@@ -119,6 +156,7 @@ add_library(light_directional SHARED ${SRC_LIBS} ${SRC_LIGHTS} ${SRC_DIRECTIONAL
 set(SRC_OBJECTS
     src/raytracer/DynamicLibrary.cpp
     src/raytracer/RaytracerInit.cpp
+    src/raytracer/RaytracerAdv.cpp
     src/raytracer/objects/lib.cpp
     src/raytracer/objects/AObject.cpp
 )
@@ -176,14 +214,18 @@ add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT})
 # Compilation parameters
 # =========================
 set_target_properties(
-    camera_camera
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/cameras
 )
 set_target_properties(
-    light_ambient
-    light_directional
+    light_global
+    light_point
+    light_spot
+    light_plane
     PROPERTIES
         PREFIX ""
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/lights
@@ -215,9 +257,13 @@ add_custom_target(generated_exception_header ALL
 )
 add_dependencies(${TARGET} generated_exception_header)
 foreach(target
-    camera_camera
-    light_ambient
-    light_directional
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
+    light_global
+    light_point
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane
@@ -240,9 +286,13 @@ target_include_directories(${TARGET} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${LIBCONFIG_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE sfml-graphics sfml-window sfml-system)
 foreach(target
-    camera_camera
-    light_ambient
-    light_directional
+    camera_viewer
+    camera_camera2D
+    camera_cameraFOV
+    light_global
+    light_point
+    light_spot
+    light_plane
     object_object
     object_point
     object_plane
@@ -264,7 +314,8 @@ endforeach()
 # =========================
 target_compile_options(${TARGET} PRIVATE
     $<$<CONFIG:Debug>:-g -ggdb3>
-    $<$<CONFIG:Optimized>:-O3 -ffast-math -march=native -funroll-loops -pipe -DNDEBUG>
+    $<$<CONFIG:Optimized>:-O3 -ffast-math -fvectorize -fslp-vectorize -funroll-loops -march=native -mtune=generic -pipe -DNDEBUG>
+    #$<$<CONFIG:optimized>:-O3 -ffast-math -flto -funroll-loops -fvectorize -fslp-vectorize -march=native -fno-plt -pipe -DNDEBUG>
     # -flto
 )
 

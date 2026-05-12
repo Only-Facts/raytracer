@@ -21,6 +21,7 @@ __pycache__
 /plugins
 /obj
 /scenes
+/screenshot
 
 ## Doxygen
 Doxyfile

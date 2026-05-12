@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 12/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -33,22 +33,23 @@ namespace raytracer { // namespace start
 
 class ACamera: public raytracer::ICamera {
     protected:
-        std::vector<utils::vector::Vector3<std::uint8_t>> _screen; // Screen pixel
+        std::vector<raytracer::Color> _screen; // Screen pixel
         std::vector<raytracer::Ray*> _rays;
-        utils::vector::Vector2<std::uint16_t> _resolution;
-        float _fieldOfView = 70.0f;
+        raytracer::Resolution _resolution;
+        raytracer::Type _renderDistance = RENDER_DISTANCE;
 
     public:
         // ---------- Pre-Function -------- //
-        void updateScreen(void) final;
-
+        void updateScreen(void) override;
+        void kill(void) final;
+ 
         // ------------ Function ---------- //
-        nodiscard const std::vector<utils::vector::Vector3<std::uint8_t>>& getScreen(void) const {return this->_screen;};
-        nodiscard std::vector<raytracer::Ray*> getRays(void) const {return this->_rays;};
-        void setResolution(utils::vector::Vector2<std::uint16_t> resolution) {this->_resolution = resolution;};
-        nodiscard utils::vector::Vector2<std::uint16_t> getResolution(void) const {return this->_resolution;};
-        void setFieldOfView(float fieldOfView) {this->_fieldOfView = fieldOfView;};
-        nodiscard float getFieldOfView(void) const {return this->_fieldOfView;};
+        nodiscard const std::vector<raytracer::Color>& getScreen(void) const final {return this->_screen;};
+        nodiscard std::vector<raytracer::Ray*> getRays(void) const final {return this->_rays;};
+        void setResolution(raytracer::Resolution resolution) final {this->_resolution = resolution;};
+        nodiscard raytracer::Resolution getResolution(void) const final {return this->_resolution;};
+        nodiscard raytracer::Type getRenderDistance(void) const final {return this->_renderDistance;};
+        void setRenderDistance(raytracer::Type renderDistance) final {this->_renderDistance = renderDistance;};
 
         // ------------ Operator ---------- //
         ACamera& operator=(const ACamera& object) = delete;

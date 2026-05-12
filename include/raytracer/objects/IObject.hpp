@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 24/04/2026 by @author Tsukini
+##  @date 05/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -42,23 +42,27 @@ class IObject {
         virtual void loadObj(const std::string& path, raytracer::ObjectDescriptor& descriptor) = 0;
 
         /* 3D logic */
-        virtual void reflectRay(raytracer::IRay* ray) const = 0;
-        virtual float computeSDF(const utils::vector::Vector3<double>& point) const = 0;
-        virtual utils::vector::Vector3<double> computeHit(const utils::vector::Vector3<double>& point) const = 0;
+        virtual void reflectRay(raytracer::IRay* ray, const raytracer::Face* face) const = 0;
+        virtual std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const = 0;
+        virtual raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face = nullptr) const = 0;
+        virtual void setImmunity(raytracer::IObject* object) = 0;
+        virtual raytracer::IObject* getImmunity(void) const = 0;
+        virtual bool willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const = 0;
 
         /* movement */
-        virtual void translate(const utils::vector::Vector3<double>& v) = 0;
-        virtual void rotate(const utils::vector::Vector3<double>& v) = 0;
+        virtual void translate(const raytracer::Coord& v) = 0;
+        virtual void rotate(const raytracer::Coord& v) = 0;
 
         /* color handling */
-        virtual raytracer::Color getPointColor(const utils::vector::Vector3<double>& point) const = 0;
-        virtual void addLightRay(std::tuple<utils::vector::Vector3<double>, utils::vector::Vector3<std::uint8_t>, float> lightRay) = 0;
-        virtual void clearLightRays(void) = 0;
+        virtual std::pair<raytracer::Color, bool> getPointColor(const raytracer::Coord& point) const = 0;
+        virtual void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) = 0;
+        virtual void clearLightData(void) = 0;
 
         /* getter & setter */
         virtual void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) = 0;
         virtual void setCFrame(const raytracer::CFrame& cframe) = 0;
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
+        virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;
 
         // ------------ Operator ---------- //
