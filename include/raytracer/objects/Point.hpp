@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.hpp
@@ -29,12 +29,9 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class Point: public raytracer::AObject {
-    private:
-        raytracer::ICamera* _camera = nullptr;
-
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
         std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const final;
         raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const final;
         bool willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const final;

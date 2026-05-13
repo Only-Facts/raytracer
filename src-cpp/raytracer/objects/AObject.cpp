@@ -200,7 +200,7 @@ hot void raytracer::AObject::reflectRay(raytracer::IRay* ray, const raytracer::F
     if (orientation.dot(hit) > 0) hit = -hit;
     orientation = orientation - hit * (2.0 * orientation.dot(hit));
     cframe.orientation = orientation;
-    ray->setCFrame(cframe);
+    ray->setCFrame(cframe, false);
 }
 
 hot static float segmentSDF(const raytracer::Coord& p, const raytracer::Vertice& a, const raytracer::Vertice& b)

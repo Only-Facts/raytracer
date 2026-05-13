@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 01/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Default.cpp
@@ -13,9 +13,8 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/materials/Default.hpp"
-#include "raytracer/Raytracer.hpp"
 
-void raytracer::Default::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Default::parse(const libconfig::Setting& node)
 {
     // Other settings
     if (node.exists("color")) {

@@ -10,18 +10,13 @@ File Description:
 ##  for me, life is all about functions...
 \**************************************************************/
 
-<<<<<<<< HEAD:src-cpp/raytracer/lights/plane/lib.cpp
 #include "raytracer/lights/Plane.hpp"
-========
-#include "raytracer/lights/Spot.hpp"
->>>>>>>> Only-Facts/feat/cpp_core:src/raytracer/lights/spot/lib.cpp
 #include <memory>
 
 extern "C" {
     // Return the name of the lib
     const char* name(void)
     {
-<<<<<<<< HEAD:src-cpp/raytracer/lights/plane/lib.cpp
         return "Plane";
     }
 
@@ -29,14 +24,5 @@ extern "C" {
     raytracer::Plane* factory(void)
     {
         return new raytracer::Plane();
-========
-        return "Spot";
-    }
-
-    // Constructor of the lib
-    raytracer::Spot* factory(void)
-    {
-        return new raytracer::Spot();
->>>>>>>> Only-Facts/feat/cpp_core:src/raytracer/lights/spot/lib.cpp
     }
 }

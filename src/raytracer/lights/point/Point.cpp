@@ -3,25 +3,23 @@ Edition:
 ##  @date 13/05/2026 by @author Tsukini
 
 File Name:
-##  @file CameraFOV.cpp
+##  @file Point.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-#define _Exception
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/cameras/CameraFOV.hpp"
+#include "raytracer/lights/Point.hpp"
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
-#include "raytracer/Define.hpp"
-#include "raytracer/rays/Ray.hpp"
-#include <limits>
+#include <cstdint>
+#include <cstdlib>
 #include <cmath>
 
-void raytracer::CameraFOV::parse(const libconfig::Setting& node)
+void raytracer::Point::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
@@ -29,45 +27,44 @@ void raytracer::CameraFOV::parse(const libconfig::Setting& node)
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
 
     // Other settings
-    if (!node.exists("resolution"))
-        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The resolution field isn't defined for the camera");
-    const libconfig::Setting& res = node["resolution"];
-    this->setResolution({(int)res[0], (int)res[1]});
+    double intensity = 1.0;
+    if (node.lookupValue("intensity", intensity))
+        this->_intensity = intensity;
 
-    double fieldOfView = 70.0f;
-    if (node.lookupValue("fieldOfView", fieldOfView))
-        this->_fieldOfView = fieldOfView;
-    
-    double renderDistance = RENDER_DISTANCE;
-    if (node.lookupValue("renderDistance", renderDistance))
-        this->_renderDistance = renderDistance;
+    double lumen = 1.0;
+    if (node.lookupValue("lumen", lumen))
+        this->_lumen = lumen;
+
+    if (node.exists("color")) {
+        const libconfig::Setting& color = node["color"];
+        this->_color = {
+            (int)color[0],
+            (int)color[1],
+            (int)color[2]
+        };
+    }
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
 }
 
-void raytracer::CameraFOV::init(void)
+void raytracer::Point::init(void)
 {
-    std::size_t size = static_cast<std::size_t>(this->getResolution().x) * this->getResolution().y;
+    std::size_t size = MAX_LIGHT_RAY;
 
     // Clear old data
-    this->_screen.clear();
-    for (std::size_t i = 0; i < this->_rays.size(); ++i)
-        delete this->_rays[i];
     this->_rays.clear();
 
     // Resize screen size
-    this->_screen.reserve(size);
     this->_rays.reserve(size);
-    this->_screen.resize(size, DEFAULT_COLOR);
     this->_rays.resize(size, nullptr);
     for (std::size_t i = 0; i < size; ++i)
-        this->_rays[i] = new raytracer::Ray();
+        this->_rays[i] = new raytracer::LightRay();
 }
 
-void raytracer::CameraFOV::reset(void)
-{   
-    utils::vector::OVector2<int> resolution = this->getResolution();
+void raytracer::Point::reset(void)
+{
+    utils::vector::OVector2<int> resolution = {std::sqrt(MAX_LIGHT_RAY), std::sqrt(MAX_LIGHT_RAY)};
     raytracer::CFrame cframe = this->getCFrame();
     raytracer::Coord position = cframe.position;
     raytracer::Direction orientation = cframe.orientation;
@@ -76,21 +73,25 @@ void raytracer::CameraFOV::reset(void)
     raytracer::Coord2D rotated;
 
     // For each rays set default light value
-    for (raytracer::Ray* ray: this->_rays)
+    for (raytracer::LightRay* ray: this->_rays) {
         ray->reset();
+        ray->setColor(this->_color);
+        ray->setIntensity(this->_intensity);
+        ray->setPower(this->_lumen);
+    }
 
-    // Pre compute values
-    float fieldOfViewW = this->_fieldOfView * .5;
-    float fieldOfViewH = (resolution.y / static_cast<float>(resolution.x)) * this->_fieldOfView * .5;
+    // Pre compute values (360 = spherical)
+    float fieldOfLightW = 360.0 * .5;
+    float fieldOfLightH = (resolution.y / static_cast<float>(resolution.x)) * 360.0 * .5;
     raytracer::Type diffAngleY = raytracer::radToDeg(std::atan2(orientation.x, orientation.z));
     raytracer::Type diffAngleX = raytracer::radToDeg(std::atan2(orientation.y, std::hypot(orientation.x, orientation.z)));
     utils::vector::OVector2<float> resolution2 = resolution / 2;
 
     // Set rays init position & orientation
     for (int y = 0; y < resolution.y; ++y) {
-        angleX = ((y - resolution2.y) / resolution2.y) * fieldOfViewH;
+        angleX = ((y - resolution2.y) / resolution2.y) * fieldOfLightH;
         for (int x = 0; x < resolution.x; ++x) {
-            angleY = ((x - resolution2.x) / resolution2.x) * fieldOfViewW;
+            angleY = ((x - resolution2.x) / resolution2.x) * fieldOfLightW;
             // Orientation
             cframe.orientation = orientation;
             // Apply rotation

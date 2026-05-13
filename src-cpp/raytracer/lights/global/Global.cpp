@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Global.cpp
@@ -13,13 +13,12 @@ File Description:
 #define _Attribute
 #include "utils/utils.hpp"
 #include "raytracer/lights/Global.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cmath>
 
-void raytracer::Global::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Global::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 

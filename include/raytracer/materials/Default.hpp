@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Default.hpp
@@ -30,7 +30,7 @@ namespace raytracer { // namespace start
 class Default: public raytracer::AMaterial {
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node);
+        void parse(const libconfig::Setting& node);
 
         // ------------ Operator ---------- //
         Default& operator=(const Default& object) = delete;

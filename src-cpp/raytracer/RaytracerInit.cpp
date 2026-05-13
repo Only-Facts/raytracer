@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -43,6 +43,40 @@ static void isFile(const std::string& path, const std::string& extensionWanted =
     if (std::filesystem::path(path).extension() != extensionWanted) {
         utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::InvalidFileExtension, std::string("Excepted extension: ") + extensionWanted + ", got: " + std::filesystem::path(path).extension().string());
         std::cout << e.formated() << std::endl;
+    }
+}
+
+static nodiscard bool checkWritablePath(const std::string& rawPath)
+{
+    std::filesystem::path path(rawPath);
+
+    // Explicit directory
+    bool isDirectory = rawPath.back() == '/' || rawPath.back() == '\\';
+    try {
+        // Check if the directory exist
+        if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
+            isDirectory = true;
+
+        // On directory case
+        if (isDirectory) {
+            std::filesystem::create_directories(path);
+            std::filesystem::path testFile = path / ".TO_DELETE-permission_check_auto_generated_file";
+            std::ofstream file(testFile.string());
+            if (!file) return false;
+            file.close();
+            std::filesystem::remove(testFile);
+            return true;
+        }
+
+        // File case
+        std::filesystem::path parent = path.parent_path();
+        if (!parent.empty()) std::filesystem::create_directories(parent);
+        std::ofstream file(path.string(), std::ios::app);
+        if (!file) return false;
+        return true;
+
+    } catch (...) { // Any error same as missing permission
+        return false;
     }
 }
 
@@ -123,8 +157,8 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.adv = true;
         }
 
-        // -n, --newton
-        else if (arg == "-n" || arg == "--newton") {
+        // -g, --newton
+        else if (arg == "-g" || arg == "--newton") {
             // Check the option argument
             if (this->_settings.newton) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
@@ -135,10 +169,40 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.newton = true;
         }
 
-        // -c, --camera <used_camera_path>
+        // -n, --nproc
+        else if (arg == "-n" || arg == "--nproc") {
+            if (i + 1 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-n requires <nproc>");
+
+            // Check the option argument
+            if (this->_settings.nproc_set) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+            try {
+                std::string str = argv[++i];
+                if (str.empty())
+                    throw std::invalid_argument("empty");
+                if (!std::all_of(str.begin(), str.end(), ::isdigit))
+                    throw std::invalid_argument("not numeric");
+                unsigned long long tmp = std::stoull(str);
+                if (tmp > std::numeric_limits<std::size_t>::max())
+                    throw std::out_of_range("overflow");
+                this->_settings.nproc = static_cast<std::size_t>(tmp);
+            } catch (const std::exception& e) {
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
+            }
+            if (this->_settings.nproc != 0 && this->_settings.nproc < 2)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-n Invalid number of processus, need to be superior to 1 or equal to 0 (auto)");
+
+            // Set the nproc value
+            this->_settings.nproc_set = true;
+        }
+
+        // -c, --camera <camera_file_path>
         else if (arg == "-c" || arg == "--camera") {
             if (i + 1 >= argc)
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-c requires <used_camera_path>");
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-c requires <camera_file_path>");
 
             // Check the option argument
             if (this->_settings.camera_set) {
@@ -186,17 +250,18 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.obj_path = argv[i];
         }
 
-        // -s, --save <ppm_directory_path>
+        // -s, --save (<ppm_directory_path>|<ppm_file_path>)
         else if (arg == "-s" || arg == "--save") {
             if (i + 1 >= argc)
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s requires <ppm_directory_path>");
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s requires <ppm_directory_path> or <ppm_file_path>");
 
             // Check the option argument
             if (this->_settings.rendered_set) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
-            isDirectory(argv[++i]);
+            if (!checkWritablePath(argv[++i]))
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-s Invalid path given, can't output a file here");
 
             // Ignored case
             if (this->_settings.gui) {
@@ -206,7 +271,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Set the ppm save path
             this->_settings.rendered_set = true;
-            this->_settings.rendered_path = argv[++i];
+            this->_settings.rendered_path = argv[i];
         }
 
         // -r, --resolution "wxh"
@@ -242,6 +307,26 @@ void raytracer::Raytracer::load(int argc, char *argv[])
     }
 
     // Try env var getting if the arguments din't already set it
+    if (!this->_settings.nproc_set) {
+        if ((envVar = std::getenv("RAYTRACER_NPROC"))) {
+            try {
+                std::string str = argv[i];
+                if (str.empty())
+                    throw std::invalid_argument("empty");
+                if (!std::all_of(str.begin(), str.end(), ::isdigit))
+                    throw std::invalid_argument("not numeric");
+                unsigned long long tmp = std::stoull(str);
+                if (tmp > std::numeric_limits<std::size_t>::max())
+                    throw std::out_of_range("overflow");
+                this->_settings.nproc = static_cast<std::size_t>(tmp);
+            } catch (const std::exception& e) {
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
+            }
+        } /*else {
+            utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::MissingEnvVar, "Wasn't able to find the environement variable: RAYTRACER_PLUGINS_PATH");
+            std::cout << e.formated() << std::endl;
+        }*/
+    }
     if (!this->_settings.plugins_set) {
         if ((envVar = std::getenv("RAYTRACER_PLUGINS_PATH"))) {
             this->_settings.plugins_path = envVar;
@@ -422,7 +507,7 @@ void raytracer::Raytracer::scene(void)
         } else if (type == "camera") {
             if (camera)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Can't set multiple camera on the scene");
-            this->_camera->parse(*this, node);
+            this->_camera->parse(node);
             camera = true;
         } else if (type == "light") {
             this->parseLight(node);
@@ -491,7 +576,7 @@ raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setti
 
     // Create the material using factory & call it's parser
     raytracer::IMaterial* material = this->factory<raytracer::IMaterial>(name + std::to_string(MATERIAL));
-    material->parse(*this, node);
+    material->parse(node);
     this->_materials.push_back(material);
     return material;
 }
@@ -505,7 +590,7 @@ void raytracer::Raytracer::parseLight(const libconfig::Setting& node)
 
     // Create the light using factory & call it's parser
     raytracer::ILight* light = this->factory<raytracer::ILight>(name + std::to_string(LIGHT));
-    light->parse(*this, node);
+    light->parse(node);
     this->_lights.push_back(light);
 }
 
@@ -518,7 +603,20 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
 
     // Create the object using factory & call it's parser
     raytracer::IObject* object = this->factory<raytracer::IObject>(name + std::to_string(OBJECT));
-    object->parse(*this, node);
+    object->parse(node);
+    raytracer::ObjectDescriptor& descriptor = object->getObjectDescriptor();
+
+    // Init the material (mandatory on object)
+    if (!node.exists("material"))
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
+    descriptor.material = this->parseMaterial(node["material"]);
+
+    // Init the obj if set
+    if (!descriptor.obj.empty())
+        object->loadObj(this->ObjPath(descriptor.obj));
+    else if (node.lookupValue("obj", descriptor.obj))
+        object->loadObj(this->ObjPath(descriptor.obj));
+
     this->_objects.push_back(object);
 }
 
