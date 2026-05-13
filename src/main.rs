@@ -1,4 +1,12 @@
 use colored::*;
+use std::env;
+
+use crate::raytracer::Raytracer;
+
+mod raytracer;
+mod utils;
+
+pub type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 fn print_help() {
     println!("{}", "PROJECT".bold());
@@ -18,7 +26,6 @@ fn print_help() {
     );
     println!();
 
-    // --- USAGE ---
     println!("{}", "USAGE".bold());
     let usage_color = |s: &str| s.magenta();
     println!(
@@ -123,6 +130,33 @@ fn print_help() {
     input("↓", "Rotate camera down");
 }
 
-fn main() {
-    print_help();
+async fn run(raytracer: &Raytracer, args: env::Args) -> Result<(), Error> {
+    raytracer.load(args);
+    if !raytracer.isViewer() {
+        raytracer.init()?;
+    }
+
+    if raytracer.isGui() || raytracer.isViewer() {
+        raytracer.gui()?;
+    } else {
+        raytracer.light()?;
+        raytracer.render()?;
+        raytracer.saveRender()?;
+    }
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    let raytracer = Raytracer::default();
+    let args = env::args();
+
+    for arg in args {
+        if arg == "-h" || arg == "--help" {
+            print_help();
+            return Ok(());
+        }
+    }
+
+    run(&raytracer, args);
 }
