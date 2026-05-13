@@ -27,8 +27,8 @@ static cold void printHelp()
 
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
-    std::cout << "\t./raytracer <scene_cfg_path> [-a]  [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s (<ppm_directory_path>|<ppm_file_path>)] [-r \"wxh\"]" << std::endl;
-    std::cout << "\t./raytracer <scene_cfg_path> -gui [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> [-a] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s (<ppm_directory_path>|<ppm_file_path>)] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> -gui [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
     std::cout << utils::write::reset() << std::endl;
@@ -44,7 +44,9 @@ static cold void printHelp()
     std::cout << "\t\tActivate the render at runtime" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-a, --advencement" << utils::write::reset() << std::endl;
     std::cout << "\t\tEnable the advencement display of the actual frame rendering " << std::endl;
-    std::cout << utils::write::color(utils::write::Color::Green) << "\t-n, --newton " << utils::write::reset() << "(" << utils::write::color(utils::write::Color::Red) << "Not Working" << utils::write::reset() << ")" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-g, --newton " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "delta" << utils::write::reset() << ">" << std::endl;
+    std::cout << "\t\tSet the number of processus (0 = auto), can also be set by the env var RAYTRACER_NPROC (default: " << utils::write::color(utils::write::Color::Red) << "0" << utils::write::reset() << ")" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-n, --nproc " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "np_proc" << utils::write::reset() << ">" << std::endl;
     std::cout << "\t\tActivate the newton mode, apply aproximative gravity on rays" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-c, --camera " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "camera_file_path" << utils::write::reset() << ">" << std::endl;
     std::cout << "\t\tForce the camera plugin used (default: first found)" << std::endl;

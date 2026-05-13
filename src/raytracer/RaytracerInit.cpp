@@ -157,8 +157,8 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.adv = true;
         }
 
-        // -n, --newton
-        else if (arg == "-n" || arg == "--newton") {
+        // -g, --newton
+        else if (arg == "-g" || arg == "--newton") {
             // Check the option argument
             if (this->_settings.newton) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
@@ -167,6 +167,36 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Set the newton mode
             this->_settings.newton = true;
+        }
+
+        // -n, --nproc
+        else if (arg == "-n" || arg == "--nproc") {
+            if (i + 1 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-n requires <nproc>");
+
+            // Check the option argument
+            if (this->_settings.nproc_set) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+            try {
+                std::string str = argv[++i];
+                if (str.empty())
+                    throw std::invalid_argument("empty");
+                if (!std::all_of(str.begin(), str.end(), ::isdigit))
+                    throw std::invalid_argument("not numeric");
+                unsigned long long tmp = std::stoull(str);
+                if (tmp > std::numeric_limits<std::size_t>::max())
+                    throw std::out_of_range("overflow");
+                this->_settings.nproc = static_cast<std::size_t>(tmp);
+            } catch (const std::exception& e) {
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
+            }
+            if (this->_settings.nproc != 0 && this->_settings.nproc < 2)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-n Invalid number of processus, need to be superior to 1 or equal to 0 (auto)");
+
+            // Set the nproc value
+            this->_settings.nproc_set = true;
         }
 
         // -c, --camera <camera_file_path>
@@ -277,6 +307,26 @@ void raytracer::Raytracer::load(int argc, char *argv[])
     }
 
     // Try env var getting if the arguments din't already set it
+    if (!this->_settings.nproc_set) {
+        if ((envVar = std::getenv("RAYTRACER_NPROC"))) {
+            try {
+                std::string str = argv[i];
+                if (str.empty())
+                    throw std::invalid_argument("empty");
+                if (!std::all_of(str.begin(), str.end(), ::isdigit))
+                    throw std::invalid_argument("not numeric");
+                unsigned long long tmp = std::stoull(str);
+                if (tmp > std::numeric_limits<std::size_t>::max())
+                    throw std::out_of_range("overflow");
+                this->_settings.nproc = static_cast<std::size_t>(tmp);
+            } catch (const std::exception& e) {
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
+            }
+        } /*else {
+            utils::exception::CustomException e(utils::exception::Warning, utils::exception::Code::MissingEnvVar, "Wasn't able to find the environement variable: RAYTRACER_PLUGINS_PATH");
+            std::cout << e.formated() << std::endl;
+        }*/
+    }
     if (!this->_settings.plugins_set) {
         if ((envVar = std::getenv("RAYTRACER_PLUGINS_PATH"))) {
             this->_settings.plugins_path = envVar;

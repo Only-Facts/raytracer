@@ -500,7 +500,7 @@ void raytracer::Raytracer::light(void)
             continue;
         }
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
-        countThreads = std::thread::hardware_concurrency() - 1;
+        countThreads = ((this->_settings.nproc) ? this->_settings.nproc : std::thread::hardware_concurrency()) - 1;
         chunkSize = lightRays.size() / countThreads;
         threads.clear();
         for (std::size_t i = 0; i < countThreads; ++i) {
@@ -565,7 +565,7 @@ void raytracer::Raytracer::render(void)
     }
 
     // 2.1 - Compute camera rays
-    countThreads = std::thread::hardware_concurrency() - 1;
+    countThreads = ((this->_settings.nproc) ? this->_settings.nproc : std::thread::hardware_concurrency()) - 1;
     chunkSize = aliveRays.size() / countThreads;
     threads.clear();
     this->advReset(aliveRays.size());
