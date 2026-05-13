@@ -6,7 +6,12 @@ use std::{
 };
 use tokio::sync::Mutex;
 
-use crate::{Error, raytracer::structs::Color, utils::vector::Vector2};
+use crate::{
+    Error,
+    ffi::bridge::ObjectBridge,
+    raytracer::{camera::Camera, ray::Ray, structs::Color},
+    utils::vector::Vector2,
+};
 
 pub mod camera;
 pub mod objects;
@@ -14,6 +19,64 @@ pub mod ray;
 pub mod structs;
 
 const PPM_MAGIC: u8 = 22;
+
+fn process_camera_chunk(
+    rays: &mut [Ray],
+    render_distance: f64,
+    sky_color: Color,
+    global_light_color: Color,
+    global_light_count: usize,
+    objects: &[ObjectBridge],
+) {
+    let sdf_colliding_limit = 1e-2;
+    let ray_distance_coef = 2.0;
+
+    for ray in rays.iter_mut() {
+        let distance_unit = ray.base.cframe.orientation.length();
+
+        while ray.base.alive {
+            if ray.base.cframe.orientation.length() <= 1e-8 {
+                ray.kill();
+                continue;
+            }
+
+            let mut min_sdf = f64::MAX;
+            let mut nearest_object = None;
+            let mut face_hit = None;
+
+            for object in objects {
+                if ray.immunity == Some(object.id) {
+                    continue;
+                }
+                let sdf = object.compute_sdf(ray.base.cframe.position);
+                if actual_sdf.distance < min_sdf {
+                    min_sdf = actual_sdf.distance;
+                    nearest_object = Some(object);
+                    face_hit = face;
+                }
+            }
+
+            if min_sdf == f64::MAX {
+                ray.kill();
+                continue;
+            }
+
+            let translation = ray.base.cframe.orientation * min_sdf;
+            ray.base.cframe.position += translation;
+            ray.base.distance += distance_unit * min_sdf;
+
+            // TODO: kill logic if too far
+
+            if min_sdf > -sdf_colliding_limit && min_sdf < sdf_colliding_limit {
+                // TODO: Collisions
+                // if mirror then reflect
+                // else get color & other things
+
+                ray.kill();
+            }
+        }
+    }
+}
 
 pub struct Settings {
     pub viewer: bool,
@@ -122,6 +185,46 @@ impl Raytracer {
         }
 
         Ok(())
+    }
+
+    pub fn render(&mut self) {
+        self.camera.reset();
+
+        let mut global_light_color = Color::new(0, 0, 0);
+        let mut global_light_count = 0;
+
+        /*for light in &self.lights {
+            if light.is_global() {
+                global_light_color +=
+                global_light_count += 1;
+            }
+        }*/
+
+        let num_threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+
+        let rays = self.camera.get_rays_mut();
+
+        let chunk_size = (rays.len() + num_threads - 1) / num_threads;
+
+        let render_distance = 400.0;
+        let sky_color = Color::new(135, 206, 235);
+
+        std::thread::scope(|scope| {
+            for chunk in rays.chunks_mut(chunk_size) {
+                scope.spawn(move || {
+                    process_camera_chunk(
+                        chunk,
+                        render_distance,
+                        sky_color,
+                        global_light_color,
+                        global_light_count,
+                        objects_ref,
+                    );
+                });
+            }
+        });
     }
 
     pub async fn gui(&mut self) -> Result<(), Error> {

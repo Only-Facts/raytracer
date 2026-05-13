@@ -14,6 +14,7 @@ pub trait Camera: Object {
     fn update_screen(&mut self);
     fn get_screen(&self) -> &Vec<Color>;
     fn get_rays(&self) -> &Vec<Ray>;
+    fn get_rays_mut(&mut self) -> &mut Vec<Ray>;
 }
 
 #[derive(Default)]
@@ -104,5 +105,9 @@ impl Camera for Viewer {
 
     fn get_rays(&self) -> &Vec<Ray> {
         &self.rays
+    }
+
+    fn get_rays_mut(&mut self) -> &mut Vec<Ray> {
+        &mut self.rays
     }
 }
