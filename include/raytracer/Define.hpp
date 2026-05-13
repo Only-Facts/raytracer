@@ -39,6 +39,9 @@ File Description:
     #define EXP_K 1.5 // Exponential coef for light diminution with distance (1 = slow, 10 = fast)
     #define NOISE_STRENGTH 0.2f // Strength of the noise on the shape color
     #define NOISE_SIZE 0.1f // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
+    #define MOVE_SPEED 10.0f
+    #define ROTATE_SPEED 2.5f
+    #define ORIENTATION_SPEED 0.05f
 
     /* default */
     #define PLUGINS_PATH "./plugins/"

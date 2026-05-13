@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 30/04/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Camera2D.cpp
@@ -17,12 +17,11 @@ File Description:
 #include "raytracer/special/Utils.hpp"
 #include "raytracer/Struct.hpp"
 #include "raytracer/Define.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/rays/Ray.hpp"
 #include <limits>
 #include <cmath>
 
-void raytracer::Camera2D::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Camera2D::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 

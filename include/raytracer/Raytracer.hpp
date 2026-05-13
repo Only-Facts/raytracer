@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -49,7 +49,8 @@ struct Settings {
     bool gui = false; // -gui
     bool debug = false; // -d, --debug
     bool adv = false; // -a, --advencement | -A, --Advencement
-    bool newton = false; // -n, --newton (unused for now)
+    bool newton = false; // -g, --newton (unused for now)
+    std::size_t nproc = 0; // -n, --nproc (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
@@ -57,6 +58,7 @@ struct Settings {
     raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
+    bool nproc_set = false; // nproc
     bool camera_set = false; // camera_path
     bool plugins_set = false; // plugins_path
     bool rendered_set = false; // rendered_path
@@ -85,8 +87,13 @@ class Raytracer {
         std::vector<raytracer::IObject*> _objects;
         mutable std::vector<raytracer::IMaterial*> _materials;
 
+        /* Light */
+        raytracer::FColor _globalLightColor = DEFAULT_COLOR;
+        std::size_t _globalLightCount = 0;
+
         /* optimisation */
         std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
+        std::unordered_map<raytracer::CFrame, raytracer::Color, raytracer::CFrameHash> _rays;
 
         // ------------ Function ---------- //
         template<typename T>

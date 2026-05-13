@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -22,16 +22,19 @@ File Description:
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 #include <cstddef>
 #include <cstdint>
 #include <thread>
+#include <atomic>
 #include <vector>
 #include <cmath>
 
 /*
 gui:
-    load gui
     light
+    load gui
     loop:
         input handling
         render
@@ -77,8 +80,7 @@ cold void raytracer::Raytracer::gui(void)
 static void subLoop(const sf::RenderWindow& window, raytracer::Raytracer& raytracer)
 {
     if (!raytracer.isGui()) return;
-    while (window.isOpen())
-        raytracer.render();
+    while (window.isOpen()) raytracer.render();
 }
 
 void raytracer::Raytracer::loop(sf::RenderWindow& window)
@@ -91,9 +93,71 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
 
         // Listen event
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) // Window killed
                 window.close();
-            /* other input handle in gui mode */
+            if (event.type == sf::Event::KeyPressed) { // Camera movement
+                raytracer::CFrame cframe = this->_camera->getCFrame();
+                switch (event.key.code) {
+                    // Window kill
+                    case sf::Keyboard::Escape:
+                        window.close();
+                        break;
+
+                    // Translation
+                    case sf::Keyboard::Q:
+                        cframe.position.x -= MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::D:
+                        cframe.position.x += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::Z:
+                        cframe.position.z += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::S:
+                        cframe.position.z -= MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::E:
+                        cframe.position.y += MOVE_SPEED;
+                        break;
+
+                    case sf::Keyboard::A:
+                        cframe.position.y -= MOVE_SPEED;
+                        break;
+
+                    // Rotation
+                    case sf::Keyboard::W:
+                        cframe.rotation -= ROTATE_SPEED;
+                        break;
+
+                    case sf::Keyboard::X:
+                        cframe.rotation += ROTATE_SPEED;
+                        break;
+
+                    case sf::Keyboard::Left:
+                        cframe.orientation.x -= ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Right:
+                        cframe.orientation.x += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Up:
+                        cframe.orientation.y += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Down:
+                        cframe.orientation.y -= ORIENTATION_SPEED;
+                        break;
+
+                    default: break;
+                }
+                this->_camera->setCFrame(cframe);
+            }
+
         }
 
         // Update display content (gui mode)
@@ -109,7 +173,7 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
 hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
     // Clear the window
-    //window.clear(sf::Color::Black);
+    window.clear(sf::Color::Black);
 
     // Update screen pixels using rays color
     this->_camera->updateScreen();
@@ -117,15 +181,63 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     // Draw each pixel
     raytracer::Resolution resolution = this->_camera->getResolution();
     const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
+    sf::VertexArray points(sf::Points, resolution.x * resolution.y);
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
         for (std::uint16_t x = 0; x < resolution.x; ++x) {
             const raytracer::Color& color = pixels[y * resolution.x + x];
-            sf::Vertex point(
-                sf::Vector2f(x, y),
-                sf::Color(color.x, color.y, color.z)
-            );
-            window.draw(&point, 1, sf::Points);
+            points[y * resolution.x + x].position = sf::Vector2f(x, y);
+            points[y * resolution.x + x].color = sf::Color(color.x, color.y, color.z);
         }
+    }
+
+    // Font loading
+    static sf::Font font;
+    static bool loaded = false;
+    if (!loaded) {
+        font.loadFromFile("/usr/share/fonts/liberation-mono/LiberationMono-Regular.ttf");
+        loaded = true;
+    }
+
+    // Setup the string
+    const raytracer::CFrame& cframe = this->_camera->getCFrame();
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Position: ";
+    ss << "(" << cframe.position.x;
+    ss << ", " << cframe.position.y;
+    ss << ", " << cframe.position.z << ")\n";
+    ss << "Orientation: ";
+    ss << "(" << cframe.orientation.x;
+    ss << ", " << cframe.orientation.y;
+    ss << ", " << cframe.orientation.z << ")\n";
+    ss << "Rotation: ";
+    ss << cframe.rotation << " deg";
+
+    // Setup the text
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(12);
+    text.setFillColor(sf::Color::White);
+    text.setString(ss.str());
+    text.setPosition(15.f, 10.f);
+
+    // Setup the text background
+    sf::FloatRect bounds = text.getLocalBounds();
+    sf::RectangleShape background;
+    background.setPosition(8.f, 8.f);
+    background.setSize({
+        bounds.width + 15.0f,
+        bounds.height + 10.0f
+    });
+    background.setFillColor(
+        sf::Color(20, 20, 20, 180)
+    );
+
+    // Draw the window content
+    window.draw(points);
+    if (this->_settings.debug) {
+        window.draw(background);
+        window.draw(text);
     }
 
     // Update the display
@@ -382,9 +494,13 @@ void raytracer::Raytracer::light(void)
     for (raytracer::ILight* light: this->_lights) this->advAddMax(light->getRays().size());
     this->adv(true, false);
     for (raytracer::ILight* light: this->_lights) {
-        if (light->isGlobal()) continue; // Ignore global light
+        if (light->isGlobal()) { // Handle global light
+            this->_globalLightColor += light->getColor() * light->getIntensity();
+            ++this->_globalLightCount;
+            continue;
+        }
         std::vector<raytracer::LightRay*> lightRays = light->getRays();
-        countThreads = std::thread::hardware_concurrency() - 1;
+        countThreads = ((this->_settings.nproc) ? this->_settings.nproc : std::thread::hardware_concurrency()) - 1;
         chunkSize = lightRays.size() / countThreads;
         threads.clear();
         for (std::size_t i = 0; i < countThreads; ++i) {
@@ -412,9 +528,9 @@ void raytracer::Raytracer::light(void)
 }
 
 /*
- 1 - Reset rays (lights)
- 2 - Compute color from global lights
- 3 - Compute camera rays
+ 1 - Reset rays (camera)
+ 2.0 - Check for already computed ray
+ 2 - Compute camera rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
     3 - Check SDF
@@ -423,47 +539,52 @@ void raytracer::Raytracer::light(void)
         - Apply color (not for mirror material)
         - kill (not for mirror material)
     too far -> kill
+ 2.2 - Store computed value
 */
 void raytracer::Raytracer::render(void)
 {
-    raytracer::FColor globalLightColor = DEFAULT_COLOR;
-    std::size_t globalLightCount = 0;
     std::vector<std::thread> threads;
+    std::vector<raytracer::Ray*> aliveRays;
+    aliveRays.reserve(this->_camera->getRays().size());
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
 
     // 1 - Reset rays (camera)
     this->_camera->reset();
 
-    // 2 - Compute color from global lights
-    for (raytracer::ILight* light: this->_lights) {
-        if (!light->isGlobal()) continue; // Ignore no global light
-        globalLightColor += light->getColor() * light->getIntensity();
-        ++globalLightCount;
+    // 2.0 - Check for already computed ray
+    for (raytracer::Ray* ray: this->_camera->getRays()) {
+        const raytracer::CFrame& cframe = ray->getCFrameOrigin();
+        auto it = this->_rays.find(cframe);
+        if (it != this->_rays.end()) {
+            ray->setColor(it->second);
+            ray->kill();
+        } else {
+            aliveRays.push_back(ray);
+        }
     }
 
-    // 3 - Compute camera rays
-    std::vector<raytracer::Ray*> cameraRays = this->_camera->getRays();
-    countThreads = std::thread::hardware_concurrency() - 1;
-    chunkSize = cameraRays.size() / countThreads;
+    // 2.1 - Compute camera rays
+    countThreads = ((this->_settings.nproc) ? this->_settings.nproc : std::thread::hardware_concurrency()) - 1;
+    chunkSize = aliveRays.size() / countThreads;
     threads.clear();
-    this->advReset(cameraRays.size());
+    this->advReset(aliveRays.size());
     this->adv(true, false);
     for (std::size_t i = 0; i < countThreads; ++i) {
         start = i * chunkSize;
-        end = (i == countThreads - 1) ? cameraRays.size() : start + chunkSize;
+        end = (i == countThreads - 1) ? aliveRays.size() : start + chunkSize;
 
         // Start the thread
         threads.emplace_back(processCameraChunk,
             std::ref(*this),
-            std::ref(cameraRays), start, end,
+            std::ref(aliveRays), start, end,
             std::cref(this->_objects),
             std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
-            globalLightColor, globalLightCount
+            this->_globalLightColor, this->_globalLightCount
         );
     }
-
+ 
     // Wait for the threads
     for (std::thread& t: threads)
         t.join();
@@ -473,6 +594,12 @@ void raytracer::Raytracer::render(void)
     // End of the advencement display
     if (!this->_settings.gui)
         this->advEnd();
+
+    // 2.2 - Store computed value
+    for (raytracer::Ray* ray: aliveRays) {
+        const raytracer::CFrame& cframe = ray->getCFrameOrigin();
+        this->_rays.try_emplace(cframe, ray->getColor());
+    }
 }
 
 cold void raytracer::Raytracer::loadRender(void)
@@ -520,13 +647,22 @@ cold void raytracer::Raytracer::saveRender(void)
     // Update screen pixels using rays color
     this->_camera->updateScreen();
 
-    // Try to open the ppm file
+    // Setup the file path
     std::filesystem::path cfg = this->_settings.cfg_path;
-    std::filesystem::path dir = this->_settings.rendered_path;
+    std::filesystem::path base = this->_settings.rendered_path;
     cfg.replace_extension(".ppm");
-    std::filesystem::path editedPath = dir / cfg.filename();
-    std::filesystem::create_directories(editedPath.parent_path());
-    std::string path = editedPath.string();
+    std::filesystem::path finalPath;
+    if (!base.empty() && base.has_extension()) { // File path given
+        finalPath = base;
+    } else { // Directory path given
+        std::filesystem::path dir = base;
+        finalPath = dir / cfg.filename();
+    }
+
+    // Create directory if needed & try to open the ppm file
+    if (!finalPath.parent_path().empty())
+        std::filesystem::create_directories(finalPath.parent_path());
+    std::string path = finalPath.string();
     std::ofstream file(path, std::ios::binary);
     if (!file)
         throw utils::exception::CustomException(utils::exception::Type::Error, utils::exception::Code::ppmFile, std::string("Failed to open file for writing: ") + path);

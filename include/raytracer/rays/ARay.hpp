@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.hpp
@@ -35,7 +35,7 @@ class ARay: public raytracer::IRay {
 
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
         void computeObjects(raytracer::Type renderDistance, const std::vector<raytracer::IObject*>& objects, const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks); // Call on init & each direction changement
 
         // ------------ Function ---------- //

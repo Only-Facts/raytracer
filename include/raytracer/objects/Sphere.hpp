@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 05/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.hpp
@@ -33,7 +33,7 @@ class Sphere: public raytracer::AObject {
 
     public:
         // ---------- Pre-Function -------- //
-        void parse(const raytracer::Raytracer& raytracer, const libconfig::Setting& node) final;
+        void parse(const libconfig::Setting& node) final;
         std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const final;
         raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const final;
         bool willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const final;
