@@ -246,15 +246,7 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/materials
 )
 
-# =========================
-# Dependencies
-# =========================
-add_custom_target(generated_exception_header ALL
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/scripts/generate_exception_header.py
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-add_dependencies(${TARGET} generated_exception_header)
-foreach(target
+set(PLUGINS
     camera_viewer
     camera_camera2D
     camera_cameraFOV
@@ -270,35 +262,35 @@ foreach(target
     object_cone
     material_default
 )
+
+# =========================
+# Special Targets
+# =========================
+add_custom_target(generated_exception_header ALL
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/scripts/generate_exception_header.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+add_custom_target(plugins)
+add_dependencies(plugins ${PLUGINS})
+
+# =========================
+# Dependencies
+# =========================
+add_dependencies(${TARGET} generated_exception_header)
+foreach(target ${PLUGINS})
     add_dependencies(${target} generated_exception_header)
 endforeach()
 
 # =========================
 # Includes
 # =========================
-# Global includes
 target_include_directories(${TARGET} PRIVATE include)
 target_link_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
 target_link_libraries(${TARGET} PRIVATE utils)
 target_include_directories(${TARGET} PRIVATE ${LIBCONFIG_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${LIBCONFIG_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE sfml-graphics sfml-window sfml-system)
-foreach(target
-    camera_viewer
-    camera_camera2D
-    camera_cameraFOV
-    light_global
-    light_point
-    light_spot
-    light_plane
-    object_object
-    object_point
-    object_plane
-    object_sphere
-    object_cylinder
-    object_cone
-    material_default
-)
+foreach(target ${PLUGINS})
     target_include_directories(${target} PRIVATE include)
     target_link_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/libs/)
     target_link_libraries(${target} PRIVATE utils)
@@ -316,6 +308,14 @@ target_compile_options(${TARGET} PRIVATE
     #$<$<CONFIG:optimized>:-O3 -ffast-math -flto -funroll-loops -fvectorize -fslp-vectorize -march=native -fno-plt -pipe -DNDEBUG>
     # -flto
 )
+foreach(target ${PLUGINS})
+    target_compile_options(${target} PRIVATE
+        $<$<CONFIG:Debug>:-g -ggdb3>
+        $<$<CONFIG:Optimized>:-O3 -ffast-math -fvectorize -fslp-vectorize -funroll-loops -march=native -mtune=generic -pipe -DNDEBUG>
+        #$<$<CONFIG:optimized>:-O3 -ffast-math -flto -funroll-loops -fvectorize -fslp-vectorize -march=native -fno-plt -pipe -DNDEBUG>
+        # -flto
+    )
+endforeach()
 
 # =========================
 # Utils
