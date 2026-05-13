@@ -1,0 +1,38 @@
+use crate::raytracer::{
+    ray::Ray,
+    structs::{CFrame, Chunk, Color, Coord, Direction, Face},
+};
+
+#[derive(Default, Clone)]
+pub struct ObjectDescriptor {
+    pub cframe: CFrame,
+    pub cframe_origin: CFrame,
+
+    pub chunks: Vec<Chunk>,
+    pub faces: Vec<Face>,
+}
+
+pub struct ChunkLightData {
+    pub position: Coord,
+    pub color: Color,
+    pub intensity: f32,
+}
+
+pub trait Object {
+    fn get_descriptor(&self) -> &ObjectDescriptor;
+    fn will_collide(&self, point: &Coord, dir: &Direction) -> bool;
+
+    fn parse(&mut self, node: &serde_json::Value);
+    fn load_obj(&mut self, path: &str);
+
+    fn reflect_ray(&self, ray: &mut Ray, face: &Face);
+    fn compute_sdf(&self, point: &Coord) -> (f32, &Face);
+    fn compute_hit(&self, point: &Coord, face: Option<&Face>) -> Coord;
+
+    fn set_immunity(&mut self, object: Option<Box<dyn Object>>);
+
+    fn translate(&mut self, v: &Coord);
+    fn rotate(&mut self, v: &Direction);
+
+    fn get_cframe(&self) -> &CFrame;
+}
