@@ -11,10 +11,17 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/DynamicLibrary.hpp"
+#include "raytracer/lights/ILight.hpp"
 #include <cstddef>
 
 // Return the type of the lib
 extern "C" {
+    void light_init(void* instance) {
+        static_cast<raytracer::ILight*>(instance)->init();
+    }
+    void light_parse(void* instance, const char* config_json) {
+        // TODO: json to settings
+    }
     std::size_t type(void)
     {
         return LIGHT;

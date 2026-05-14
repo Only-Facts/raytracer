@@ -21,7 +21,7 @@ pub mod structs;
 const PPM_MAGIC: u8 = 22;
 
 fn merge_color(color1: Color, color2: Color, intensity: f32) -> Color {
-    let mut new_color = Vector3::new(
+    let new_color = Vector3::new(
         color1.x as f32 + color2.x as f32 * intensity,
         color1.y as f32 + color2.y as f32 * intensity,
         color1.z as f32 + color2.z as f32 * intensity,
@@ -30,7 +30,7 @@ fn merge_color(color1: Color, color2: Color, intensity: f32) -> Color {
     Color::new(
         new_color.x.min(255.0) as u8,
         new_color.y.min(255.0) as u8,
-        new_color.y.min(255.0) as u8,
+        new_color.z.min(255.0) as u8,
     )
 }
 
@@ -38,8 +38,8 @@ fn process_camera_chunk(
     rays: &mut [Ray],
     render_distance: f64,
     sky_color: Color,
-    global_light_color: Color,
-    global_light_count: usize,
+    _global_light_color: Color,
+    _global_light_count: usize,
     objects: &[ObjectBridge],
     lights: &[LightBridge],
 ) {
@@ -48,7 +48,7 @@ fn process_camera_chunk(
     for ray in rays.iter_mut() {
         while ray.base.alive {
             if ray.base.cframe.orientation.length() <= 1e-8 {
-                ray.kill();
+                ray.base.kill();
                 continue;
             }
 
@@ -74,23 +74,23 @@ fn process_camera_chunk(
 
             if nearest_object.is_none() || min_sdf == f64::MAX {
                 ray.color = merge_color(ray.color, sky_color, ray.coef);
-                ray.kill();
+                ray.base.kill();
                 continue;
             }
 
             let nearest = nearest_object.unwrap();
 
-            let hit_point = ray.base.cframe.position + (ray.base.cframe.orientation * min_sdf);
-            ray.base.cframe.position += hit_point;
+            let translation = ray.base.cframe.orientation * min_sdf;
+            ray.base.cframe.position += translation;
             ray.base.distance += min_sdf;
 
             if ray.base.distance >= render_distance * 2.0 {
-                ray.kill();
+                ray.base.kill();
                 continue;
             }
 
             if min_sdf < sdf_colliding_limit {
-                let normal = nearest.compute_hit(hit_point, face_hit).norm();
+                let normal = nearest.compute_hit(translation, face_hit).normalize();
 
                 if nearest.is_mirror() {
                     let dot = ray.base.cframe.orientation.dot(normal);
@@ -102,7 +102,7 @@ fn process_camera_chunk(
                     ray.base.potential_objects.push(nearest.instance as usize);
                 } else {
                     let mut final_pixel_color = Color::default();
-                    let (base_obj_color_res) = nearest.get_point_color(hit_point);
+                    let base_obj_color_res = nearest.get_point_color(ray.base.cframe.position);
                     let base_obj_color = Color::new(
                         base_obj_color_res.r,
                         base_obj_color_res.g,
@@ -111,13 +111,14 @@ fn process_camera_chunk(
 
                     for light in lights {
                         let light_pos = light.get_position();
-                        let dir_to_light = (light_pos - hit_point).norm();
-                        let dist_to_light = (light_pos - hit_point).length();
+                        let dir_to_light = (light_pos - ray.base.cframe.position).normalize();
+                        let dist_to_light = (light_pos - ray.base.cframe.position).length();
 
                         let mut shadow_factor = 1.0;
                         for obstacle in objects {
-                            let shadow_res = obstacle
-                                .compute_sdf(hit_point + (normal * (sdf_colliding_limit * 2.0)));
+                            let shadow_res = obstacle.compute_sdf(
+                                ray.base.cframe.position + (normal * (sdf_colliding_limit * 2.0)),
+                            );
                             if shadow_res.distance < dist_to_light {
                                 shadow_factor = 0.0;
                                 break;
@@ -154,7 +155,7 @@ fn process_camera_chunk(
                     );
 
                     ray.color = merge_color(final_pixel_color, ambient, ray.coef);
-                    ray.kill();
+                    ray.base.kill();
                 }
             }
         }
@@ -219,10 +220,27 @@ pub struct Raytracer {
     adv: Mutex<usize>,
     adv_max: usize,
     //libs: HashMap<String, Rc<DynamicLibrary>>,
+    objects: Vec<ObjectBridge>,
+    lights: Vec<LightBridge>,
     camera: camera::Viewer,
 }
 
 impl Raytracer {
+    pub fn new(
+        camera: camera::Viewer,
+        objects: Vec<ObjectBridge>,
+        lights: Vec<LightBridge>,
+    ) -> Self {
+        Self {
+            settings: Settings::default(),
+            step: 0,
+            adv: Mutex::new(0),
+            adv_max: 0,
+            objects,
+            lights,
+            camera,
+        }
+    }
     pub async fn load_render(&mut self) -> Result<(), Error> {
         let path = &self.settings.ppm_path;
 
@@ -246,9 +264,9 @@ impl Raytracer {
             return Err(format!("Invalid magic number in file: {}", path).into());
         }
 
-        self.camera.set_resolution(width as u32, height as u32);
+        /*self.camera.set_resolution(width as u32, height as u32);
         self.camera.init();
-        self.camera.kill();
+        self.camera.kill();*/
 
         let buffer_size = (width as usize) * (height as usize) * 3;
         let mut buffer = vec![0u8; buffer_size];
@@ -273,20 +291,21 @@ impl Raytracer {
     pub fn render(&mut self) {
         self.camera.reset();
 
-        let mut global_light_color = Color::new(0, 0, 0);
-        let mut global_light_count = 0;
+        let global_light_color = Color::new(0, 0, 0);
+        let global_light_count = 0;
 
-        for light in &self.lights {
+        /*for light in &self.lights {
             if light.is_global() {
                 global_light_color += global_light_count += 1;
             }
-        }
+        }*/
 
         let num_threads = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(1);
 
-        let rays = self.camera.get_rays_mut();
+        let (rays, objects_ref, lights_ref) =
+            (self.camera.get_rays_mut(), &self.objects, &self.lights);
 
         let chunk_size = (rays.len() + num_threads - 1) / num_threads;
 
@@ -303,6 +322,7 @@ impl Raytracer {
                         global_light_color,
                         global_light_count,
                         objects_ref,
+                        lights_ref,
                     );
                 });
             }
@@ -311,7 +331,7 @@ impl Raytracer {
 
     pub async fn gui(&mut self) -> Result<(), Error> {
         if self.settings.viewer {
-            self.load_render().await;
+            self.load_render().await?;
         }
         Ok(())
     }

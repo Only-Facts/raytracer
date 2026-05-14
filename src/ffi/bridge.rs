@@ -64,13 +64,13 @@ impl ObjectBridge {
             Ok(Self {
                 _lib: lib.clone(),
                 instance,
-                set_position_ptr: *lib.get(b"object_set_position\0").unwrap_or_default(),
-                set_orientation_ptr: *lib.get(b"object_set_orientation\0").unwrap_or_default(),
-                compute_sdf_ptr: *lib.get(b"object_compute_sdf\0").unwrap_or_default(),
-                compute_hit_ptr: *lib.get(b"object_compute_hit\0").unwrap_or_default(),
-                get_point_color_ptr: *lib.get(b"object_get_point_color\0").unwrap_or_default(),
-                is_mirror_ptr: *lib.get(b"object_is_mirror\0").unwrap_or_default(),
-                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap_or_default(),
+                set_position_ptr: *lib.get(b"object_set_position\0").unwrap(),
+                set_orientation_ptr: *lib.get(b"object_set_orientation\0").unwrap(),
+                compute_sdf_ptr: *lib.get(b"object_compute_sdf\0").unwrap(),
+                compute_hit_ptr: *lib.get(b"object_compute_hit\0").unwrap(),
+                get_point_color_ptr: *lib.get(b"object_get_point_color\0").unwrap(),
+                is_mirror_ptr: *lib.get(b"object_is_mirror\0").unwrap(),
+                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap(),
             })
         }
     }
@@ -149,10 +149,10 @@ impl LightBridge {
             Ok(Self {
                 _lib: lib.clone(),
                 instance,
-                get_pos_ptr: *lib.get(b"light_get_position\0").unwrap_or_default(),
-                get_color_ptr: *lib.get(b"light_get_color\0").unwrap_or_default(),
-                set_pos_ptr: *lib.get(b"light_set_position\0").unwrap_or_default(),
-                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap_or_default(),
+                get_pos_ptr: *lib.get(b"light_get_position\0").unwrap(),
+                get_color_ptr: *lib.get(b"light_get_color\0").unwrap(),
+                set_pos_ptr: *lib.get(b"light_set_position\0").unwrap(),
+                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap(),
             })
         }
     }

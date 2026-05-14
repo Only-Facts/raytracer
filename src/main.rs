@@ -1,7 +1,7 @@
 use colored::*;
-use std::env;
+use std::{env, fs::File, io::Write};
 
-use crate::raytracer::Raytracer;
+use crate::raytracer::{Raytracer, camera::Camera, structs::Color};
 
 mod config;
 mod ffi;
@@ -133,33 +133,46 @@ fn print_help() {
     input("↓", "Rotate camera down");
 }
 
-async fn run(raytracer: &Raytracer, args: env::Args) -> Result<(), Error> {
-    raytracer.load(args);
-    if !raytracer.isViewer() {
-        raytracer.init()?;
+fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std::io::Result<()> {
+    let mut file = File::create(filename)?;
+    write!(&mut file, "P3\n{} {}\n255\n", width, height)?;
+    for p in pixels {
+        writeln!(&mut file, "{} {} {}", p.x as u8, p.y as u8, p.z as u8)?;
     }
+    Ok(())
+}
 
-    if raytracer.isGui() || raytracer.isViewer() {
-        raytracer.gui()?;
-    } else {
-        raytracer.light()?;
-        raytracer.render()?;
-        raytracer.saveRender()?;
-    }
+async fn run(_raytracer: &Raytracer, args: Vec<String>) -> Result<(), Error> {
+    let default_scene = "scene.json".to_string();
+    let filepath = args.get(1).unwrap_or(&default_scene);
+    let mut scene = config::load_scene(filepath).expect("Error loading scene");
+
+    //raytracer.gui()?;
+
+    scene.camera.update_screen();
+    save_as_ppm(
+        "output.ppm",
+        scene.camera.get_screen(),
+        scene.camera.resolution.0,
+        scene.camera.resolution.1,
+    )
+    .expect("Error saving image");
+    println!("Finished rendering: output.ppm generated");
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let raytracer = Raytracer::default();
-    let args = env::args();
+    let args: Vec<String> = env::args().collect();
 
-    for arg in args {
+    for arg in &args {
         if arg == "-h" || arg == "--help" {
             print_help();
             return Ok(());
         }
     }
 
-    run(&raytracer, args);
+    run(&raytracer, args).await?;
+    Ok(())
 }

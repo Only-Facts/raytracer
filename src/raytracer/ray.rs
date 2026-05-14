@@ -87,6 +87,10 @@ impl Ray {
         self.color = Color::new(0, 0, 0);
         self.coef = 1.0;
     }
+
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color;
+    }
 }
 
 pub struct LightRay {

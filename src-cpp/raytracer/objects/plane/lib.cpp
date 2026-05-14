@@ -57,6 +57,20 @@ extern "C" {
         raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
         return obj->getObjectDescriptor().material->isMirror();
     }
+
+    void object_set_position(void* instance, double x, double y, double z) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        raytracer::CFrame frame = obj->getCFrame();
+        frame.position = raytracer::Coord(x, y, z);
+        obj->setCFrame(frame, true);
+    }
+
+    void object_set_orientation(void* instance, double x, double y, double z) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        raytracer::CFrame frame = obj->getCFrame();
+        frame.orientation = raytracer::Coord(x, y, z);
+        obj->setCFrame(frame, true);
+    }
     /* !Wrapper for Rust Bridge */
 
 

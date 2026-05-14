@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
+use serde::Deserialize;
+
 pub trait Real: Sized + Copy + Add<Output = Self> + Mul<Output = Self> {
     fn sqrt(self) -> Self;
 }
@@ -34,7 +36,7 @@ impl_real_int!(
     i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
 );
 
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub struct Vector2<T> {
     pub x: T,
     pub y: T,
@@ -43,6 +45,15 @@ pub struct Vector2<T> {
 impl<T> Vector2<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
+    }
+}
+
+impl<T> Vector2<T>
+where
+    T: std::ops::Mul<Output = T> + std::ops::Add<Output = T> + Copy,
+{
+    pub fn dot(&self, other: Vector3<T>) -> T {
+        self.x * other.x + self.y * other.y
     }
 }
 
@@ -153,7 +164,7 @@ impl_vector_scalar_ops!(
     f32, f64, i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
 );
 
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub struct Vector3<T> {
     pub x: T,
     pub y: T,
@@ -163,6 +174,15 @@ pub struct Vector3<T> {
 impl<T> Vector3<T> {
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
+    }
+}
+
+impl<T> Vector3<T>
+where
+    T: std::ops::Mul<Output = T> + std::ops::Add<Output = T> + Copy,
+{
+    pub fn dot(&self, other: Vector3<T>) -> T {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
@@ -177,6 +197,25 @@ impl<T: Real> Vector3<T> {
 
     pub fn length(&self) -> T {
         self.norm()
+    }
+}
+
+impl Vector3<f64> {
+    pub fn normalize(&self) -> Vector3<f64> {
+        let len = self.length();
+        if len > 0.0 {
+            Vector3::new(self.x / len, self.y / len, self.z / len)
+        } else {
+            Vector3::new(0.0, 0.0, 0.0)
+        }
+    }
+
+    pub fn cross(&self, other: Vector3<f64>) -> Vector3<f64> {
+        Vector3::new(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
     }
 }
 

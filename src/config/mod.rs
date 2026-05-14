@@ -1,5 +1,6 @@
 use crate::{
     ffi::bridge::{LightBridge, ObjectBridge},
+    raytracer::{camera::Viewer, structs::Coord},
     utils::vector::Vector3,
 };
 use libloading::Library;
@@ -9,6 +10,7 @@ use std::sync::Arc;
 pub mod loader;
 
 pub struct Scene {
+    pub camera: Viewer,
     pub objects: Vec<ObjectBridge>,
     pub lights: Vec<LightBridge>,
     _libraries: Vec<Arc<Library>>,
@@ -19,6 +21,54 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
         .map_err(|e| format!("Error reading file {filepath}: {e}"))?;
 
     let root: Value = serde_json::from_str(&data).map_err(|e| format!("JSON Syntax error: {e}"))?;
+
+    let cam_val = root
+        .get("camera")
+        .ok_or("No section 'camera' in JSON file")?;
+
+    let res_x = cam_val
+        .get("resolution_x")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(800) as u32;
+    let res_y = cam_val
+        .get("resolution_y")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(600) as u32;
+    let fov = cam_val.get("fov").and_then(|v| v.as_f64()).unwrap_or(90.0);
+
+    let pos_val = cam_val.get("position");
+    let cam_pos = Coord::new(
+        pos_val
+            .and_then(|p| p.get("x"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0),
+        pos_val
+            .and_then(|p| p.get("y"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0),
+        pos_val
+            .and_then(|p| p.get("z"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(-5.0),
+    );
+
+    let dir_val = cam_val.get("rotation");
+    let cam_dir = Coord::new(
+        dir_val
+            .and_then(|p| p.get("x"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0),
+        dir_val
+            .and_then(|p| p.get("y"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0),
+        dir_val
+            .and_then(|p| p.get("z"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1.0),
+    );
+
+    let camera = Viewer::new(cam_pos, cam_dir, res_x, res_y, fov);
 
     let mut objects = Vec::new();
     let mut lights = Vec::new();
@@ -96,6 +146,7 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
     }
 
     Ok(Scene {
+        camera,
         objects,
         lights,
         _libraries: libraries,
