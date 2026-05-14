@@ -1,4 +1,4 @@
-use std::fii::{c_char, c_void};
+use std::ffi::{c_char, c_void};
 
 pub mod bridge;
 pub mod types;

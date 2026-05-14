@@ -2,7 +2,7 @@ use std::{ffi::c_void, sync::Arc};
 
 use libloading::{Library, Symbol};
 
-use crate::utils::vector::Vector3;
+use crate::{raytracer::structs::Color, utils::vector::Vector3};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -119,14 +119,64 @@ impl Drop for ObjectBridge {
 
 pub struct CameraBridge {
     instance: *mut c_void,
-    get_pixels_ptr: FnGetPixel,
+    get_pixels_ptr: FnGetPointColor,
 }
 
-impl CameraBridge {
-    pub fn get_pixels(&self, width: usize, height: usize) -> &[CColor] {
+type FnLightGetPos = unsafe extern "C" fn(*mut c_void, *mut f64, *mut f64, *mut f64);
+type FnLightGetColor = unsafe extern "C" fn(*mut c_void, *mut u8, *mut u8, *mut u8, *mut f64);
+type FnLightSetPos = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
+
+pub struct LightBridge {
+    _lib: Arc<Library>,
+    pub instance: *mut c_void,
+    get_pos_ptr: FnLightGetPos,
+    get_color_ptr: FnLightGetColor,
+    set_pos_ptr: FnLightSetPos,
+    destroy_ptr: FnDestroy,
+}
+
+unsafe impl Send for LightBridge {}
+unsafe impl Sync for LightBridge {}
+
+impl LightBridge {
+    pub fn new(lib: Arc<Library>) -> Result<Self, String> {
         unsafe {
-            let ptr = (self.get_pixels_ptr)(self.instance);
-            std::slice::from_raw_parts(ptr as *const CColor, width * height)
+            let factory_ptr: Symbol<FnFactory> = lib
+                .get(b"factory\0")
+                .map_err(|e| format!("factory error: {e}"))?;
+            let instance = factory_ptr();
+
+            Ok(Self {
+                _lib: lib.clone(),
+                instance,
+                get_pos_ptr: *lib.get(b"light_get_position\0").unwrap_or_default(),
+                get_color_ptr: *lib.get(b"light_get_color\0").unwrap_or_default(),
+                set_pos_ptr: *lib.get(b"light_set_position\0").unwrap_or_default(),
+                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap_or_default(),
+            })
         }
+    }
+
+    pub fn get_position(&self) -> Vector3<f64> {
+        let (mut x, mut y, mut z) = (0.0, 0.0, 0.0);
+        unsafe { (self.get_pos_ptr)(self.instance, &mut x, &mut y, &mut z) };
+        Vector3::new(x, y, z)
+    }
+
+    pub fn get_color_info(&self) -> (Color, f64) {
+        let (mut r, mut g, mut b) = (0, 0, 0);
+        let mut intensity = 0.0;
+        unsafe { (self.get_color_ptr)(self.instance, &mut r, &mut g, &mut b, &mut intensity) };
+        (Color::new(r, g, b), intensity)
+    }
+
+    pub fn set_position(&self, pos: Vector3<f64>) {
+        unsafe { (self.set_pos_ptr)(self.instance, pos.x, pos.y, pos.z) };
+    }
+}
+
+impl Drop for LightBridge {
+    fn drop(&mut self) {
+        unsafe { (self.destroy_ptr)(self.instance) }
     }
 }

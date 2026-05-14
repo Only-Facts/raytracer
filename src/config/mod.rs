@@ -1,4 +1,7 @@
-use crate::{ffi::bridge::ObjectBridge, utils::vector::Vector3};
+use crate::{
+    ffi::bridge::{LightBridge, ObjectBridge},
+    utils::vector::Vector3,
+};
 use libloading::Library;
 use serde_json::Value;
 use std::sync::Arc;
@@ -7,6 +10,7 @@ pub mod loader;
 
 pub struct Scene {
     pub objects: Vec<ObjectBridge>,
+    pub lights: Vec<LightBridge>,
     _libraries: Vec<Arc<Library>>,
 }
 
@@ -17,6 +21,7 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
     let root: Value = serde_json::from_str(&data).map_err(|e| format!("JSON Syntax error: {e}"))?;
 
     let mut objects = Vec::new();
+    let mut lights = Vec::new();
     let mut libraries = Vec::new();
 
     if let Some(primitives) = root.get("primitives").and_then(|p| p.as_array()) {
@@ -64,8 +69,35 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
         return Err("Error: failed to find 'primitives' table in JSON file".to_string());
     }
 
+    if let Some(light_list) = root.get("lights").and_then(|l| l.as_array()) {
+        for l_conf in light_list {
+            let l_type = l_conf
+                .get("type")
+                .and_then(|t| t.as_str())
+                .unwrap_or("point");
+            let lib_path = format!("./plugins/light_{l_type}.so");
+
+            if let Ok(lib) = unsafe { Library::new(&lib_path) } {
+                let lib_arc = Arc::new(lib);
+                libraries.push(lib_arc.clone());
+                if let Ok(bridge) = LightBridge::new(lib_arc) {
+                    if let Some(pos) = l_conf.get("position") {
+                        let x = pos.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let y = pos.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        bridge.set_position(Vector3::new(x, y, z));
+                    }
+                    lights.push(bridge);
+                }
+            }
+        }
+    } else {
+        return Err("Error: failed to find 'lights' table in JSON file".to_string());
+    }
+
     Ok(Scene {
         objects,
+        lights,
         _libraries: libraries,
     })
 }

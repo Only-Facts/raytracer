@@ -8,7 +8,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     Error,
-    ffi::bridge::ObjectBridge,
+    ffi::bridge::{LightBridge, ObjectBridge},
     raytracer::{camera::Camera, ray::Ray, structs::Color},
     utils::vector::{Vector2, Vector3},
 };
@@ -41,13 +41,11 @@ fn process_camera_chunk(
     global_light_color: Color,
     global_light_count: usize,
     objects: &[ObjectBridge],
+    lights: &[LightBridge],
 ) {
     let sdf_colliding_limit = 1e-2;
-    let ray_distance_coef = 2.0;
 
     for ray in rays.iter_mut() {
-        let distance_unit = ray.base.cframe.orientation.length();
-
         while ray.base.alive {
             if ray.base.cframe.orientation.length() <= 1e-8 {
                 ray.kill();
@@ -82,42 +80,80 @@ fn process_camera_chunk(
 
             let nearest = nearest_object.unwrap();
 
-            let translation = ray.base.cframe.orientation * min_sdf;
-            ray.base.cframe.position += translation;
-            ray.base.distance += distance_unit * min_sdf;
+            let hit_point = ray.base.cframe.position + (ray.base.cframe.orientation * min_sdf);
+            ray.base.cframe.position += hit_point;
+            ray.base.distance += min_sdf;
 
             if ray.base.distance >= render_distance * 2.0 {
                 ray.kill();
                 continue;
             }
 
-            if min_sdf > -sdf_colliding_limit && min_sdf < sdf_colliding_limit {
+            if min_sdf < sdf_colliding_limit {
+                let normal = nearest.compute_hit(hit_point, face_hit).norm();
+
                 if nearest.is_mirror() {
-                    let mut normal = nearest
-                        .compute_hit(ray.base.cframe.position, face_hit)
-                        .normalize();
-                    let mut orientation = ray.base.cframe.orientation;
-
-                    if orientation.dot(normal) > 0.0 {
-                        normal = -normal;
-                    }
-
-                    let dot_product = orientation.dot(normal);
-                    orientation = orientation - normal * (2.0 * dot_product);
-                    ray.base.cframe.orientation = orientation;
-
+                    let dot = ray.base.cframe.orientation.dot(normal);
+                    ray.base.cframe.orientation =
+                        ray.base.cframe.orientation - normal * (2.0 * dot);
                     ray.base.cframe.position +=
                         ray.base.cframe.orientation * (sdf_colliding_limit * 2.0);
-
                     ray.base.potential_objects.clear();
                     ray.base.potential_objects.push(nearest.instance as usize);
                 } else {
-                    let color_result = nearest.get_point_color(ray.base.cframe.position);
-                    let obj_color = Color::new(color_result.r, color_result.g, color_result.b);
+                    let mut final_pixel_color = Color::default();
+                    let (base_obj_color_res) = nearest.get_point_color(hit_point);
+                    let base_obj_color = Color::new(
+                        base_obj_color_res.r,
+                        base_obj_color_res.g,
+                        base_obj_color_res.b,
+                    );
 
-                    let local_intensity = 1.0;
-                    ray.color = merge_color(ray.color, obj_color, ray.coef * local_intensity);
+                    for light in lights {
+                        let light_pos = light.get_position();
+                        let dir_to_light = (light_pos - hit_point).norm();
+                        let dist_to_light = (light_pos - hit_point).length();
 
+                        let mut shadow_factor = 1.0;
+                        for obstacle in objects {
+                            let shadow_res = obstacle
+                                .compute_sdf(hit_point + (normal * (sdf_colliding_limit * 2.0)));
+                            if shadow_res.distance < dist_to_light {
+                                shadow_factor = 0.0;
+                                break;
+                            }
+                        }
+
+                        if shadow_factor > 0.0 {
+                            let dot_light = normal.dot(dir_to_light).max(0.0);
+                            let (l_color, l_intensity) = light.get_color_info();
+
+                            let light_contribution = Color::new(
+                                (base_obj_color.x as f64
+                                    * (l_color.x as f64 / 255.0)
+                                    * dot_light
+                                    * l_intensity) as u8,
+                                (base_obj_color.y as f64
+                                    * (l_color.y as f64 / 255.0)
+                                    * dot_light
+                                    * l_intensity) as u8,
+                                (base_obj_color.z as f64
+                                    * (l_color.z as f64 / 255.0)
+                                    * dot_light
+                                    * l_intensity) as u8,
+                            );
+                            final_pixel_color =
+                                merge_color(final_pixel_color, light_contribution, 1.0);
+                        }
+                    }
+
+                    let ambient = Color::new(
+                        (base_obj_color.x as f32 * 0.1) as u8,
+                        (base_obj_color.y as f32 * 0.1) as u8,
+                        (base_obj_color.z as f32 * 0.1) as u8,
+                    );
+
+                    ray.color = merge_color(final_pixel_color, ambient, ray.coef);
                     ray.kill();
                 }
             }
