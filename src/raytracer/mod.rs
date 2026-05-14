@@ -3,14 +3,27 @@ use std::{
     io::{BufReader, Read},
     path::PathBuf,
     str::FromStr,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
+    thread,
+    time::Duration,
 };
-use tokio::sync::Mutex;
+
+use sfml::{
+    graphics::{
+        Color as SfColor, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Vertex,
+    },
+    system::Vector2f,
+    window::{Event, Key, Style},
+};
 
 use crate::{
-    Error,
     ffi::bridge::{LightBridge, ObjectBridge},
     raytracer::{camera::Camera, ray::Ray, structs::Color},
     utils::vector::{Vector2, Vector3},
+    Error,
 };
 
 pub mod camera;
@@ -19,6 +32,8 @@ pub mod ray;
 pub mod structs;
 
 const PPM_MAGIC: u8 = 22;
+
+type SharedPixels = Arc<Mutex<Vec<Color>>>;
 
 fn merge_color(color1: Color, color2: Color, intensity: f32) -> Color {
     let new_color = Vector3::new(
@@ -219,10 +234,103 @@ pub struct Raytracer {
     step: u8,
     adv: Mutex<usize>,
     adv_max: usize,
-    //libs: HashMap<String, Rc<DynamicLibrary>>,
+
+    camera: camera::Viewer,
+
     objects: Vec<ObjectBridge>,
     lights: Vec<LightBridge>,
+}
+
+struct RenderState {
     camera: camera::Viewer,
+    objects: Vec<ObjectBridge>,
+    lights: Vec<LightBridge>,
+}
+
+impl RenderState {
+    fn render_thread_loop(
+        &mut self,
+        shared_pixels: SharedPixels,
+        running: Arc<AtomicBool>,
+        width: usize,
+        height: usize,
+    ) {
+        while running.load(Ordering::Relaxed) {
+            self.render_once();
+
+            self.camera.update_screen();
+
+            let screen = self.camera.get_screen();
+
+            {
+                let mut pixels = shared_pixels
+                    .lock()
+                    .expect("shared pixel buffer mutex poisoned");
+
+                let expected_len = width * height;
+
+                if pixels.len() != expected_len {
+                    pixels.resize(expected_len, Color::default());
+                }
+
+                let copy_len = pixels.len().min(screen.len());
+
+                pixels[..copy_len].copy_from_slice(&screen[..copy_len]);
+            }
+
+            thread::sleep(Duration::from_millis(1));
+        }
+    }
+
+    fn render_once(&mut self) {
+        self.camera.reset();
+
+        let mut global_light_color = Color::new(0, 0, 0);
+        let mut global_light_count = 0;
+
+        for light in &self.lights {
+            if light.is_global() {
+                let (light_color, _intensity) = light.get_color_info();
+
+                global_light_color = merge_color(global_light_color, light_color, 1.0);
+                global_light_count += 1;
+            }
+        }
+
+        let num_threads = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+
+        let rays = self.camera.get_rays_mut();
+
+        if rays.is_empty() {
+            return;
+        }
+
+        let chunk_size = (rays.len() + num_threads - 1) / num_threads;
+
+        let render_distance = 400.0;
+        let sky_color = Color::new(135, 206, 235);
+
+        let objects_ref = &self.objects;
+        let lights_ref = &self.lights;
+
+        thread::scope(|scope| {
+            for chunk in rays.chunks_mut(chunk_size) {
+                scope.spawn(move || {
+                    process_camera_chunk(
+                        chunk,
+                        render_distance,
+                        sky_color,
+                        global_light_color,
+                        global_light_count,
+                        objects_ref,
+                        lights_ref,
+                    );
+                });
+            }
+        });
+    }
 }
 
 impl Raytracer {
@@ -246,6 +354,7 @@ impl Raytracer {
 
         let file =
             File::open(path).map_err(|_| format!("Failed to open file for reading: {}", path))?;
+
         let mut reader = BufReader::new(file);
 
         let mut magic_buf = [0u8; 1];
@@ -268,7 +377,7 @@ impl Raytracer {
         self.camera.init();
         self.camera.kill();*/
 
-        let buffer_size = (width as usize) * (height as usize) * 3;
+        let buffer_size = width as usize * height as usize * 3;
         let mut buffer = vec![0u8; buffer_size];
 
         reader
@@ -278,7 +387,7 @@ impl Raytracer {
         let rays = self.camera.get_rays_mut();
 
         for (i, ray) in rays.iter_mut().enumerate() {
-            let r = buffer[i * 3 + 0];
+            let r = buffer[i * 3];
             let g = buffer[i * 3 + 1];
             let b = buffer[i * 3 + 2];
 
@@ -289,58 +398,187 @@ impl Raytracer {
     }
 
     pub fn render(&mut self) {
-        self.camera.reset();
+        let mut render_state = self.take_render_state();
+        render_state.render_once();
 
-        let global_light_color = Color::new(0, 0, 0);
-        let global_light_count = 0;
-
-        /*for light in &self.lights {
-            if light.is_global() {
-                global_light_color += global_light_count += 1;
-            }
-        }*/
-
-        let num_threads = std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
-
-        let (rays, objects_ref, lights_ref) =
-            (self.camera.get_rays_mut(), &self.objects, &self.lights);
-
-        let chunk_size = (rays.len() + num_threads - 1) / num_threads;
-
-        let render_distance = 400.0;
-        let sky_color = Color::new(135, 206, 235);
-
-        std::thread::scope(|scope| {
-            for chunk in rays.chunks_mut(chunk_size) {
-                scope.spawn(move || {
-                    process_camera_chunk(
-                        chunk,
-                        render_distance,
-                        sky_color,
-                        global_light_color,
-                        global_light_count,
-                        objects_ref,
-                        lights_ref,
-                    );
-                });
-            }
-        });
+        self.camera = render_state.camera;
+        self.objects = render_state.objects;
+        self.lights = render_state.lights;
     }
 
     pub async fn gui(&mut self) -> Result<(), Error> {
         if self.settings.viewer {
             self.load_render().await?;
+        } else {
+            self.light()?;
         }
+
+        let resolution = self.camera.get_resolution();
+
+        let width = resolution.x as usize;
+        let height = resolution.y as usize;
+
+        let shared_pixels: SharedPixels =
+            Arc::new(Mutex::new(vec![Color::default(); width * height]));
+
+        let running = Arc::new(AtomicBool::new(true));
+
+        if self.settings.viewer {
+            self.camera.update_screen();
+
+            let screen = self.camera.get_screen();
+
+            let mut pixels = shared_pixels
+                .lock()
+                .expect("shared pixel buffer mutex poisoned");
+
+            let copy_len = pixels.len().min(screen.len());
+            pixels[..copy_len].copy_from_slice(&screen[..copy_len]);
+        }
+
+        let mut render_state = self.take_render_state();
+
+        let render_pixels = Arc::clone(&shared_pixels);
+        let render_running = Arc::clone(&running);
+        let gui_enabled = self.settings.gui;
+
+        let render_handle = thread::spawn(move || {
+            if gui_enabled {
+                render_state.render_thread_loop(render_pixels, render_running, width, height);
+            }
+        });
+
+        let mut window = RenderWindow::new(
+            (resolution.x as u32, resolution.y as u32),
+            "Raytracer",
+            Style::TITLEBAR | Style::CLOSE,
+            &Default::default(),
+        )?;
+
+        window.set_vertical_sync_enabled(true);
+
+        Self::loop_window_threaded(
+            &mut window,
+            shared_pixels,
+            Arc::clone(&running),
+            width,
+            height,
+        );
+
+        running.store(false, Ordering::Relaxed);
+
+        if render_handle.join().is_err() {
+            eprintln!("Render thread panicked");
+        }
+
+        window.close();
+
+        self.adv_end();
+
         Ok(())
     }
+
+    fn take_render_state(&mut self) -> RenderState {
+        RenderState {
+            camera: std::mem::take(&mut self.camera),
+            objects: std::mem::take(&mut self.objects),
+            lights: std::mem::take(&mut self.lights),
+        }
+    }
+
+    fn loop_window_threaded(
+        window: &mut RenderWindow,
+        shared_pixels: SharedPixels,
+        running: Arc<AtomicBool>,
+        width: usize,
+        height: usize,
+    ) {
+        while window.is_open() {
+            while let Some(event) = window.poll_event() {
+                match event {
+                    Event::Closed
+                    | Event::KeyPressed {
+                        code: Key::Escape, ..
+                    } => {
+                        window.close();
+                    }
+                    _ => {}
+                }
+            }
+
+            let pixels_snapshot = {
+                let pixels = shared_pixels
+                    .lock()
+                    .expect("shared pixel buffer mutex poisoned");
+
+                pixels.clone()
+            };
+
+            Self::draw_pixels(window, &pixels_snapshot, width, height);
+        }
+
+        running.store(false, Ordering::Relaxed);
+    }
+
+    fn draw_pixels(window: &mut RenderWindow, pixels: &[Color], width: usize, height: usize) {
+        let mut vertices = Vec::with_capacity(width * height);
+
+        for y in 0..height {
+            for x in 0..width {
+                let index = y * width + x;
+
+                let Some(color) = pixels.get(index) else {
+                    continue;
+                };
+
+                let position = Vector2f::new(x as f32, y as f32);
+                let sfml_color = SfColor::rgb(color.x, color.y, color.z);
+
+                vertices.push(Vertex::with_pos_color(position, sfml_color));
+            }
+        }
+
+        window.clear(SfColor::BLACK);
+
+        window.draw_primitives(
+            &vertices,
+            PrimitiveType::POINTS,
+            &RenderStates::default(),
+        );
+
+        window.display();
+    }
+
+    pub fn light(&mut self) -> Result<(), Error> {
+        // TODO: port real C++ Raytracer::light()
+        Ok(())
+    }
+
+    pub fn adv_end(&self) {
+        if self.settings.adv {
+            println!();
+        }
+    }
+    /*
+        These methods are referenced above but not included in your pasted file.
+
+        Keep your real implementations if they already exist elsewhere.
+        These stubs are here only so you understand what signatures are expected.
+
+        pub fn light(&mut self) -> Result<(), Error> {
+            Ok(())
+        }
+
+        pub fn adv_end(&self) {}
+    */
 }
 
-/*impl Factory<T> for Raytracer<T> {
+/*
+impl Factory<T> for Raytracer<T> {
     fn factory(&self, name: &str) -> &T {
         for lib in self.libs.iter() {
 
         }
     }
-}*/
+}
+*/

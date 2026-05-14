@@ -18,7 +18,7 @@ pub struct ChunkLightData {
     pub intensity: f32,
 }
 
-pub trait Object {
+pub trait Object: Send {
     fn get_descriptor(&self) -> &ObjectDescriptor;
     fn will_collide(&self, point: &Coord, dir: &Direction) -> bool;
 

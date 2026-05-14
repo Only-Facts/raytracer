@@ -2,11 +2,15 @@ use std::{collections::HashMap, sync::OnceLock};
 
 use tokio::sync::Mutex;
 
-use crate::raytracer::{
-    objects::{ChunkLightData, Object, ObjectDescriptor},
-    ray::{Ray, RayBase},
-    structs::{CFrame, Color, Coord, Direction, Face},
+use crate::{ 
+    raytracer::{
+        objects::{ChunkLightData, Object, ObjectDescriptor},
+        ray::{Ray, RayBase},
+        structs::{CFrame, Color, Coord, Direction, Face},
+    },
+    utils::vector::Vector2,
 };
+
 
 pub trait Camera: Object {
     fn init(&mut self);
@@ -43,6 +47,12 @@ impl Viewer {
         };
         viewer.init();
         viewer
+    }
+    pub fn get_resolution(&self) -> Vector2<u16> {
+        Vector2 {
+            x: self.resolution.0 as u16,
+            y: self.resolution.1 as u16,
+        }
     }
 }
 
