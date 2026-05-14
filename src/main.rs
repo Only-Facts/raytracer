@@ -3,6 +3,7 @@ use std::env;
 
 use crate::raytracer::Raytracer;
 
+mod config;
 mod ffi;
 mod plugins;
 mod raytracer;
