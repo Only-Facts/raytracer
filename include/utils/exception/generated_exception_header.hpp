@@ -29,8 +29,6 @@ namespace utils::exception { // namespace start
 /* Definition of the different exception code */
 enum class Code: std::size_t {
     Undefined = 0,
-    Exit,
-    NotSupportedFunction,
     ArgumentsNumber,
     InvalidArgument,
     IgnoredArgument,
@@ -42,35 +40,35 @@ enum class Code: std::size_t {
     InvalidDirectory,
     InvalidFile,
     InvalidFileExtension,
+    ExceptionCodeRestriction,
+    Exit,
+    NotSupportedFunction,
+    VectorInvalidIndex,
     NoPlugins,
     NoLoadedCamera,
     Runtime,
     Parser,
     ppmFile,
     InvalidAction,
-    ANSIMouseEvent,
     CliInternal,
     CliHook,
     CliMiddleware,
     CliParser,
     CliExecution,
     CliUndefined,
-    Dlopen,
-    Dlsym,
-    Dlclose,
-    VectorInvalidIndex,
+    ANSIMouseEvent,
     IdOverflow,
     UnknowId,
     SharedObject,
-    ExceptionCodeRestriction,
+    Dlopen,
+    Dlsym,
+    Dlclose,
     CODE_SENTINEL // sentinel used for verification
 };
 
 /* Corresponding exception message for each code */
 constexpr inline const char *Message[] = {
     /* Undefined */ "An undefined error has occured",
-    /* Exit */ "Exit",
-    /* NotSupportedFunction */ "This function is not supported by this class",
     /* ArgumentsNumber */ "Invalid number of arguments given, use '-h' for more information",
     /* InvalidArgument */ "Can't interpret this argument",
     /* IgnoredArgument */ "This argument won't be used",
@@ -82,34 +80,34 @@ constexpr inline const char *Message[] = {
     /* InvalidDirectory */ "Invalid directory given",
     /* InvalidFile */ "Invalid file given",
     /* InvalidFileExtension */ "The file extension is different than expected",
+    /* ExceptionCodeRestriction */ "Error during the setup of an exception",
+    /* Exit */ "Exit",
+    /* NotSupportedFunction */ "This function is not supported by this class",
+    /* VectorInvalidIndex */ "Invalid index on a vector",
     /* NoPlugins */ "Wasn't able to find any plugins",
     /* NoLoadedCamera */ "Wasn't able to load any camera",
     /* Runtime */ "Error during the runtime",
     /* Parser */ "Error during the parsing",
     /* ppmFile */ "Error during the ppm file writing/reading",
     /* InvalidAction */ "Can't execute this action",
-    /* ANSIMouseEvent */ "Error during the read of the mouse event",
     /* CliInternal */ "Internal error from the cli",
     /* CliHook */ "Error during a hook call",
     /* CliMiddleware */ "Error during a middleware call",
     /* CliParser */ "Error during the parsing",
     /* CliExecution */ "Error during the command execution",
     /* CliUndefined */ "An undefined error has append",
-    /* Dlopen */ "Failed to load a dynamic library",
-    /* Dlsym */ "Failed to load a function from a dynamic library",
-    /* Dlclose */ "Failed to release a loaded dynamic library",
-    /* VectorInvalidIndex */ "Invalid index on a vector",
+    /* ANSIMouseEvent */ "Error during the read of the mouse event",
     /* IdOverflow */ "Can't distribute an id, uint32_t limits are reach",
     /* UnknowId */ "Try to edit an unknow id",
     /* SharedObject */ "An object created with dynamic code that was free is still alive",
-    /* ExceptionCodeRestriction */ "Error during the setup of an exception",
+    /* Dlopen */ "Failed to load a dynamic library",
+    /* Dlsym */ "Failed to load a function from a dynamic library",
+    /* Dlclose */ "Failed to release a loaded dynamic library",
 };
 
 /* Potential default info: nullptr same as "[None]" */
 constexpr inline const char *Info[] = {
     /* Undefined */ nullptr,
-    /* Exit */ "Exit",
-    /* NotSupportedFunction */ nullptr,
     /* ArgumentsNumber */ nullptr,
     /* InvalidArgument */ nullptr,
     /* IgnoredArgument */ nullptr,
@@ -121,27 +119,29 @@ constexpr inline const char *Info[] = {
     /* InvalidDirectory */ nullptr,
     /* InvalidFile */ nullptr,
     /* InvalidFileExtension */ nullptr,
+    /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
+    /* Exit */ "Exit",
+    /* NotSupportedFunction */ nullptr,
+    /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
     /* NoPlugins */ nullptr,
     /* NoLoadedCamera */ nullptr,
     /* Runtime */ nullptr,
     /* Parser */ nullptr,
     /* ppmFile */ nullptr,
     /* InvalidAction */ nullptr,
-    /* ANSIMouseEvent */ nullptr,
     /* CliInternal */ nullptr,
     /* CliHook */ nullptr,
     /* CliMiddleware */ nullptr,
     /* CliParser */ nullptr,
     /* CliExecution */ nullptr,
     /* CliUndefined */ nullptr,
-    /* Dlopen */ nullptr,
-    /* Dlsym */ nullptr,
-    /* Dlclose */ nullptr,
-    /* VectorInvalidIndex */ "Can't retrieve the value, the VectorX dosen't have this index",
+    /* ANSIMouseEvent */ nullptr,
     /* IdOverflow */ nullptr,
     /* UnknowId */ nullptr,
     /* SharedObject */ nullptr,
-    /* ExceptionCodeRestriction */ "Restriction trigerred on a code & type combination",
+    /* Dlopen */ nullptr,
+    /* Dlsym */ nullptr,
+    /* Dlclose */ nullptr,
 };
 
 /* Potential restriction on exception code */
@@ -152,8 +152,6 @@ constexpr inline const char *Info[] = {
 // 0b1000 = Warning			(allow Warning)
 constexpr inline const std::uint8_t Restriction[] = {
     /* Undefined */ 0b0000, // allow: All
-    /* Exit */ 0b0001, // allow: None
-    /* NotSupportedFunction */ 0b0110, // allow: Fatal, Error
     /* ArgumentsNumber */ 0b0110, // allow: Fatal, Error
     /* InvalidArgument */ 0b1110, // allow: Fatal, Error, Warning
     /* IgnoredArgument */ 0b1110, // allow: Fatal, Error, Warning
@@ -165,27 +163,29 @@ constexpr inline const std::uint8_t Restriction[] = {
     /* InvalidDirectory */ 0b1110, // allow: Fatal, Error, Warning
     /* InvalidFile */ 0b1110, // allow: Fatal, Error, Warning
     /* InvalidFileExtension */ 0b1110, // allow: Fatal, Error, Warning
+    /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
+    /* Exit */ 0b0001, // allow: None
+    /* NotSupportedFunction */ 0b0110, // allow: Fatal, Error
+    /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
     /* NoPlugins */ 0b1110, // allow: Fatal, Error, Warning
     /* NoLoadedCamera */ 0b1110, // allow: Fatal, Error, Warning
     /* Runtime */ 0b1110, // allow: Fatal, Error, Warning
     /* Parser */ 0b1110, // allow: Fatal, Error, Warning
     /* ppmFile */ 0b0110, // allow: Fatal, Error
     /* InvalidAction */ 0b1110, // allow: Fatal, Error, Warning
-    /* ANSIMouseEvent */ 0b0110, // allow: Fatal, Error
     /* CliInternal */ 0b0110, // allow: Fatal, Error
     /* CliHook */ 0b1110, // allow: Fatal, Error, Warning
     /* CliMiddleware */ 0b1110, // allow: Fatal, Error, Warning
     /* CliParser */ 0b0000, // allow: All
     /* CliExecution */ 0b0110, // allow: Fatal, Error
     /* CliUndefined */ 0b0110, // allow: Fatal, Error
-    /* Dlopen */ 0b0110, // allow: Fatal, Error
-    /* Dlsym */ 0b0110, // allow: Fatal, Error
-    /* Dlclose */ 0b0110, // allow: Fatal, Error
-    /* VectorInvalidIndex */ 0b1110, // allow: Fatal, Error, Warning
+    /* ANSIMouseEvent */ 0b0110, // allow: Fatal, Error
     /* IdOverflow */ 0b0110, // allow: Fatal, Error
     /* UnknowId */ 0b0110, // allow: Fatal, Error
     /* SharedObject */ 0b1110, // allow: Fatal, Error, Warning
-    /* ExceptionCodeRestriction */ 0b0110, // allow: Fatal, Error
+    /* Dlopen */ 0b0110, // allow: Fatal, Error
+    /* Dlsym */ 0b0110, // allow: Fatal, Error
+    /* Dlclose */ 0b0110, // allow: Fatal, Error
 };
 
 // Check at the compile time the correspondece between the message & code
