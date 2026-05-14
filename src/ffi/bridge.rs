@@ -125,6 +125,8 @@ pub struct CameraBridge {
 type FnLightGetPos = unsafe extern "C" fn(*mut c_void, *mut f64, *mut f64, *mut f64);
 type FnLightGetColor = unsafe extern "C" fn(*mut c_void, *mut u8, *mut u8, *mut u8, *mut f64);
 type FnLightSetPos = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
+type FnLightIsGlobal = unsafe extern "C" fn(*mut c_void, *mut bool);
+
 
 pub struct LightBridge {
     _lib: Arc<Library>,
@@ -132,6 +134,7 @@ pub struct LightBridge {
     get_pos_ptr: FnLightGetPos,
     get_color_ptr: FnLightGetColor,
     set_pos_ptr: FnLightSetPos,
+    is_global_ptr: FnLightIsGlobal,
     destroy_ptr: FnDestroy,
 }
 
@@ -152,6 +155,7 @@ impl LightBridge {
                 get_pos_ptr: *lib.get(b"light_get_position\0").unwrap(),
                 get_color_ptr: *lib.get(b"light_get_color\0").unwrap(),
                 set_pos_ptr: *lib.get(b"light_set_position\0").unwrap(),
+                is_global_ptr: *lib.get(b"light_is_global\0").unwrap(),
                 destroy_ptr: *lib.get(b"destroy_instance\0").unwrap(),
             })
         }
@@ -172,6 +176,12 @@ impl LightBridge {
 
     pub fn set_position(&self, pos: Vector3<f64>) {
         unsafe { (self.set_pos_ptr)(self.instance, pos.x, pos.y, pos.z) };
+    }
+
+    pub fn is_global(&self) -> bool {
+        let mut global = false;
+        unsafe { (self.is_global_ptr)(self.instance, &mut global) };
+        global
     }
 }
 

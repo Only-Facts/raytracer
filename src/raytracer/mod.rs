@@ -79,9 +79,7 @@ fn process_camera_chunk(
                 {
                     continue;
                 }
-
                 let actual_sdf = object.compute_sdf(ray.base.cframe.position);
-
                 if actual_sdf.distance < min_sdf {
                     min_sdf = actual_sdf.distance;
                     nearest_object = Some(object);
@@ -97,9 +95,8 @@ fn process_camera_chunk(
 
             let nearest = nearest_object.unwrap();
 
-            let hit_point = ray.base.cframe.position + (ray.base.cframe.orientation * min_sdf);
-
-            ray.base.cframe.position += ray.base.cframe.orientation * min_sdf;
+            let translation = ray.base.cframe.orientation * min_sdf;
+            ray.base.cframe.position += translation;
             ray.base.distance += min_sdf;
 
             if ray.base.distance >= render_distance * 2.0 {
@@ -112,13 +109,10 @@ fn process_camera_chunk(
 
                 if nearest.is_mirror() {
                     let dot = ray.base.cframe.orientation.dot(normal);
-
                     ray.base.cframe.orientation =
                         ray.base.cframe.orientation - normal * (2.0 * dot);
-
                     ray.base.cframe.position +=
                         ray.base.cframe.orientation * (sdf_colliding_limit * 2.0);
-
                     ray.base.potential_objects.clear();
                     ray.base.potential_objects.push(nearest.instance as usize);
                 } else {
@@ -136,12 +130,10 @@ fn process_camera_chunk(
                         let dist_to_light = (light_pos - ray.base.cframe.position).length();
 
                         let mut shadow_factor = 1.0;
-
                         for obstacle in objects {
                             let shadow_res = obstacle.compute_sdf(
                                 ray.base.cframe.position + (normal * (sdf_colliding_limit * 2.0)),
                             );
-
                             if shadow_res.distance < dist_to_light {
                                 shadow_factor = 0.0;
                                 break;
@@ -150,35 +142,25 @@ fn process_camera_chunk(
 
                         if shadow_factor > 0.0 {
                             let dot_light = normal.dot(dir_to_light).max(0.0);
-                            let (light_color, light_intensity) = light.get_color_info();
+                            let (l_color, l_intensity) = light.get_color_info();
 
                             let light_contribution = Color::new(
                                 (base_obj_color.x as f64
-                                    * (light_color.x as f64 / 255.0)
+                                    * (l_color.x as f64 / 255.0)
                                     * dot_light
-                                    * light_intensity)
-                                    .min(255.0) as u8,
+                                    * l_intensity) as u8,
                                 (base_obj_color.y as f64
-                                    * (light_color.y as f64 / 255.0)
+                                    * (l_color.y as f64 / 255.0)
                                     * dot_light
-                                    * light_intensity)
-                                    .min(255.0) as u8,
+                                    * l_intensity) as u8,
                                 (base_obj_color.z as f64
-                                    * (light_color.z as f64 / 255.0)
+                                    * (l_color.z as f64 / 255.0)
                                     * dot_light
-                                    * light_intensity)
-                                    .min(255.0) as u8,
+                                    * l_intensity) as u8,
                             );
-
                             final_pixel_color =
                                 merge_color(final_pixel_color, light_contribution, 1.0);
                         }
-                    }
-
-                    if global_light_count > 0 {
-                        let intensity = 1.0 / global_light_count as f32;
-                        final_pixel_color =
-                            merge_color(final_pixel_color, global_light_color, intensity);
                     }
 
                     let ambient = Color::new(
@@ -567,6 +549,16 @@ impl Raytracer {
         window.display();
     }
 
+    pub fn light(&mut self) -> Result<(), Error> {
+        // TODO: port real C++ Raytracer::light()
+        Ok(())
+    }
+
+    pub fn adv_end(&self) {
+        if self.settings.adv {
+            println!();
+        }
+    }
     /*
         These methods are referenced above but not included in your pasted file.
 

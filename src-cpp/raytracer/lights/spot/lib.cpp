@@ -36,6 +36,13 @@ extern "C" {
         frame.position = raytracer::Coord(x, y, z);
         light->setCFrame(frame, true);
     }
+
+    void light_is_global(void* instance, bool* global) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        auto is_global = light->isGlobal();
+        *global = is_global;
+    }
+
     /* !Wrapper for Rust Bridge */
 
 
