@@ -38,3 +38,6 @@ perf.*
 
 # Clangd
 compile_commands.json
+
+# Generated
+*.ppm
