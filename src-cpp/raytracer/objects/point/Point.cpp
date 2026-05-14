@@ -46,13 +46,3 @@ hot nodiscard bool raytracer::Point::willColide(const raytracer::Coord& point, c
     raytracer::Coord closest = this->getCFrame().position + orientation * t;
     return (closest - point).lengthSquared() <= limit;
 }
-
-hot nodiscard bool raytracer::Point::willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const
-{
-    static const raytracer::Type limit = SDF_COLLINDING_LIMIT * SDF_COLLINDING_LIMIT;
-    raytracer::Coord local = point - this->getCFrame().position;
-    raytracer::Type t = local.dot(orientation);
-    if (t < 0) return false;
-    raytracer::Coord closest = this->getCFrame().position + orientation * t;
-    return (closest - point).lengthSquared() <= limit;
-}

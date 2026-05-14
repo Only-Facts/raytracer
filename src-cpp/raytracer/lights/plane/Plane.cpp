@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 02/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.cpp
@@ -14,11 +14,10 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/lights/Plane.hpp"
 #include "raytracer/special/Utils.hpp"
-#include "raytracer/Raytracer.hpp"
 #include "raytracer/Struct.hpp"
 #include <cmath>
 
-void raytracer::Plane::parse(unused const raytracer::Raytracer& raytracer, const libconfig::Setting& node)
+void raytracer::Plane::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
