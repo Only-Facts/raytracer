@@ -15,20 +15,26 @@ File Description:
 
 extern "C" {
     /* Wrapper for Rust Bridge */
-    struct CSdfResult {
-        double distance;
-        const void* face_ptr;
-    };
-
-    CSdfResult object_compute_sdf(void* instance, float x, float y, float z) {
-        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
-        auto result = obj->computeSDF(raytracer::Coord(x, y, z));
-
-        return CSdfResult { result.first, static_cast<const void*>(result.second) };
+    void light_get_position(void* instance, double* x, double* y, double* z) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        auto pos = light->getCFrame().position;
+        *x = pos.x; *y = pos.y; *z = pos.z;
     }
 
-    void destroy_instance(void* instance) {
-        delete static_cast<raytracer::IObject*>(instance);
+    void light_get_color(void* instance, uint8_t* r, uint8_t* g, uint8_t* b, double* intensity) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        auto color = light->getColor();
+        *r = (uint8_t)color.x;
+        *g = (uint8_t)color.y;
+        *b = (uint8_t)color.z;
+        *intensity = 1.0;
+    }
+
+    void light_set_position(void* instance, double x, double y, double z) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        raytracer::CFrame frame = light->getCFrame();
+        frame.position = raytracer::Coord(x, y, z);
+        light->setCFrame(frame, true);
     }
     /* !Wrapper for Rust Bridge */
 
