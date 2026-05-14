@@ -11,10 +11,18 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/DynamicLibrary.hpp"
+#include "raytracer/cameras/ICamera.hpp"
 #include <cstddef>
 
 // Return the type of the lib
 extern "C" {
+    const raytracer::Color* camera_get_pixels(void* instance) {
+        raytracer::ICamera* cam = static_cast<raytracer::ICamera*>(instance);
+        return cam->getScreen().data();
+    }
+    void camera_render(void* instance) {
+        static_cast<raytracer::ICamera*>(instance)->updateScreen();
+    }
     std::size_t type(void)
     {
         return CAMERA;

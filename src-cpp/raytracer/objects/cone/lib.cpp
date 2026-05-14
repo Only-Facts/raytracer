@@ -30,6 +30,33 @@ extern "C" {
     void destroy_instance(void* instance) {
         delete static_cast<raytracer::IObject*>(instance);
     }
+
+    struct CHitResult {
+        double nx, ny, nz;
+    };
+
+    struct CColorResult {
+        uint8_t r, g, b;
+        bool ok;
+    };
+
+    CHitResult object_compute_hit(void* instance, double px, double py, double pz, const void* face_ptr) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        const raytracer::Face* face = static_cast<const raytracer::Face*>(face_ptr);
+        raytracer::Coord hit = obj->computeHit(raytracer::Coord(px, py, pz), face);
+        return CHitResult{ hit.x, hit.y, hit.z };
+    }
+
+    CColorResult object_get_point_color(void* instance, double px, double py, double pz) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        auto result = obj->getPointColor(raytracer::Coord(px, py, pz));
+        return CColorResult{ result.first.x, result.first.y, result.first.z, result.second };
+    }
+
+    bool object_is_mirror(void* instance) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        return obj->getObjectDescriptor().material->isMirror();
+    }
     /* !Wrapper for Rust Bridge */
 
 
