@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 14/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -128,7 +128,7 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
     raytracer::Coord worldUp = {0, 1, 0};
     if (std::abs(forward.dot(worldUp)) > 0.999) worldUp = {1, 0, 0}; // Edge case, parrallel
     raytracer::Coord right = (worldUp.cross(forward)).normalize();
-    raytracer::Coord up = forward.cross(right);
+    raytracer::Coord up = forward.cross(right).normalize();
 
     // Get the file content
     const auto& attrib = reader.GetAttrib();
