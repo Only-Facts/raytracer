@@ -4,7 +4,7 @@ use tokio::sync::Mutex;
 
 use crate::raytracer::{
     objects::{ChunkLightData, Object, ObjectDescriptor},
-    ray::Ray,
+    ray::{Ray, RayBase},
     structs::{CFrame, Color, Coord, Direction, Face},
 };
 
@@ -51,7 +51,7 @@ impl Object for Viewer {
     }
 
     fn will_collide(&self, point: &Coord, dir: &Direction) -> bool {
-        todo!()
+        false
     }
 
     fn translate(&mut self, v: &Coord) {
@@ -66,20 +66,14 @@ impl Object for Viewer {
         &self.descriptor.cframe
     }
 
-    fn parse(&mut self, _node: &serde_json::Value) {
-        todo!()
-    }
-    fn load_obj(&mut self, _path: &str) {
-        todo!()
-    }
-    fn reflect_ray(&self, _ray: &mut Ray, _face: &Face) {
-        todo!()
-    }
+    fn parse(&mut self, _node: &serde_json::Value) {}
+    fn load_obj(&mut self, _path: &str) {}
+    fn reflect_ray(&self, _ray: &mut Ray, _face: &Face) {}
     fn compute_sdf(&self, _point: &Coord) -> (f32, &Face) {
-        todo!()
+        (f32::MAX, &Vec::new())
     }
     fn compute_hit(&self, _point: &Coord, _face: Option<&Face>) -> Coord {
-        todo!()
+        Coord::new(0.0, 0.0, 0.0)
     }
     fn set_immunity(&mut self, object: Option<Box<dyn Object>>) {
         self.immunity = object;
@@ -88,15 +82,34 @@ impl Object for Viewer {
 
 impl Camera for Viewer {
     fn init(&mut self) {
-        todo!()
+        let size = (self.resolution.0 * self.resolution.1) as usize;
+        self.screen.clear();
+        self.screen.resize(size, Color::default());
+
+        self.rays.clear();
+        for _ in 0..size {
+            let base = RayBase::new(self.descriptor.cframe.clone());
+            self.rays.push(Ray {
+                base,
+                color: Color::default(),
+                coef: 1.0,
+            });
+        }
     }
 
     fn reset(&mut self) {
-        todo!()
+        for ray in self.rays.iter_mut() {
+            ray.reset();
+            // TODO: and everything else
+        }
     }
 
     fn update_screen(&mut self) {
-        todo!()
+        for (i, ray) in self.rays.iter().enumerate() {
+            if !ray.base.alive {
+                self.screen[i] = ray.color;
+            }
+        }
     }
 
     fn get_screen(&self) -> &Vec<Color> {
