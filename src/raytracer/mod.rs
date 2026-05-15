@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     thread,
     time::Duration,
@@ -21,6 +21,7 @@ use crate::{
     Error,
     config::loader::PluginLoader,
     ffi::bridge::{LightBridge, ObjectBridge},
+    print_progress_bar,
     raytracer::{camera::Camera, ray::Ray, structs::Color},
     utils::vector::{Vector2, Vector3},
 };
@@ -52,10 +53,9 @@ fn process_camera_chunk(
     rays: &mut [Ray],
     render_distance: f64,
     sky_color: Color,
-    _global_light_color: Color,
-    _global_light_count: usize,
     objects: &[ObjectBridge],
     lights: &[LightBridge],
+    progress: Option<Arc<AtomicUsize>>,
 ) {
     let sdf_colliding_limit = 1e-2;
 
@@ -96,15 +96,6 @@ fn process_camera_chunk(
 
             let nearest = nearest_object.unwrap();
 
-            let translation = ray.base.cframe.orientation * min_sdf;
-            ray.base.cframe.position += translation;
-            ray.base.distance += min_sdf;
-
-            if ray.base.distance >= render_distance * 2.0 {
-                ray.base.kill();
-                continue;
-            }
-
             if min_sdf < sdf_colliding_limit {
                 let normal = nearest
                     .compute_hit(ray.base.cframe.position, face_hit)
@@ -118,7 +109,7 @@ fn process_camera_chunk(
                     ray.base.potential_objects.clear();
                     ray.base.potential_objects.push(nearest.instance as usize);
                 } else {
-                    let mut final_pixel_color = Color::default();
+                    let view_dir = ray.base.cframe.orientation * -1.0;
                     let base_obj_color_res = nearest.get_point_color(ray.base.cframe.position);
                     let base_obj_color = Color::new(
                         base_obj_color_res.r,
@@ -126,63 +117,123 @@ fn process_camera_chunk(
                         base_obj_color_res.b,
                     );
 
+                    let mut total_light_r = 0.0;
+                    let mut total_light_g = 0.0;
+                    let mut total_light_b = 0.0;
+
                     for light in lights {
                         let light_pos = light.get_position();
                         let dir_to_light = (light_pos - ray.base.cframe.position).normalize();
                         let dist_to_light = (light_pos - ray.base.cframe.position).length();
 
-                        let mut shadow_factor = 1.0;
+                        let mut shadow_factor: f64 = 1.0;
                         let shadow_origin =
                             ray.base.cframe.position + (normal * (sdf_colliding_limit * 2.0));
 
-                        for obstacle in objects {
-                            if obstacle.instance == nearest.instance {
-                                continue;
+                        let k = 16.0;
+                        let mut t = sdf_colliding_limit;
+
+                        while t < dist_to_light {
+                            let current_shadow_pos = shadow_origin + dir_to_light * t;
+                            let mut min_obstacle_dist = f64::MAX;
+
+                            for obstacle in objects {
+                                if obstacle.instance == nearest.instance {
+                                    continue;
+                                }
+
+                                let shadow_res = obstacle.compute_sdf(current_shadow_pos);
+
+                                if shadow_res.distance < min_obstacle_dist {
+                                    min_obstacle_dist = shadow_res.distance;
+                                }
                             }
 
-                            let shadow_res = obstacle.compute_sdf(shadow_origin);
-
-                            if shadow_res.distance < dist_to_light
-                                && shadow_res.distance > sdf_colliding_limit
-                            {
+                            if min_obstacle_dist < 1e-3 {
                                 shadow_factor = 0.0;
                                 break;
                             }
+
+                            shadow_factor = shadow_factor.min(k * min_obstacle_dist / t);
+
+                            t += min_obstacle_dist;
+
+                            if shadow_factor <= 0.0 {
+                                break;
+                            }
                         }
+
+                        shadow_factor = shadow_factor.clamp(0.0, 1.0);
 
                         if shadow_factor > 0.0 {
                             let dot_light = normal.dot(dir_to_light).max(0.0);
                             let (l_color, l_intensity) = light.get_color_info();
 
-                            let light_contribution = Color::new(
-                                (base_obj_color.x as f64
-                                    * (l_color.x as f64 / 255.0)
-                                    * dot_light
-                                    * l_intensity) as u8,
-                                (base_obj_color.y as f64
-                                    * (l_color.y as f64 / 255.0)
-                                    * dot_light
-                                    * l_intensity) as u8,
-                                (base_obj_color.z as f64
-                                    * (l_color.z as f64 / 255.0)
-                                    * dot_light
-                                    * l_intensity) as u8,
-                            );
-                            final_pixel_color =
-                                merge_color(final_pixel_color, light_contribution, 1.0);
+                            let mut specular_factor = 0.0;
+                            if dot_light > 0.0 {
+                                let half_vector = (dir_to_light + view_dir).normalize();
+                                let spec_angle = normal.dot(half_vector).max(0.0);
+
+                                let shininess = 32.0;
+                                specular_factor = spec_angle.powf(shininess);
+                            }
+
+                            let specular_strength = 0.5;
+
+                            let diffuse_r =
+                                base_obj_color.x as f64 * (l_color.x as f64 / 255.0) * dot_light;
+                            let diffuse_g =
+                                base_obj_color.y as f64 * (l_color.y as f64 / 255.0) * dot_light;
+                            let diffuse_b =
+                                base_obj_color.z as f64 * (l_color.z as f64 / 255.0) * dot_light;
+
+                            let spec_r = 255.0
+                                * (l_color.x as f64 / 255.0)
+                                * specular_factor
+                                * specular_strength;
+                            let spec_g = 255.0
+                                * (l_color.y as f64 / 255.0)
+                                * specular_factor
+                                * specular_strength;
+                            let spec_b = 255.0
+                                * (l_color.z as f64 / 255.0)
+                                * specular_factor
+                                * specular_strength;
+
+                            total_light_r += (diffuse_r + spec_r) * l_intensity * shadow_factor;
+                            total_light_g += (diffuse_g + spec_g) * l_intensity * shadow_factor;
+                            total_light_b += (diffuse_b + spec_b) * l_intensity * shadow_factor;
                         }
                     }
 
-                    let ambient = Color::new(
-                        (base_obj_color.x as f32 * 0.3) as u8,
-                        (base_obj_color.y as f32 * 0.3) as u8,
-                        (base_obj_color.z as f32 * 0.3) as u8,
-                    );
+                    let final_r =
+                        (total_light_r + (base_obj_color.x as f64 * 0.3)).min(255.0) as u8;
+                    let final_g =
+                        (total_light_g + (base_obj_color.y as f64 * 0.3)).min(255.0) as u8;
+                    let final_b =
+                        (total_light_b + (base_obj_color.z as f64 * 0.3)).min(255.0) as u8;
 
-                    ray.color = merge_color(final_pixel_color, ambient, ray.coef);
+                    let surface_color = Color::new(final_r, final_g, final_b);
+
+                    ray.color = merge_color(ray.color, surface_color, ray.coef);
                     ray.base.kill();
                 }
+                continue;
             }
+
+            let translation = ray.base.cframe.orientation * min_sdf;
+            ray.base.cframe.position += translation;
+            ray.base.distance += min_sdf;
+
+            if ray.base.distance >= render_distance * 2.0 {
+                ray.color = merge_color(ray.color, sky_color, ray.coef);
+                ray.base.kill();
+                continue;
+            }
+        }
+
+        if let Some(ref counter) = progress {
+            counter.fetch_add(1, Ordering::SeqCst);
         }
     }
 }
@@ -261,9 +312,10 @@ impl RenderState {
         running: Arc<AtomicBool>,
         width: usize,
         height: usize,
+        show_progress: bool,
     ) {
         while running.load(Ordering::Relaxed) {
-            self.render_once();
+            self.render_once(show_progress);
 
             self.camera.update_screen();
 
@@ -289,30 +341,20 @@ impl RenderState {
         }
     }
 
-    fn render_once(&mut self) {
+    fn render_once(&mut self, show_progress: bool) {
         self.camera.reset();
-
-        let mut global_light_color = Color::new(0, 0, 0);
-        let mut global_light_count = 0;
-
-        for light in &self.lights {
-            if light.is_global() {
-                let (light_color, _intensity) = light.get_color_info();
-
-                global_light_color = merge_color(global_light_color, light_color, 1.0);
-                global_light_count += 1;
-            }
-        }
-
-        let num_threads = thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
 
         let rays = self.camera.get_rays_mut();
 
         if rays.is_empty() {
             return;
         }
+
+        let total_rays = rays.len();
+        let progress_counter = Arc::new(AtomicUsize::new(0));
+        let num_threads = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
 
         let chunk_size = rays.len().div_ceil(num_threads);
 
@@ -323,16 +365,30 @@ impl RenderState {
         let lights_ref = &self.lights;
 
         thread::scope(|scope| {
+            if show_progress {
+                let progress_ref = Arc::clone(&progress_counter);
+                scope.spawn(move || {
+                    while progress_ref.load(Ordering::Relaxed) < total_rays {
+                        print_progress_bar(
+                            "Rendering:",
+                            progress_ref.load(Ordering::Relaxed),
+                            total_rays,
+                        );
+                        thread::sleep(Duration::from_millis(100));
+                    }
+                    print_progress_bar("Rendering:", total_rays, total_rays);
+                });
+            }
             for chunk in rays.chunks_mut(chunk_size) {
+                let progress_ref = Arc::clone(&progress_counter);
                 scope.spawn(move || {
                     process_camera_chunk(
                         chunk,
                         render_distance,
                         sky_color,
-                        global_light_color,
-                        global_light_count,
                         objects_ref,
                         lights_ref,
+                        Some(progress_ref),
                     );
                 });
             }
@@ -404,7 +460,7 @@ impl Raytracer {
 
     pub fn render(&mut self) {
         let mut render_state = self.take_render_state();
-        render_state.render_once();
+        render_state.render_once(self.settings.adv);
 
         self.camera = render_state.camera;
         self.objects = render_state.objects;
@@ -447,9 +503,17 @@ impl Raytracer {
         let render_running = Arc::clone(&running);
         let gui_enabled = self.settings.gui;
 
+        let show_progress = self.settings.adv;
+
         let render_handle = thread::spawn(move || {
             if gui_enabled {
-                render_state.render_thread_loop(render_pixels, render_running, width, height);
+                render_state.render_thread_loop(
+                    render_pixels,
+                    render_running,
+                    width,
+                    height,
+                    show_progress,
+                );
             }
         });
 
@@ -562,13 +626,10 @@ impl Raytracer {
     }
 
     pub fn parse_flags(&mut self, args: Vec<String>) {
-        for arg in args {
-            match arg.as_str() {
-                "-gui" => {
-                    self.settings.gui = true;
-                }
-                _ => {}
-            }
-        }
+        self.settings.gui = args.contains(&"-gui".to_string());
+        self.settings.adv =
+            args.contains(&"-a".to_string()) || args.contains(&"--advencement".to_string());
+        self.settings.newton =
+            args.contains(&"-n".to_string()) || args.contains(&"--newton".to_string());
     }
 }

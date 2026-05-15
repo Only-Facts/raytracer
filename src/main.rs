@@ -135,12 +135,53 @@ fn print_help() {
     input("↓", "Rotate camera down");
 }
 
+pub fn print_progress_bar(msg: &str, current: usize, total: usize) {
+    let width: usize = 40;
+    let progress: usize = (current * width) / total;
+
+    let bar_done = "█".repeat(progress);
+    let bar_remaining = "░".repeat(width - progress);
+
+    let current_colored = if current == total {
+        current.to_string().green()
+    } else {
+        current.to_string().yellow()
+    };
+
+    let total_colored = if current == total {
+        total.to_string().green()
+    } else {
+        total.to_string().red()
+    };
+
+    print!(
+        "\r{} {}{} ({}/{})",
+        msg.bright_black(),
+        bar_done.green(),
+        bar_remaining.to_string().red(),
+        current_colored,
+        total_colored,
+    );
+    std::io::stdout().flush().ok();
+}
+
 fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
     write!(&mut file, "P3\n{width} {height}\n255\n")?;
-    for p in pixels {
+
+    let total_pixels = pixels.len();
+
+    let update_interval = width as usize;
+
+    for (i, p) in pixels.iter().enumerate() {
         writeln!(&mut file, "{} {} {}", p.x, p.y, p.z)?;
+        if i % update_interval == 0 {
+            print_progress_bar("Saving:", i, total_pixels);
+        }
     }
+
+    print_progress_bar("Saving:", total_pixels, total_pixels);
+    println!();
     Ok(())
 }
 
@@ -149,7 +190,11 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
     let filepath = &args.get(1).unwrap_or(&default_scene);
     let mut loader = PluginLoader::default();
 
-    println!("Loading scene from {filepath}...");
+    println!(
+        "{} '{}'...",
+        "Loading scene from".bright_black(),
+        filepath.underline()
+    );
     let scene = config::load_scene(filepath, &mut loader)?;
 
     raytracer.camera = scene.camera;
@@ -159,23 +204,34 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
 
     raytracer.parse_flags(args);
 
+    let default_ppm_path = "output.ppm";
+
     if raytracer.settings.gui {
         raytracer.gui().await?;
     } else {
-        println!("Rendering...");
         raytracer.render();
+        println!();
 
         raytracer.camera.update_screen();
 
+        println!(
+            "{} '{}'...",
+            "Generating image to".bright_black(),
+            default_ppm_path.underline()
+        );
         save_as_ppm(
-            "output.ppm",
+            default_ppm_path,
             raytracer.camera.get_screen(),
             raytracer.camera.resolution.0,
             raytracer.camera.resolution.1,
         )
         .expect("Error saving image");
 
-        println!("Finished rendering: output.ppm generated");
+        println!(
+            "{} '{}'",
+            "Successfully generated".green(),
+            default_ppm_path.underline()
+        );
     }
     Ok(())
 }
