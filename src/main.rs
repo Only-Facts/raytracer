@@ -1,11 +1,13 @@
 use colored::*;
 use std::{env, fs::File, io::Write};
 
-use crate::raytracer::{Raytracer, camera::Camera, structs::Color};
+use crate::{
+    config::loader::PluginLoader,
+    raytracer::{Raytracer, camera::Camera, structs::Color},
+};
 
 mod config;
 mod ffi;
-mod plugins;
 mod raytracer;
 mod utils;
 
@@ -137,33 +139,45 @@ fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std
     let mut file = File::create(filename)?;
     write!(&mut file, "P3\n{} {}\n255\n", width, height)?;
     for p in pixels {
-        writeln!(&mut file, "{} {} {}", p.x as u8, p.y as u8, p.z as u8)?;
+        writeln!(&mut file, "{} {} {}", p.x, p.y, p.z)?;
     }
     Ok(())
 }
 
-async fn run(_raytracer: &Raytracer, args: Vec<String>) -> Result<(), Error> {
+async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
     let default_scene = "scene.json".to_string();
     let filepath = args.get(1).unwrap_or(&default_scene);
-    let mut scene = config::load_scene(filepath).expect("Error loading scene");
 
-    //raytracer.gui()?;
+    let mut loader = PluginLoader::default();
 
-    scene.camera.update_screen();
+    println!("Loading scene from {filepath}...");
+    let scene = config::load_scene(filepath, &mut loader)?;
+
+    raytracer.camera = scene.camera;
+    raytracer.objects = scene.objects;
+    raytracer.lights = scene.lights;
+    raytracer.plugins = Some(loader);
+
+    println!("Rendering...");
+    raytracer.render();
+
+    raytracer.camera.update_screen();
+
     save_as_ppm(
         "output.ppm",
-        scene.camera.get_screen(),
-        scene.camera.resolution.0,
-        scene.camera.resolution.1,
+        raytracer.camera.get_screen(),
+        raytracer.camera.resolution.0,
+        raytracer.camera.resolution.1,
     )
     .expect("Error saving image");
+
     println!("Finished rendering: output.ppm generated");
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let raytracer = Raytracer::default();
+    let mut raytracer = Raytracer::default();
     let args: Vec<String> = env::args().collect();
 
     for arg in &args {
@@ -173,6 +187,6 @@ async fn main() -> Result<(), Error> {
         }
     }
 
-    run(&raytracer, args).await?;
+    run(&mut raytracer, args).await?;
     Ok(())
 }
