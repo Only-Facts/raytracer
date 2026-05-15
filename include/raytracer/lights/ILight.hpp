@@ -35,6 +35,8 @@ class ILight: public raytracer::AObject {
         virtual void enableGlobal(void) = 0;
         virtual bool isGlobal(void) const = 0;
         virtual float getPower(void) const = 0;
+        virtual void setColor(raytracer::Color color) = 0;
+        virtual void setIntensity(float intensity) = 0;
 
         // ------------ Operator ---------- //
         ILight& operator=(const ILight& object) = delete;

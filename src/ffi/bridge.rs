@@ -245,6 +245,8 @@ type FnLightGetPos = unsafe extern "C" fn(*mut c_void, *mut f64, *mut f64, *mut 
 type FnLightGetColor = unsafe extern "C" fn(*mut c_void, *mut u8, *mut u8, *mut u8, *mut f64);
 type FnLightSetPos = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
 type FnLightIsGlobal = unsafe extern "C" fn(*mut c_void, *mut bool);
+type FnLightSetColor = unsafe extern "C" fn(*mut c_void, u8, u8, u8);
+type FnLightSetIntensity = unsafe extern "C" fn(*mut c_void, f64);
 
 pub struct LightBridge {
     _lib: Arc<Library>,
@@ -253,6 +255,8 @@ pub struct LightBridge {
     get_color_ptr: FnLightGetColor,
     set_pos_ptr: FnLightSetPos,
     is_global_ptr: FnLightIsGlobal,
+    set_color_ptr: FnLightSetColor,
+    set_intensity_ptr: FnLightSetIntensity,
     destroy_ptr: FnDestroy,
 }
 
@@ -286,6 +290,12 @@ impl LightBridge {
                 is_global_ptr: *lib
                     .get(b"light_is_global\0")
                     .map_err(|_| "Missing 'light_is_global' in light plugin")?,
+                set_color_ptr: *lib
+                    .get(b"light_set_color\0")
+                    .map_err(|_| "Missing 'light_set_color' in light plugin")?,
+                set_intensity_ptr: *lib
+                    .get(b"light_set_intensity\0")
+                    .map_err(|_| "Missing 'light_set_intensity' in light plugin")?,
                 destroy_ptr: *lib
                     .get(b"destroy_instance\0")
                     .map_err(|_| "Missing 'destroy_instance' in light plugin")?,
@@ -314,6 +324,14 @@ impl LightBridge {
         let mut global = false;
         unsafe { (self.is_global_ptr)(self.instance, &mut global) };
         global
+    }
+
+    pub fn set_color(&self, r: u8, g: u8, b: u8) {
+        unsafe { (self.set_color_ptr)(self.instance, r, g, b) };
+    }
+
+    pub fn set_intensity(&self, intensity: f64) {
+        unsafe { (self.set_intensity_ptr)(self.instance, intensity) };
     }
 }
 

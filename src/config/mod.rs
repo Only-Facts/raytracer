@@ -88,10 +88,7 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
 
             let mat_path = "./plugins/materials/material_default.so";
             let mat_lib = match loader.get_library(mat_path) {
-                Ok(l) => {
-                    println!("{} {}", "Successfully loaded".green(), mat_path.underline());
-                    l
-                }
+                Ok(l) => l,
                 Err(e) => {
                     println!(
                         "{}: Failed to load {}, ignoring... ({})",
@@ -107,10 +104,7 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
             let lib_path = format!("./plugins/objects/object_{obj_type}.so");
 
             let lib = match loader.get_library(&lib_path) {
-                Ok(l) => {
-                    println!("{} {}", "Successfully loaded".green(), lib_path.underline());
-                    l
-                }
+                Ok(l) => l,
                 Err(e) => {
                     println!(
                         "{}: Failed to load {}, ignoring... ({})",
@@ -183,7 +177,6 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
 
             match loader.get_library(&lib_path) {
                 Ok(lib) => {
-                    println!("{} {}", "Successfully loaded".green(), lib_path.underline());
                     libraries.push(Arc::clone(&lib));
                     if let Ok(bridge) = LightBridge::new(lib) {
                         if let Some(pos) = l_conf.get("position") {
@@ -192,6 +185,20 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                             let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
                             bridge.set_position(Vector3::new(x, y, z));
                         }
+
+                        if let Some(intensity) = l_conf.get("intensity").and_then(|v| v.as_f64()) {
+                            bridge.set_intensity(intensity);
+                        }
+
+                        if let Some(color_arr) = l_conf.get("color").and_then(|c| c.as_array())
+                            && color_arr.len() >= 3
+                        {
+                            let r = color_arr[0].as_u64().unwrap_or(255) as u8;
+                            let g = color_arr[1].as_u64().unwrap_or(255) as u8;
+                            let b = color_arr[2].as_u64().unwrap_or(255) as u8;
+                            bridge.set_color(r, g, b);
+                        }
+
                         lights.push(bridge);
                     }
                 }

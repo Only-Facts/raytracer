@@ -1,14 +1,9 @@
+use colored::*;
+use libloading::Library;
+use serde::Deserialize;
 use std::{collections::HashMap, sync::Arc};
 
-use libloading::{Library, Symbol};
-use serde::Deserialize;
-
-use crate::{
-    Error,
-    ffi::bridge::{LightBridge, ObjectBridge},
-    raytracer::structs::Coord,
-    utils::vector::Vector3,
-};
+use crate::{raytracer::structs::Coord, utils::vector::Vector3};
 
 #[derive(Deserialize)]
 pub struct ObjectConfig {
@@ -55,6 +50,11 @@ impl PluginLoader {
                 Library::new(path).map_err(|e| format!("Failed to load library {path}: {e}"))?;
             let shared_lib = Arc::new(lib);
             self.cache.insert(path.to_string(), Arc::clone(&shared_lib));
+            println!(
+                "{} {}",
+                "Successfully loaded".green(),
+                path.underline().bright_black()
+            );
             Ok(shared_lib)
         }
     }

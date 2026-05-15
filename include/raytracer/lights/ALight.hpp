@@ -45,6 +45,8 @@ class ALight: public raytracer::ILight {
         void enableGlobal(void) {this->_global = true;};
         nodiscard bool isGlobal(void) const {return this->_global;};
         nodiscard float getPower(void) const {return this->_lumen;};
+        void setColor(raytracer::Color color) override {this->_color = color;};
+        void setIntensity(float intensity) override {this->_intensity = intensity;};
 
         // ------------ Operator ---------- //
         ALight& operator=(const ALight& object) = delete;

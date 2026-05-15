@@ -48,6 +48,16 @@ extern "C" {
     void destroy_instance(void* instance) {
         delete static_cast<raytracer::ILight*>(instance);
     }
+
+    void light_set_color(void* instance, uint8_t r, uint8_t g, uint8_t b) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        light->setColor(raytracer::Color(r, g, b));
+    }
+
+    void light_set_intensity(void* instance, double intensity) {
+        auto* light = static_cast<raytracer::ILight*>(instance);
+        light->setIntensity(static_cast<float>(intensity));
+    }
     /* !Wrapper for Rust Bridge */
 
     void light_init(void* instance) {
