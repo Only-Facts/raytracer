@@ -560,4 +560,15 @@ impl Raytracer {
             println!();
         }
     }
+
+    pub fn parse_flags(&mut self, args: Vec<String>) {
+        for arg in args {
+            match arg.as_str() {
+                "-gui" => {
+                    self.settings.gui = true;
+                }
+                _ => {}
+            }
+        }
+    }
 }

@@ -4,6 +4,7 @@ use crate::{
     raytracer::{camera::Viewer, structs::Coord},
     utils::vector::Vector3,
 };
+use colored::Colorize;
 use libloading::Library;
 use serde_json::Value;
 use std::sync::Arc;
@@ -18,8 +19,13 @@ pub struct Scene {
 }
 
 pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, String> {
-    let data = std::fs::read_to_string(filepath)
-        .map_err(|e| format!("Error reading file {filepath}: {e}"))?;
+    let data = std::fs::read_to_string(filepath).map_err(|e| {
+        format!(
+            "{} reading file {}: {e}",
+            "Error".red(),
+            filepath.underline(),
+        )
+    })?;
 
     let root: Value = serde_json::from_str(&data).map_err(|e| format!("JSON Syntax error: {e}"))?;
 
@@ -83,11 +89,16 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
             let mat_path = "./plugins/materials/material_default.so";
             let mat_lib = match loader.get_library(mat_path) {
                 Ok(l) => {
-                    println!("Successfully loaded {mat_path}");
+                    println!("{} {}", "Successfully loaded".green(), mat_path.underline());
                     l
                 }
                 Err(e) => {
-                    println!("Warning: Failed to load {mat_path}, ignoring... ({e})");
+                    println!(
+                        "{}: Failed to load {}, ignoring... ({})",
+                        "Warning".yellow(),
+                        mat_path.underline(),
+                        e.red()
+                    );
                     continue;
                 }
             };
@@ -97,11 +108,16 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
 
             let lib = match loader.get_library(&lib_path) {
                 Ok(l) => {
-                    println!("Successfully loaded {lib_path}");
+                    println!("{} {}", "Successfully loaded".green(), lib_path.underline());
                     l
                 }
                 Err(e) => {
-                    println!("Warning: Failed to load {lib_path}, ignoring... ({e})");
+                    println!(
+                        "{}: Failed to load {}, ignoring... ({})",
+                        "Warning".yellow(),
+                        lib_path.underline(),
+                        e.red()
+                    );
                     continue;
                 }
             };
@@ -114,7 +130,6 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                         let y = pos.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         bridge.set_position(Vector3::new(x, y, z));
-                        println!("pos: {x}, {y}, {z}");
                     }
 
                     if let Some(rot) = prim.get("rotation") {
@@ -122,7 +137,6 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                         let y = rot.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         let z = rot.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         bridge.set_orientation(Vector3::new(x, y, z));
-                        println!("rot: {x}, {y}, {z}");
                     }
 
                     if let Some(radius) = prim.get("radius").and_then(|v| v.as_f64()) {
@@ -142,12 +156,21 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                     objects.push(bridge);
                 }
                 Err(e) => {
-                    println!("Warning: Error instantiating object {obj_type}: {e}");
+                    println!(
+                        "{}: Error instantiating object {}: {}",
+                        "Warning".yellow(),
+                        obj_type.underline(),
+                        e.red()
+                    );
                 }
             }
         }
     } else {
-        return Err("Error: failed to find 'primitives' table in JSON file".to_string());
+        return Err(format!(
+            "{}: failed to find '{}' table in JSON file",
+            "Error".red(),
+            "primitives".underline()
+        ));
     }
 
     if let Some(light_list) = root.get("lights").and_then(|l| l.as_array()) {
@@ -160,7 +183,7 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
 
             match loader.get_library(&lib_path) {
                 Ok(lib) => {
-                    println!("Successfully loaded {lib_path}");
+                    println!("{} {}", "Successfully loaded".green(), lib_path.underline());
                     libraries.push(Arc::clone(&lib));
                     if let Ok(bridge) = LightBridge::new(lib) {
                         if let Some(pos) = l_conf.get("position") {
@@ -173,12 +196,21 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                     }
                 }
                 Err(e) => {
-                    println!("Warning: Failed to load {lib_path}, ignoring... ({e})");
+                    println!(
+                        "{}: Failed to load {}, ignoring... ({})",
+                        "Warning".yellow(),
+                        lib_path.underline(),
+                        e.red()
+                    );
                 }
             }
         }
     } else {
-        return Err("Error: failed to find 'lights' table in JSON file".to_string());
+        return Err(format!(
+            "{}: failed to find '{}' table in JSON file",
+            "Error".red(),
+            "lights".underline()
+        ));
     }
 
     Ok(Scene {

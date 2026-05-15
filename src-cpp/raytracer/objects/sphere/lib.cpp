@@ -25,15 +25,11 @@ extern "C" {
     void object_set_radius(void* instance, double r) {
         auto* sphere = dynamic_cast<raytracer::Sphere*>(static_cast<raytracer::AObject*>(instance));
         sphere->setRadius(r);
-        std::cout << "radius: " << r << std::endl;
     }
 
     CSdfResult sphere_compute_sdf(void* instance, double x, double y, double z) {
         auto* sphere = static_cast<raytracer::Sphere*>(instance);
         auto result = sphere->computeSDF(raytracer::Coord(x, y, z));
-
-        //std::cout << sphere->getCFrame().position << std::endl;
-        //std::cout << result.first << std::endl << x << " " << y << " " << z << std::endl;
 
         return CSdfResult { result.first, static_cast<const void*>(result.second) };
     }

@@ -28,9 +28,6 @@ extern "C" {
         raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
         auto result = obj->computeSDF(raytracer::Coord(x, y, z));
 
-        //std::cout << result.first << std::endl << x << " " << y << " " << z << std::endl;
-        //std::cout << obj->getCFrame().position << std::endl;
-
         return CSdfResult { result.first, static_cast<const void*>(result.second) };
     }
 
@@ -79,7 +76,6 @@ extern "C" {
         raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
         raytracer::CFrame frame = obj->getCFrame();
         frame.position = raytracer::Coord(x, y, z);
-        std::cout << "position: " << frame.position << std::endl;
         obj->setCFrame(frame, true);
     }
 
@@ -97,7 +93,7 @@ extern "C" {
             desc.material->setColor(raytracer::Color(r, g, b));
             obj->setObjectDescriptor(desc);
         } else {
-            printf("Warning: object has no material");
+            std::cout << "Warning: object has no material" << std::endl;
         }
     }
 

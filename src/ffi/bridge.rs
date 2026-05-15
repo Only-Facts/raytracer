@@ -83,8 +83,8 @@ pub struct ObjectBridge {
     set_radius_ptr: Option<FnSetRadius>,
     set_color_ptr: Option<FnSetColor>,
 
-    sphere_compute_sdf_ptr: FnSphereComputeSdf,
-    sphere_compute_hit_ptr: FnSphereComputeHit,
+    sphere_compute_sdf_ptr: Option<FnSphereComputeSdf>,
+    sphere_compute_hit_ptr: Option<FnSphereComputeHit>,
 
     compute_sdf_ptr: FnComputeSdf,
     compute_hit_ptr: FnComputeHit,
@@ -189,7 +189,12 @@ impl ObjectBridge {
     #[inline(always)]
     pub fn compute_sdf(&self, point: Vector3<f64>) -> CSdfResult {
         if self.obj_type == "sphere" {
-            unsafe { (self.sphere_compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+            if let Some(sphere_compute_sdf_ptr) = self.sphere_compute_sdf_ptr {
+                unsafe { (sphere_compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+            } else {
+                println!("Warning: Missing 'sphere_compute_sdf' in plugin, ignoring...");
+                unsafe { (self.compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+            }
         } else {
             unsafe { (self.compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
         }
@@ -199,8 +204,15 @@ impl ObjectBridge {
     pub fn compute_hit(&self, point: Vector3<f64>, face: *const c_void) -> Vector3<f64> {
         let res;
         if self.obj_type == "sphere" {
-            unsafe {
-                res = (self.sphere_compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
+            if let Some(sphere_compute_hit_ptr) = self.sphere_compute_hit_ptr {
+                unsafe {
+                    res = (sphere_compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
+                }
+            } else {
+                println!("Warning: Missing 'sphere_compute_hit' in plugin, ignoring...");
+                unsafe {
+                    res = (self.compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
+                }
             }
         } else {
             unsafe {

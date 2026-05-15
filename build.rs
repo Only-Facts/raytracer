@@ -1,13 +1,11 @@
 use cmake::Config;
 
 fn main() {
-    println!("cargo::rerun-if-changed=src-cpp/");
-    println!("cargo::rerun-if-changed=include/");
-    println!("cargo::rerun-if-changed=CMakeLists.txt");
-    println!("cargo::rerun-if-changed=build.rs");
+    cargo_build::warning("Rebuilding CMake");
+    cargo_build::rerun_if_changed(["src-cpp", "include", "CMakeLists.txt", "build.rs"]);
 
     Config::new(".")
-        .define("CMAKE_BUILD_TYPE", "Optimized")
+        .define("CMAKE_BUILD_TYPE", "Released")
         .build_target("all")
         .build();
 }

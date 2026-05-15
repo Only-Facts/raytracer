@@ -146,8 +146,7 @@ fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std
 
 async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
     let default_scene = "scene.json".to_string();
-    let filepath = args.get(1).unwrap_or(&default_scene);
-
+    let filepath = &args.get(1).unwrap_or(&default_scene);
     let mut loader = PluginLoader::default();
 
     println!("Loading scene from {filepath}...");
@@ -158,20 +157,26 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
     raytracer.lights = scene.lights;
     raytracer.plugins = Some(loader);
 
-    println!("Rendering...");
-    raytracer.render();
+    raytracer.parse_flags(args);
 
-    raytracer.camera.update_screen();
+    if raytracer.settings.gui {
+        raytracer.gui().await?;
+    } else {
+        println!("Rendering...");
+        raytracer.render();
 
-    save_as_ppm(
-        "output.ppm",
-        raytracer.camera.get_screen(),
-        raytracer.camera.resolution.0,
-        raytracer.camera.resolution.1,
-    )
-    .expect("Error saving image");
+        raytracer.camera.update_screen();
 
-    println!("Finished rendering: output.ppm generated");
+        save_as_ppm(
+            "output.ppm",
+            raytracer.camera.get_screen(),
+            raytracer.camera.resolution.0,
+            raytracer.camera.resolution.1,
+        )
+        .expect("Error saving image");
+
+        println!("Finished rendering: output.ppm generated");
+    }
     Ok(())
 }
 
