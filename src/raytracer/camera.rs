@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::OnceLock};
 
 use tokio::sync::Mutex;
 
-use crate::{ 
+use crate::{
     raytracer::{
         objects::{ChunkLightData, Object, ObjectDescriptor},
         ray::{Ray, RayBase},
@@ -10,7 +10,6 @@ use crate::{
     },
     utils::vector::Vector2,
 };
-
 
 pub trait Camera: Object {
     fn init(&mut self);
@@ -108,6 +107,7 @@ impl Camera for Viewer {
 
     fn update_screen(&mut self) {
         for (i, ray) in self.rays.iter().enumerate() {
+            self.screen[i] = ray.color;
             if !ray.base.alive {
                 self.screen[i] = ray.color;
             }

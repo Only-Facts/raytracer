@@ -4,26 +4,25 @@ use std::{
     path::PathBuf,
     str::FromStr,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     time::Duration,
 };
 
 use sfml::{
-    graphics::{
-        Color as SfColor, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Vertex,
-    },
+    graphics::{Color as SfColor, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Vertex},
     system::Vector2f,
     window::{Event, Key, Style},
 };
 
 use crate::{
+    Error,
+    config::loader::PluginLoader,
     ffi::bridge::{LightBridge, ObjectBridge},
     raytracer::{camera::Camera, ray::Ray, structs::Color},
     utils::vector::{Vector2, Vector3},
-    Error,
 };
 
 pub mod camera;
@@ -79,8 +78,10 @@ fn process_camera_chunk(
                 {
                     continue;
                 }
+
                 let actual_sdf = object.compute_sdf(ray.base.cframe.position);
-                if actual_sdf.distance < min_sdf {
+
+                if actual_sdf.distance > 1e-6 && actual_sdf.distance < min_sdf {
                     min_sdf = actual_sdf.distance;
                     nearest_object = Some(object);
                     face_hit = actual_sdf.face_ptr;
@@ -105,12 +106,13 @@ fn process_camera_chunk(
             }
 
             if min_sdf < sdf_colliding_limit {
-                let normal = nearest.compute_hit(translation, face_hit).normalize();
+                let normal = nearest
+                    .compute_hit(ray.base.cframe.position, face_hit)
+                    .normalize();
 
                 if nearest.is_mirror() {
                     let dot = ray.base.cframe.orientation.dot(normal);
-                    ray.base.cframe.orientation =
-                        ray.base.cframe.orientation - normal * (2.0 * dot);
+                    ray.base.cframe.orientation -= normal * (2.0 * dot);
                     ray.base.cframe.position +=
                         ray.base.cframe.orientation * (sdf_colliding_limit * 2.0);
                     ray.base.potential_objects.clear();
@@ -130,11 +132,19 @@ fn process_camera_chunk(
                         let dist_to_light = (light_pos - ray.base.cframe.position).length();
 
                         let mut shadow_factor = 1.0;
+                        let shadow_origin =
+                            ray.base.cframe.position + (normal * (sdf_colliding_limit * 2.0));
+
                         for obstacle in objects {
-                            let shadow_res = obstacle.compute_sdf(
-                                ray.base.cframe.position + (normal * (sdf_colliding_limit * 2.0)),
-                            );
-                            if shadow_res.distance < dist_to_light {
+                            if obstacle.instance == nearest.instance {
+                                continue;
+                            }
+
+                            let shadow_res = obstacle.compute_sdf(shadow_origin);
+
+                            if shadow_res.distance < dist_to_light
+                                && shadow_res.distance > sdf_colliding_limit
+                            {
                                 shadow_factor = 0.0;
                                 break;
                             }
@@ -164,9 +174,9 @@ fn process_camera_chunk(
                     }
 
                     let ambient = Color::new(
-                        (base_obj_color.x as f32 * 0.1) as u8,
-                        (base_obj_color.y as f32 * 0.1) as u8,
-                        (base_obj_color.z as f32 * 0.1) as u8,
+                        (base_obj_color.x as f32 * 0.3) as u8,
+                        (base_obj_color.y as f32 * 0.3) as u8,
+                        (base_obj_color.z as f32 * 0.3) as u8,
                     );
 
                     ray.color = merge_color(final_pixel_color, ambient, ray.coef);
@@ -229,16 +239,13 @@ pub trait Factory<T> {
 
 #[derive(Default)]
 pub struct Raytracer {
-    settings: Settings,
+    pub settings: Settings,
 
-    step: u8,
-    adv: Mutex<usize>,
-    adv_max: usize,
+    pub camera: camera::Viewer,
+    pub objects: Vec<ObjectBridge>,
+    pub lights: Vec<LightBridge>,
 
-    camera: camera::Viewer,
-
-    objects: Vec<ObjectBridge>,
-    lights: Vec<LightBridge>,
+    pub plugins: Option<PluginLoader>,
 }
 
 struct RenderState {
@@ -341,12 +348,10 @@ impl Raytracer {
     ) -> Self {
         Self {
             settings: Settings::default(),
-            step: 0,
-            adv: Mutex::new(0),
-            adv_max: 0,
             objects,
             lights,
             camera,
+            plugins: None,
         }
     }
     pub async fn load_render(&mut self) -> Result<(), Error> {
@@ -540,11 +545,7 @@ impl Raytracer {
 
         window.clear(SfColor::BLACK);
 
-        window.draw_primitives(
-            &vertices,
-            PrimitiveType::POINTS,
-            &RenderStates::default(),
-        );
+        window.draw_primitives(&vertices, PrimitiveType::POINTS, &RenderStates::default());
 
         window.display();
     }
@@ -559,26 +560,4 @@ impl Raytracer {
             println!();
         }
     }
-    /*
-        These methods are referenced above but not included in your pasted file.
-
-        Keep your real implementations if they already exist elsewhere.
-        These stubs are here only so you understand what signatures are expected.
-
-        pub fn light(&mut self) -> Result<(), Error> {
-            Ok(())
-        }
-
-        pub fn adv_end(&self) {}
-    */
 }
-
-/*
-impl Factory<T> for Raytracer<T> {
-    fn factory(&self, name: &str) -> &T {
-        for lib in self.libs.iter() {
-
-        }
-    }
-}
-*/
