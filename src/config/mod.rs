@@ -1,5 +1,6 @@
 use crate::{
-    ffi::bridge::{LightBridge, ObjectBridge},
+    config::loader::PluginLoader,
+    ffi::bridge::{LightBridge, MaterialBridge, ObjectBridge},
     raytracer::{camera::Viewer, structs::Coord},
     utils::vector::Vector3,
 };
@@ -16,7 +17,7 @@ pub struct Scene {
     _libraries: Vec<Arc<Library>>,
 }
 
-pub fn load_scene(filepath: &str) -> Result<Scene, String> {
+pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, String> {
     let data = std::fs::read_to_string(filepath)
         .map_err(|e| format!("Error reading file {filepath}: {e}"))?;
 
@@ -53,26 +54,27 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
     );
 
     let dir_val = cam_val.get("rotation");
-    let cam_dir = Coord::new(
-        dir_val
-            .and_then(|p| p.get("x"))
-            .and_then(|v| v.as_f64())
-            .unwrap_or(0.0),
-        dir_val
-            .and_then(|p| p.get("y"))
-            .and_then(|v| v.as_f64())
-            .unwrap_or(0.0),
-        dir_val
-            .and_then(|p| p.get("z"))
-            .and_then(|v| v.as_f64())
-            .unwrap_or(1.0),
-    );
+
+    let rx = dir_val
+        .and_then(|p| p.get("x"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0_f64)
+        .to_radians();
+    let ry = dir_val
+        .and_then(|p| p.get("y"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0_f64)
+        .to_radians();
+    let cam_dir = Coord::new(ry.sin() * rx.cos(), -rx.sin(), ry.cos() * rx.cos());
 
     let camera = Viewer::new(cam_pos, cam_dir, res_x, res_y, fov);
 
     let mut objects = Vec::new();
     let mut lights = Vec::new();
     let mut libraries = Vec::new();
+
+    let mat_lib = loader.get_library("./plugins/materials/material_default.so")?;
+    let material = MaterialBridge::new(mat_lib)?;
 
     if let Some(primitives) = root.get("primitives").and_then(|p| p.as_array()) {
         for prim in primitives {
@@ -83,22 +85,26 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
 
             let lib_path = format!("./plugins/objects/object_{obj_type}.so");
 
-            let lib = match unsafe { Library::new(&lib_path) } {
-                Ok(l) => Arc::new(l),
+            let lib = match loader.get_library(&lib_path) {
+                Ok(l) => {
+                    println!("Successfully loaded {lib_path}");
+                    l
+                }
                 Err(e) => {
                     println!("Warning: Failed to load {lib_path}, ignoring... ({e})");
                     continue;
                 }
             };
-            libraries.push(lib.clone());
+            libraries.push(Arc::clone(&lib));
 
-            match ObjectBridge::new(lib) {
-                Ok(bridge) => {
+            match ObjectBridge::new(lib, obj_type.to_string()) {
+                Ok(mut bridge) => {
                     if let Some(pos) = prim.get("position") {
                         let x = pos.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         let y = pos.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         bridge.set_position(Vector3::new(x, y, z));
+                        println!("pos: {x}, {y}, {z}");
                     }
 
                     if let Some(rot) = prim.get("rotation") {
@@ -106,6 +112,21 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
                         let y = rot.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         let z = rot.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
                         bridge.set_orientation(Vector3::new(x, y, z));
+                        println!("rot: {x}, {y}, {z}");
+                    }
+
+                    if let Some(radius) = prim.get("radius").and_then(|v| v.as_f64()) {
+                        bridge.set_radius(radius);
+                    }
+
+                    if let Some(color) = prim.get("color") {
+                        let r = color.get("r").and_then(|v| v.as_u64()).unwrap_or(255) as u8;
+                        let g = color.get("g").and_then(|v| v.as_u64()).unwrap_or(255) as u8;
+                        let b = color.get("b").and_then(|v| v.as_u64()).unwrap_or(255) as u8;
+                        bridge.set_material(material.instance);
+                        bridge.set_color(r, g, b);
+                    } else {
+                        bridge.set_color(255, 255, 255);
                     }
 
                     objects.push(bridge);
@@ -125,19 +146,24 @@ pub fn load_scene(filepath: &str) -> Result<Scene, String> {
                 .get("type")
                 .and_then(|t| t.as_str())
                 .unwrap_or("point");
-            let lib_path = format!("./plugins/light_{l_type}.so");
+            let lib_path = format!("./plugins/lights/light_{l_type}.so");
 
-            if let Ok(lib) = unsafe { Library::new(&lib_path) } {
-                let lib_arc = Arc::new(lib);
-                libraries.push(lib_arc.clone());
-                if let Ok(bridge) = LightBridge::new(lib_arc) {
-                    if let Some(pos) = l_conf.get("position") {
-                        let x = pos.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        let y = pos.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        bridge.set_position(Vector3::new(x, y, z));
+            match loader.get_library(&lib_path) {
+                Ok(lib) => {
+                    println!("Successfully loaded {lib_path}");
+                    libraries.push(Arc::clone(&lib));
+                    if let Ok(bridge) = LightBridge::new(lib) {
+                        if let Some(pos) = l_conf.get("position") {
+                            let x = pos.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let y = pos.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let z = pos.get("z").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            bridge.set_position(Vector3::new(x, y, z));
+                        }
+                        lights.push(bridge);
                     }
-                    lights.push(bridge);
+                }
+                Err(e) => {
+                    println!("Warning: Failed to load {lib_path}, ignoring... ({e})");
                 }
             }
         }

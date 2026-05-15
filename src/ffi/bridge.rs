@@ -2,7 +2,32 @@ use std::{ffi::c_void, sync::Arc};
 
 use libloading::{Library, Symbol};
 
-use crate::{raytracer::structs::Color, utils::vector::Vector3};
+use crate::{
+    raytracer::structs::{Color, Coord},
+    utils::vector::Vector3,
+};
+
+pub struct MaterialBridge {
+    pub instance: *mut c_void,
+    _library: Arc<Library>,
+}
+
+impl MaterialBridge {
+    pub fn new(lib: Arc<Library>) -> Result<Self, String> {
+        unsafe {
+            let factory: Symbol<unsafe extern "C" fn() -> *mut c_void> = lib
+                .get(b"factory\0")
+                .map_err(|e| format!("Failed to load material factory: {e}"))?;
+
+            Ok(Self {
+                instance: factory(),
+                _library: lib,
+            })
+        }
+    }
+}
+
+type FnSetMaterial = unsafe extern "C" fn(*mut c_void, *mut c_void);
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -30,8 +55,16 @@ pub struct CColorResult {
 
 type FnSetPosition = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
 type FnSetOrientation = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
+type FnSetRadius = unsafe extern "C" fn(*mut c_void, f64);
+type FnSetColor = unsafe extern "C" fn(*mut c_void, u8, u8, u8);
+
+type FnSphereComputeSdf = unsafe extern "C" fn(*mut c_void, f64, f64, f64) -> CSdfResult;
+type FnSphereComputeHit =
+    unsafe extern "C" fn(*mut c_void, f64, f64, f64, *const c_void) -> CHitResult;
+
 type FnComputeSdf = unsafe extern "C" fn(*mut c_void, f64, f64, f64) -> CSdfResult;
 type FnComputeHit = unsafe extern "C" fn(*mut c_void, f64, f64, f64, *const c_void) -> CHitResult;
+
 type FnGetPointColor = unsafe extern "C" fn(*mut c_void, f64, f64, f64) -> CColorResult;
 type FnIsMirror = unsafe extern "C" fn(*mut c_void) -> bool;
 type FnDestroy = unsafe extern "C" fn(*mut c_void);
@@ -39,12 +72,23 @@ type FnFactory = unsafe extern "C" fn() -> *mut c_void;
 
 pub struct ObjectBridge {
     _lib: Arc<Library>,
+    pub obj_type: String,
     pub instance: *mut c_void,
+    pub position: Coord,
+
+    set_material_ptr: Option<FnSetMaterial>,
 
     set_position_ptr: FnSetPosition,
     set_orientation_ptr: FnSetOrientation,
+    set_radius_ptr: Option<FnSetRadius>,
+    set_color_ptr: Option<FnSetColor>,
+
+    sphere_compute_sdf_ptr: FnSphereComputeSdf,
+    sphere_compute_hit_ptr: FnSphereComputeHit,
+
     compute_sdf_ptr: FnComputeSdf,
     compute_hit_ptr: FnComputeHit,
+
     get_point_color_ptr: FnGetPointColor,
     is_mirror_ptr: FnIsMirror,
     destroy_ptr: FnDestroy,
@@ -54,29 +98,72 @@ unsafe impl Send for ObjectBridge {}
 unsafe impl Sync for ObjectBridge {}
 
 impl ObjectBridge {
-    pub fn new(lib: Arc<Library>) -> Result<Self, String> {
+    pub fn new(lib: Arc<Library>, obj_type: String) -> Result<Self, String> {
         unsafe {
             let factory_ptr: Symbol<FnFactory> = lib
                 .get(b"factory\0")
                 .map_err(|e| format!("factory error: {e}"))?;
+
             let instance = factory_ptr();
+            if instance.is_null() {
+                return Err("Plugin factory returned a null pointer".to_string());
+            }
 
             Ok(Self {
                 _lib: lib.clone(),
                 instance,
-                set_position_ptr: *lib.get(b"object_set_position\0").unwrap(),
-                set_orientation_ptr: *lib.get(b"object_set_orientation\0").unwrap(),
-                compute_sdf_ptr: *lib.get(b"object_compute_sdf\0").unwrap(),
-                compute_hit_ptr: *lib.get(b"object_compute_hit\0").unwrap(),
-                get_point_color_ptr: *lib.get(b"object_get_point_color\0").unwrap(),
-                is_mirror_ptr: *lib.get(b"object_is_mirror\0").unwrap(),
-                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap(),
+                obj_type,
+                position: Vector3::default(),
+
+                set_material_ptr: *lib
+                    .get(b"object_set_material\0")
+                    .map_err(|_| "Missing 'object_set_material' in plugin")?,
+
+                set_position_ptr: *lib
+                    .get(b"object_set_position\0")
+                    .map_err(|_| "Missing 'object_set_position' in plugin")?,
+                set_orientation_ptr: *lib
+                    .get(b"object_set_orientation\0")
+                    .map_err(|_| "Missing 'object_set_orientation' in plugin")?,
+                set_radius_ptr: lib.get(b"object_set_radius\0").ok().map(|sym| *sym),
+                set_color_ptr: lib.get(b"object_set_color\0").ok().map(|sym| *sym),
+
+                sphere_compute_sdf_ptr: *lib
+                    .get(b"sphere_compute_sdf\0")
+                    .map_err(|_| "Missing 'sphere_compute_sdf' in plugin")?,
+                sphere_compute_hit_ptr: *lib
+                    .get(b"sphere_compute_hit\0")
+                    .map_err(|_| "Missing 'sphere_compute_hit' in plugin")?,
+
+                compute_sdf_ptr: *lib
+                    .get(b"object_compute_sdf\0")
+                    .map_err(|_| "Missing 'object_compute_sdf' in plugin")?,
+                compute_hit_ptr: *lib
+                    .get(b"object_compute_hit\0")
+                    .map_err(|_| "Missing 'object_compute_hit' in plugin")?,
+                get_point_color_ptr: *lib
+                    .get(b"object_get_point_color\0")
+                    .map_err(|_| "Missing 'object_get_point_color' in plugin")?,
+                is_mirror_ptr: *lib
+                    .get(b"object_is_mirror\0")
+                    .map_err(|_| "Missing 'object_is_mirror' in plugin")?,
+                destroy_ptr: *lib
+                    .get(b"destroy_instance\0")
+                    .map_err(|_| "Missing 'destroy_instance' in plugin")?,
             })
         }
     }
 
     #[inline(always)]
-    pub fn set_position(&self, pos: Vector3<f64>) {
+    pub fn set_material(&self, material_instance: *mut c_void) {
+        if let Some(ref func) = self.set_material_ptr {
+            unsafe { (func)(self.instance, material_instance) };
+        }
+    }
+
+    #[inline(always)]
+    pub fn set_position(&mut self, pos: Vector3<f64>) {
+        self.position = pos;
         unsafe { (self.set_position_ptr)(self.instance, pos.x, pos.y, pos.z) }
     }
 
@@ -86,16 +173,41 @@ impl ObjectBridge {
     }
 
     #[inline(always)]
+    pub fn set_radius(&self, r: f64) {
+        if let Some(func) = self.set_radius_ptr {
+            unsafe { func(self.instance, r) }
+        }
+    }
+
+    #[inline(always)]
+    pub fn set_color(&self, r: u8, g: u8, b: u8) {
+        if let Some(func) = self.set_color_ptr {
+            unsafe { func(self.instance, r, g, b) }
+        }
+    }
+
+    #[inline(always)]
     pub fn compute_sdf(&self, point: Vector3<f64>) -> CSdfResult {
-        unsafe { (self.compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+        if self.obj_type == "sphere" {
+            unsafe { (self.sphere_compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+        } else {
+            unsafe { (self.compute_sdf_ptr)(self.instance, point.x, point.y, point.z) }
+        }
     }
 
     #[inline(always)]
     pub fn compute_hit(&self, point: Vector3<f64>, face: *const c_void) -> Vector3<f64> {
-        unsafe {
-            let res = (self.compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
-            Vector3::new(res.nx, res.ny, res.nz)
+        let res;
+        if self.obj_type == "sphere" {
+            unsafe {
+                res = (self.sphere_compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
+            }
+        } else {
+            unsafe {
+                res = (self.compute_hit_ptr)(self.instance, point.x, point.y, point.z, face);
+            }
         }
+        Vector3::new(res.nx, res.ny, res.nz)
     }
 
     #[inline(always)]
@@ -117,16 +229,10 @@ impl Drop for ObjectBridge {
     }
 }
 
-pub struct CameraBridge {
-    instance: *mut c_void,
-    get_pixels_ptr: FnGetPointColor,
-}
-
 type FnLightGetPos = unsafe extern "C" fn(*mut c_void, *mut f64, *mut f64, *mut f64);
 type FnLightGetColor = unsafe extern "C" fn(*mut c_void, *mut u8, *mut u8, *mut u8, *mut f64);
 type FnLightSetPos = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
 type FnLightIsGlobal = unsafe extern "C" fn(*mut c_void, *mut bool);
-
 
 pub struct LightBridge {
     _lib: Arc<Library>,
@@ -147,16 +253,30 @@ impl LightBridge {
             let factory_ptr: Symbol<FnFactory> = lib
                 .get(b"factory\0")
                 .map_err(|e| format!("factory error: {e}"))?;
+
             let instance = factory_ptr();
+            if instance.is_null() {
+                return Err("Light plugin factory returned a null pointer".to_string());
+            }
 
             Ok(Self {
                 _lib: lib.clone(),
                 instance,
-                get_pos_ptr: *lib.get(b"light_get_position\0").unwrap(),
-                get_color_ptr: *lib.get(b"light_get_color\0").unwrap(),
-                set_pos_ptr: *lib.get(b"light_set_position\0").unwrap(),
-                is_global_ptr: *lib.get(b"light_is_global\0").unwrap(),
-                destroy_ptr: *lib.get(b"destroy_instance\0").unwrap(),
+                get_pos_ptr: *lib
+                    .get(b"light_get_position\0")
+                    .map_err(|_| "Missing 'light_get_position' in light plugin")?,
+                get_color_ptr: *lib
+                    .get(b"light_get_color\0")
+                    .map_err(|_| "Missing 'light_get_color' in light plugin")?,
+                set_pos_ptr: *lib
+                    .get(b"light_set_position\0")
+                    .map_err(|_| "Missing 'light_set_position' in light plugin")?,
+                is_global_ptr: *lib
+                    .get(b"light_is_global\0")
+                    .map_err(|_| "Missing 'light_is_global' in light plugin")?,
+                destroy_ptr: *lib
+                    .get(b"destroy_instance\0")
+                    .map_err(|_| "Missing 'destroy_instance' in light plugin")?,
             })
         }
     }
