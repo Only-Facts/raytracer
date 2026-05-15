@@ -137,7 +137,7 @@ fn print_help() {
 
 fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
-    write!(&mut file, "P3\n{} {}\n255\n", width, height)?;
+    write!(&mut file, "P3\n{width} {height}\n255\n")?;
     for p in pixels {
         writeln!(&mut file, "{} {} {}", p.x, p.y, p.z)?;
     }

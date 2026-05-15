@@ -23,7 +23,7 @@ extern "C" {
     };
 
     void object_set_radius(void* instance, double r) {
-        auto* sphere = static_cast<raytracer::Sphere*>(instance);
+        auto* sphere = dynamic_cast<raytracer::Sphere*>(static_cast<raytracer::AObject*>(instance));
         sphere->setRadius(r);
         std::cout << "radius: " << r << std::endl;
     }

@@ -107,7 +107,6 @@ impl Camera for Viewer {
 
     fn update_screen(&mut self) {
         for (i, ray) in self.rays.iter().enumerate() {
-            self.screen[i] = ray.color;
             if !ray.base.alive {
                 self.screen[i] = ray.color;
             }

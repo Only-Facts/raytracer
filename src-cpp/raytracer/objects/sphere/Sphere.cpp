@@ -34,7 +34,7 @@ cold void raytracer::Sphere::parse(const libconfig::Setting& node)
 
 hot std::pair<float, const raytracer::Face*> raytracer::Sphere::computeSDF(const raytracer::Coord& point) const
 {
-    return {(point - this->getCFrame().position).length() - (this->_radius / 2), nullptr};
+    return {(point - this->getCFrame().position).length() - (this->_radius), nullptr};
 }
 
 hot raytracer::Direction raytracer::Sphere::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const

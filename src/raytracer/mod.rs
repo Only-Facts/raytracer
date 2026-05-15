@@ -81,7 +81,7 @@ fn process_camera_chunk(
 
                 let actual_sdf = object.compute_sdf(ray.base.cframe.position);
 
-                if actual_sdf.distance > 1e-6 && actual_sdf.distance < min_sdf {
+                if actual_sdf.distance < min_sdf {
                     min_sdf = actual_sdf.distance;
                     nearest_object = Some(object);
                     face_hit = actual_sdf.face_ptr;
@@ -314,7 +314,7 @@ impl RenderState {
             return;
         }
 
-        let chunk_size = (rays.len() + num_threads - 1) / num_threads;
+        let chunk_size = rays.len().div_ceil(num_threads);
 
         let render_distance = 400.0;
         let sky_color = Color::new(135, 206, 235);

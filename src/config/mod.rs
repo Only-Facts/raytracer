@@ -73,15 +73,25 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
     let mut lights = Vec::new();
     let mut libraries = Vec::new();
 
-    let mat_lib = loader.get_library("./plugins/materials/material_default.so")?;
-    let material = MaterialBridge::new(mat_lib)?;
-
     if let Some(primitives) = root.get("primitives").and_then(|p| p.as_array()) {
         for prim in primitives {
             let obj_type = prim
                 .get("type")
                 .and_then(|t| t.as_str())
                 .unwrap_or("sphere");
+
+            let mat_path = "./plugins/materials/material_default.so";
+            let mat_lib = match loader.get_library(mat_path) {
+                Ok(l) => {
+                    println!("Successfully loaded {mat_path}");
+                    l
+                }
+                Err(e) => {
+                    println!("Warning: Failed to load {mat_path}, ignoring... ({e})");
+                    continue;
+                }
+            };
+            let material = MaterialBridge::new(mat_lib)?;
 
             let lib_path = format!("./plugins/objects/object_{obj_type}.so");
 
