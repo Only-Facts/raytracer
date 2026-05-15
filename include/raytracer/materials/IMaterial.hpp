@@ -33,6 +33,7 @@ class IMaterial {
         // ---------- Pre-Function -------- //
         virtual void parse(const libconfig::Setting& node) = 0;
         virtual raytracer::Color getColor(void) const = 0;
+        virtual void setColor(raytracer::Color color) = 0;
         virtual float getTransparency(void) const = 0;
         virtual float getLightReflectionCoef(void) const = 0;
         virtual bool isMirror(void) const = 0;

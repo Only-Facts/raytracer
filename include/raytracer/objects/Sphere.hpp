@@ -37,6 +37,7 @@ class Sphere: public raytracer::AObject {
         std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const final;
         raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const final;
         bool willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const final;
+        void setRadius(float radius) { _radius = radius; }
 
         // ------------ Operator ---------- //
         Sphere& operator=(const Sphere& object) = delete;

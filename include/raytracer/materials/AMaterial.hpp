@@ -46,6 +46,7 @@ class AMaterial: public raytracer::IMaterial {
     public:
         // ------------ Function ---------- //
         nodiscard raytracer::Color getColor(void) const final {return this->_color;};
+        void setColor(raytracer::Color color) { this->_color = color; };
         nodiscard float getTransparency(void) const final {return this->_transparency;};
         nodiscard float getLightReflectionCoef(void) const final {return this->_reflection;};
         nodiscard bool isMirror(void) const final {return this->_mirror;};
