@@ -205,13 +205,28 @@ jobs:
           cargo build --verbose
 
       - name: Check formatting
-        run: cargo fmt --check
+        run: |
+          export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          export CXXFLAGS="-I/tmp/sfml-install/include"
+          export LIBRARY_PATH="/tmp/sfml-install/lib:$LIBRARY_PATH"
+          export LD_LIBRARY_PATH="/tmp/sfml-install/lib:$LD_LIBRARY_PATH"
+          cargo fmt --check
 
       - name: Lint with Clippy
-        run: cargo clippy -- -D warnings
+        run: |
+          export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          export CXXFLAGS="-I/tmp/sfml-install/include"
+          export LIBRARY_PATH="/tmp/sfml-install/lib:$LIBRARY_PATH"
+          export LD_LIBRARY_PATH="/tmp/sfml-install/lib:$LD_LIBRARY_PATH"
+          cargo clippy -- -D warnings
 
       - name: Run Tests
-        run: cargo test
+        run: |
+          export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          export CXXFLAGS="-I/tmp/sfml-install/include"
+          export LIBRARY_PATH="/tmp/sfml-install/lib:$LIBRARY_PATH"
+          export LD_LIBRARY_PATH="/tmp/sfml-install/lib:$LD_LIBRARY_PATH"
+          cargo test
 
   push_to_mirror:
     runs-on: ubuntu-latest
