@@ -33,6 +33,7 @@ File Description:
     #include <libconfig.h++>            // libconfig::Setting
     #include <unordered_map>            // std::unordered_map
     #include <cstddef>                  // std::size_t
+    #include <chrono>                   // std::chrono
     #include <memory>                   // std::shared_ptr
     #include <vector>                   // std::vector
     #include <string>                   // std::string
@@ -79,6 +80,7 @@ class Raytracer {
         std::uint8_t _step = 0; // 0 = scene, 1 = light, 2 = camera
         std::size_t _adv = 0;
         std::size_t _advMax = 0;
+        std::chrono::steady_clock::time_point _timer;
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
@@ -138,8 +140,8 @@ class Raytracer {
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
-        hot inline void advReset(std::size_t advMax) {this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
-        inline void advNext(std::size_t advMax) {++this->_step; this->_adv = 0; this->_advMax = advMax;}; // Next step
+        hot inline void advReset(std::size_t advMax) {this->_timer = std::chrono::steady_clock::now(); this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
+        inline void advNext(std::size_t advMax) {++this->_step; this->advReset(advMax);}; // Next step
         inline void advAddMax(std::size_t adv) {this->_advMax += adv;};
         inline void advFull(void) {this->_adv = this->_advMax; this->adv(true, false);};
         inline void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};

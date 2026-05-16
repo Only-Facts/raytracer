@@ -97,6 +97,10 @@ int main(int argc, char *argv[])
     // Init the raytracer (in the main to keep the longer the plugins charged)
     raytracer::Raytracer raytracer;
 
+    // Setup term
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
     // Basic flag help detection
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
