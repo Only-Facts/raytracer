@@ -1,10 +1,8 @@
-use std::{collections::HashMap, sync::OnceLock};
-
-use tokio::sync::Mutex;
+use std::sync::OnceLock;
 
 use crate::{
     raytracer::{
-        objects::{ChunkLightData, Object, ObjectDescriptor},
+        objects::{Object, ObjectDescriptor},
         ray::{Ray, RayBase},
         structs::{CFrame, Color, Coord, Direction, Face},
     },
@@ -16,6 +14,7 @@ pub trait Camera: Object {
     fn reset(&mut self);
     fn update_screen(&mut self);
     fn get_screen(&self) -> &Vec<Color>;
+    #[allow(dead_code)]
     fn get_rays(&self) -> &Vec<Ray>;
     fn get_rays_mut(&mut self) -> &mut Vec<Ray>;
 }
@@ -27,6 +26,7 @@ pub struct Viewer {
     pub fov: f64,
     pub screen: Vec<Color>,
     pub rays: Vec<Ray>,
+    #[allow(dead_code)]
     pub immunity: Option<Box<dyn Object>>,
 }
 
@@ -154,7 +154,7 @@ impl Object for Viewer {
     fn reflect_ray(&self, _ray: &mut Ray, _face: &Face) {}
     fn compute_sdf(&self, _point: &Coord) -> (f32, &Face) {
         static EMPTY_VEC: OnceLock<Face> = OnceLock::new();
-        let empty_face = EMPTY_VEC.get_or_init(|| Vec::new());
+        let empty_face = EMPTY_VEC.get_or_init(Vec::new);
         (f32::MAX, empty_face)
     }
     fn compute_hit(&self, _point: &Coord, _face: Option<&Face>) -> Coord {

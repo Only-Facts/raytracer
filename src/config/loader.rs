@@ -6,6 +6,7 @@ use std::{collections::HashMap, sync::Arc};
 use crate::{raytracer::structs::Coord, utils::vector::Vector3};
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ObjectConfig {
     pub r#type: String,
     pub position: [f64; 3],
@@ -13,6 +14,7 @@ pub struct ObjectConfig {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct CameraConfig {
     pub resolution_x: u32,
     pub resolution_y: u32,
@@ -22,12 +24,14 @@ pub struct CameraConfig {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct LightConfig {
     pub r#type: String,
     pub position: Vector3<Coord>,
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct SceneConfig {
     pub camera: CameraConfig,
     pub objects: Vec<ObjectConfig>,

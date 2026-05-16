@@ -4,6 +4,7 @@ use crate::raytracer::{
 };
 
 #[derive(Default, Clone)]
+#[allow(dead_code)]
 pub struct ObjectDescriptor {
     pub cframe: CFrame,
     pub cframe_origin: CFrame,
@@ -12,12 +13,14 @@ pub struct ObjectDescriptor {
     pub faces: Vec<Face>,
 }
 
+#[allow(dead_code)]
 pub struct ChunkLightData {
     pub position: Coord,
     pub color: Color,
     pub intensity: f32,
 }
 
+#[allow(dead_code)]
 pub trait Object: Send {
     fn get_descriptor(&self) -> &ObjectDescriptor;
     fn will_collide(&self, point: &Coord, dir: &Direction) -> bool;

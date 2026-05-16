@@ -26,6 +26,7 @@ impl RayBase {
         self.alive = false;
     }
 
+    #[allow(dead_code)]
     pub fn compute_objects(
         &mut self,
         render_distance: Type,
@@ -93,6 +94,7 @@ impl Ray {
     }
 }
 
+#[allow(dead_code)]
 pub struct LightRay {
     pub base: RayBase,
     pub color: Color,
@@ -100,6 +102,7 @@ pub struct LightRay {
     pub lumen: f32,
 }
 
+#[allow(dead_code)]
 impl LightRay {
     pub fn get_luminescence(&self, unit_meter_coef: Type) -> f32 {
         if self.lumen == -1.0 {

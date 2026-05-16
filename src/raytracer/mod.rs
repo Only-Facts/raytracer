@@ -238,6 +238,7 @@ fn process_camera_chunk(
     }
 }
 
+#[allow(dead_code)]
 pub struct Settings {
     pub viewer: bool,
     pub ppm_path: String,
@@ -284,6 +285,7 @@ impl Default for Settings {
     }
 }
 
+#[allow(dead_code)]
 pub trait Factory<T> {
     fn factory(&self, name: &str) -> &T;
 }
@@ -396,6 +398,7 @@ impl RenderState {
     }
 }
 
+#[allow(dead_code)]
 impl Raytracer {
     pub fn new(
         camera: camera::Viewer,

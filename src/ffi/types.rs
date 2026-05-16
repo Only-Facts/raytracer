@@ -1,5 +1,6 @@
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub struct CVector3 {
     pub x: f64,
     pub y: f64,

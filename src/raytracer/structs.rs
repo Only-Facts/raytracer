@@ -1,7 +1,5 @@
 use crate::utils::vector::Vector3;
 
-const SPACE_CHUNK_SIZE: i64 = 50;
-
 pub type Type = f64;
 pub type Coord = Vector3<Type>;
 pub type Direction = Vector3<Type>;
@@ -13,6 +11,7 @@ pub type Vertice = Vector3<Type>;
 pub type Face = Vec<Vertice>;
 
 #[derive(Default, Clone)]
+#[allow(dead_code)]
 pub struct CFrame {
     pub position: Coord,
     pub orientation: Direction,

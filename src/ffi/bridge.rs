@@ -320,6 +320,7 @@ impl LightBridge {
         unsafe { (self.set_pos_ptr)(self.instance, pos.x, pos.y, pos.z) };
     }
 
+    #[allow(dead_code)]
     pub fn is_global(&self) -> bool {
         let mut global = false;
         unsafe { (self.is_global_ptr)(self.instance, &mut global) };
