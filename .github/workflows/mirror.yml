@@ -42,11 +42,10 @@ jobs:
         with:
           repository: ""
 
-      - name: Install SFML, X11, libconfig and tinyobjloader dependencies
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libsfml-dev \
             libx11-dev \
             libxrandr-dev \
             libxcursor-dev \
@@ -70,15 +69,26 @@ jobs:
             libconfig++-dev \
             libtinyobjloader-dev
 
-      - name: Compile Repo
+      - name: Cache SFML 3.1.0
+        id: cache-sfml
+        uses: actions/cache@v4
+        with:
+          path: /tmp/sfml-install
+          key: ${{ runner.os }}-sfml-3.1.0
+
+      - name: Build and Install SFML 3.1.0
+        if: steps.cache-sfml.outputs.cache-hit != 'true'
         run: |
-          if [ -f "CMakeLists.txt" ]; then
-            mkdir build && cd build
-            cmake ..
-            make
-          else
-            make && make clean
-          fi
+          cd /tmp
+          git clone --depth 1 --branch 3.1.0 https://github.com/SFML/SFML.git
+          cd SFML
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install -DSFML_BUILD_AUDIO=ON
+          cmake --build build --target install --parallel $(nproc)
+
+      - name: Build & Compile Repo
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/tmp/sfml-install
+          cmake --build build --parallel $(nproc)
 
       - name: Check Compilation
         run: |
@@ -101,11 +111,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install SFML, X11, libconfig and tinyobjloader dependencies
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libsfml-dev \
             libx11-dev \
             libxrandr-dev \
             libxcursor-dev \
@@ -128,6 +137,22 @@ jobs:
             libconfig-dev \
             libconfig++-dev \
             libtinyobjloader-dev
+
+      - name: Cache SFML 3.1.0
+        id: cache-sfml
+        uses: actions/cache@v4
+        with:
+          path: /tmp/sfml-install
+          key: ${{ runner.os }}-sfml-3.1.0
+
+      - name: Build and Install SFML 3.1.0
+        if: steps.cache-sfml.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp
+          git clone --depth 1 --branch 3.1.0 https://github.com/SFML/SFML.git
+          cd SFML
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install -DSFML_BUILD_AUDIO=ON
+          cmake --build build --target install --parallel $(nproc)
 
       - name: Cache Cargo Dependencies
         uses: actions/cache@v4
