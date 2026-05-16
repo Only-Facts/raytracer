@@ -1,0 +1,60 @@
+/**************************************************************\
+Edition:
+##  @date 09/04/2026 by @author Tsukini
+
+File Name:
+##  @file ExceptionDefine.hpp
+
+File Description:
+##  Definition of the error code&message
+\**************************************************************/
+
+#ifndef EXCEPTIONDEFINE_H
+    #define EXCEPTIONDEFINE_H
+
+    //----------------------------------------------------------------//
+    /* INCLUDE */
+
+    /* type */
+    #include "generated_exception_header.hpp"   // utils::exception::Code, utils::exception::Message, utils::exception::Info, utils::exception::Restriction
+    #include <cstdint>                          // std::uint8_t
+
+    //----------------------------------------------------------------//
+    /* DEFINE */
+    
+    /* Definition of the different return status */
+    #ifndef OK
+        #define OK 0 // Valid
+    #endif
+    #ifndef KO
+        #define KO -1 // Error
+    #endif
+
+namespace utils::exception { // namespace start
+//----------------------------------------------------------------//
+/* TYPEDEF */
+
+/* Definition of the different exception type */
+enum Type: std::uint8_t {
+    None    = 0b0001, // Exception like Exit, does nothing (ignore other type)
+    Fatal   = 0b0010,
+    Error   = 0b0100,
+    Warning = 0b1000,
+};
+
+// ------------ Operator ---------- //
+constexpr utils::exception::Type operator|(utils::exception::Type lhs, utils::exception::Type rhs)
+{return static_cast<utils::exception::Type>(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));}
+constexpr utils::exception::Type operator&(utils::exception::Type lhs, utils::exception::Type rhs)
+{return static_cast<utils::exception::Type>(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));}
+constexpr utils::exception::Type operator^(utils::exception::Type lhs, utils::exception::Type rhs)
+{return static_cast<utils::exception::Type>(static_cast<std::uint8_t>(lhs) ^ static_cast<std::uint8_t>(rhs));}
+constexpr utils::exception::Type operator~(utils::exception::Type f)
+{return static_cast<utils::exception::Type>(~static_cast<std::uint8_t>(f));}
+
+inline utils::exception::Type& operator|=(utils::exception::Type& lhs, utils::exception::Type rhs) {return lhs = lhs | rhs;}
+inline utils::exception::Type& operator&=(utils::exception::Type& lhs, utils::exception::Type rhs) {return lhs = lhs & rhs;}
+inline utils::exception::Type& operator^=(utils::exception::Type& lhs, utils::exception::Type rhs) {return lhs = lhs ^ rhs;}
+
+} // namespace end
+#endif /* EXCEPTIONDEFINE_H */

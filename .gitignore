@@ -1,0 +1,43 @@
+## Compilation
+*.o
+*.a
+*.so
+a.out
+/raytracer
+
+## Vim
+*.sw*
+\#*#
+*~
+:*
+q
+vg
+z
+
+## CMake
+build/
+__pycache__
+/rendered
+/plugins
+/obj
+/scenes
+/screenshot
+
+## Doxygen
+Doxyfile
+/html
+/latex
+
+## Other
+#.info
+perf.*
+
+# Cargo
+/target
+/Cargo.lock
+
+# Clangd
+compile_commands.json
+
+# Generated
+*.ppm
