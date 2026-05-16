@@ -129,6 +129,9 @@ struct ObjectDescriptor {
     std::vector<raytracer::Face> faces;
     float scale = 1.0f;
 
+    raytracer::Coord aabbMin = {1e10, 1e10, 1e10};
+    raytracer::Coord aabbMax = {-1e10, -1e10, -1e10};
+
     // ---------- Constructor --------- //
     ObjectDescriptor() = default;
     ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe}, cframeOrigin{cframe} {};

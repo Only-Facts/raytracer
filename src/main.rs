@@ -1,5 +1,5 @@
 use colored::*;
-use std::{env, fs::File, io::Write};
+use std::{env, fs::File, io::Write, ops::Deref, path::PathBuf};
 
 use crate::{
     config::loader::PluginLoader,
@@ -165,7 +165,12 @@ pub fn print_progress_bar(msg: &str, current: usize, total: usize) {
     std::io::stdout().flush().ok();
 }
 
-fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std::io::Result<()> {
+fn save_as_ppm(
+    filename: &PathBuf,
+    pixels: &[Color],
+    width: u32,
+    height: u32,
+) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
     write!(&mut file, "P3\n{width} {height}\n255\n")?;
 
@@ -186,25 +191,43 @@ fn save_as_ppm(filename: &str, pixels: &[Color], width: u32, height: u32) -> std
 }
 
 async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
-    let default_scene = "scene.json".to_string();
-    let filepath = &args.get(1).unwrap_or(&default_scene);
-    let mut loader = PluginLoader::default();
+    raytracer.parse_flags(args);
+    let filepath = if raytracer.settings.viewer {
+        raytracer.settings.ppm_path.clone()
+    } else {
+        "scene.json".to_string()
+    };
 
     println!(
-        "{} '{}'...",
+        "{} '{}'{}",
         "Loading scene from".bright_black(),
-        filepath.underline()
+        filepath.underline(),
+        "...".bright_black(),
     );
-    let scene = config::load_scene(filepath, &mut loader)?;
+
+    let mut loader = if raytracer.settings.plugins_set
+        && let Some(path) = raytracer.settings.plugins_path.to_str()
+    {
+        PluginLoader::new(path.to_string())
+    } else {
+        PluginLoader::new("./plugins".to_string())
+    };
+    let scene = config::load_scene(&filepath, &mut loader)?;
 
     raytracer.camera = scene.camera;
     raytracer.objects = scene.objects;
     raytracer.lights = scene.lights;
     raytracer.plugins = Some(loader);
 
-    raytracer.parse_flags(args);
+    if raytracer.settings.resolution_set {
+        raytracer.camera.resolution = raytracer.settings.resolution;
+    }
 
-    let default_ppm_path = "output.ppm";
+    let ppm_path = if raytracer.settings.rendered_set {
+        raytracer.settings.rendered_path.clone()
+    } else {
+        "output.ppm".into()
+    };
 
     if raytracer.settings.gui {
         raytracer.gui().await?;
@@ -217,10 +240,10 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
         println!(
             "{} '{}'...",
             "Generating image to".bright_black(),
-            default_ppm_path.underline()
+            ppm_path.to_string_lossy().underline()
         );
         save_as_ppm(
-            default_ppm_path,
+            &ppm_path,
             raytracer.camera.get_screen(),
             raytracer.camera.resolution.0,
             raytracer.camera.resolution.1,
@@ -230,7 +253,7 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
         println!(
             "{} '{}'",
             "Successfully generated".green(),
-            default_ppm_path.underline()
+            ppm_path.to_string_lossy().underline()
         );
     }
     Ok(())

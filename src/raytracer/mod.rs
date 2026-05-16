@@ -252,8 +252,9 @@ pub struct Settings {
     pub plugins_path: PathBuf,
     pub rendered_path: PathBuf,
     pub obj_path: PathBuf,
-    pub resolution: Vector2<u16>,
-
+    pub resolution: (u32, u32),
+    pub nproc_set: bool,
+    pub nproc: u8,
     pub camera_set: bool,
     pub plugins_set: bool,
     pub rendered_set: bool,
@@ -272,11 +273,12 @@ impl Default for Settings {
             adv: false,
             newton: false,
             camera_path: PathBuf::new(),
-            plugins_path: PathBuf::from_str("./plugins/").unwrap_or_default(),
-            rendered_path: PathBuf::from_str("./rendered/").unwrap_or_default(),
-            obj_path: PathBuf::from_str("./obj/").unwrap_or_default(),
-            resolution: Vector2 { x: 0, y: 0 },
-
+            plugins_path: PathBuf::from_str("./plugins").unwrap_or_default(),
+            rendered_path: PathBuf::from_str("./rendered").unwrap_or_default(),
+            obj_path: PathBuf::from_str("./obj").unwrap_or_default(),
+            resolution: (0, 0),
+            nproc_set: false,
+            nproc: 0,
             camera_set: false,
             plugins_set: false,
             rendered_set: false,
@@ -539,10 +541,80 @@ impl Raytracer {
     }
 
     pub fn parse_flags(&mut self, args: Vec<String>) {
-        self.settings.gui = args.contains(&"-gui".to_string());
-        self.settings.adv =
-            args.contains(&"-a".to_string()) || args.contains(&"--advencement".to_string());
-        self.settings.newton =
-            args.contains(&"-n".to_string()) || args.contains(&"--newton".to_string());
+        let mut i = 1;
+
+        while i < args.len() {
+            match args[i].as_str() {
+                "-gui" => {
+                    self.settings.gui = true;
+                }
+                "-a" | "--advencement" => {
+                    self.settings.adv = true;
+                }
+                "-n" | "--nproc" => {
+                    if let Some(nproc_str) = args.get(i + 1)
+                        && let Ok(n) = nproc_str.parse::<u8>()
+                    {
+                        self.settings.nproc = n;
+                        self.settings.nproc_set = true;
+                    }
+                }
+                "-g" | "--newton" => {
+                    self.settings.newton = true;
+                }
+                "-c" | "--camera" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.camera_path = PathBuf::from(path);
+                        self.settings.camera_set = true;
+                        i += 1;
+                    }
+                }
+                "-p" | "--plugins" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.plugins_path = PathBuf::from(path);
+                        self.settings.plugins_set = true;
+                        i += 1;
+                    }
+                }
+                "-o" | "--obj" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.obj_path = PathBuf::from(path);
+                        self.settings.obj_set = true;
+                        i += 1;
+                    }
+                }
+                "-s" | "--save" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.rendered_path = PathBuf::from(path);
+                        self.settings.rendered_set = true;
+                        i += 1;
+                    }
+                }
+                "-r" | "--resolution" => {
+                    if let Some(res_str) = args.get(i + 1) {
+                        let parts: Vec<&str> = res_str.split('x').collect();
+                        if parts.len() == 2
+                            && let (Ok(w), Ok(h)) =
+                                (parts[0].parse::<u32>(), parts[1].parse::<u32>())
+                        {
+                            self.settings.resolution = (w, h);
+                            self.settings.resolution_set = true;
+                        }
+                        i += 1;
+                    }
+                }
+                s => {
+                    if !s.starts_with('-') {
+                        if s.ends_with(".ppm") {
+                            self.settings.ppm_path = s.to_string();
+                            self.settings.viewer = true;
+                        } else {
+                            self.settings.cfg_path = s.to_string();
+                        }
+                    }
+                }
+            }
+            i += 1;
+        }
     }
 }

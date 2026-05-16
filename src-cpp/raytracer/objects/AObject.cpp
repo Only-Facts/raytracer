@@ -160,6 +160,14 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
                 vertice.y = rotated.y + descriptor.cframe.position.y;
                 vertice.z = rotated.z + descriptor.cframe.position.z;
 
+                descriptor.aabbMin.x = std::min(descriptor.aabbMin.x, vertice.x);
+                descriptor.aabbMin.y = std::min(descriptor.aabbMin.y, vertice.y);
+                descriptor.aabbMin.z = std::min(descriptor.aabbMin.z, vertice.z);
+
+                descriptor.aabbMax.x = std::max(descriptor.aabbMax.x, vertice.x);
+                descriptor.aabbMax.y = std::max(descriptor.aabbMax.y, vertice.y);
+                descriptor.aabbMax.z = std::max(descriptor.aabbMax.z, vertice.z);
+
                 // Min & Max
                 if (v == 0) {
                     verticeMin = vertice;
@@ -178,8 +186,8 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
             }
 
             // Store the face
-            chunkMin = raytracer::getSpaceChunk(verticeMin);
-            chunkMax = raytracer::getSpaceChunk(verticeMax);
+            chunkMin = raytracer::getSpaceChunk(descriptor.aabbMin);
+            chunkMax = raytracer::getSpaceChunk(descriptor.aabbMax);
             for (int z = chunkMin.z; z <= chunkMax.z; ++z)
             for (int y = chunkMin.y; y <= chunkMax.y; ++y)
             for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
@@ -332,6 +340,32 @@ hot static float triangleSDF(const raytracer::Coord& p, const raytracer::Vertice
 
 hot std::pair<float, const raytracer::Face*> raytracer::AObject::computeSDF(const raytracer::Coord& point) const
 {
+    const auto& faces = this->getObjectDescriptor().faces;
+    if (!faces.empty()) {
+        const raytracer::Coord& min = this->getObjectDescriptor().aabbMin;
+        const raytracer::Coord& max = this->getObjectDescriptor().aabbMax;
+
+        raytracer::Coord center = (min + max) * 0.5;
+        raytracer::Coord extents = (max - min) * 0.5;
+
+        raytracer::Coord d = {
+            std::abs(point.x - center.x) - extents.x,
+            std::abs(point.y - center.y) - extents.y,
+            std::abs(point.z - center.z) - extents.z
+        };
+
+        float max_d = std::max({d.x, d.y, d.z});
+
+        if (max_d > 0.05f) {
+            float outDist = std::sqrt(
+                std::max(d.x, 0.0) * std::max(d.x, 0.0) +
+                std::max(d.y, 0.0) * std::max(d.y, 0.0) +
+                std::max(d.z, 0.0) * std::max(d.z, 0.0)
+            );
+            return {outDist, nullptr};
+        }
+    }
+
     float sdf = std::numeric_limits<float>::max(), dist = 0.0f;
     const raytracer::Face* sdfFace = nullptr;
 

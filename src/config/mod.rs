@@ -86,8 +86,8 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                 .and_then(|t| t.as_str())
                 .unwrap_or("sphere");
 
-            let mat_path = "./plugins/materials/material_default.so";
-            let mat_lib = match loader.get_library(mat_path) {
+            let mat_path = format!("{}/materials/material_default.so", loader.plugins_path);
+            let mat_lib = match loader.get_library(&mat_path) {
                 Ok(l) => l,
                 Err(e) => {
                     println!(
@@ -101,7 +101,7 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
             };
             let material = MaterialBridge::new(mat_lib)?;
 
-            let lib_path = format!("./plugins/objects/object_{obj_type}.so");
+            let lib_path = format!("{}/objects/object_{obj_type}.so", loader.plugins_path);
 
             let lib = match loader.get_library(&lib_path) {
                 Ok(l) => l,
@@ -173,7 +173,7 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                 .get("type")
                 .and_then(|t| t.as_str())
                 .unwrap_or("point");
-            let lib_path = format!("./plugins/lights/light_{l_type}.so");
+            let lib_path = format!("{}/lights/light_{l_type}.so", loader.plugins_path);
 
             match loader.get_library(&lib_path) {
                 Ok(lib) => {

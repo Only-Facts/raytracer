@@ -1,7 +1,7 @@
 use colored::*;
 use libloading::Library;
 use serde::Deserialize;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use crate::{raytracer::structs::Coord, utils::vector::Vector3};
 
@@ -41,9 +41,16 @@ pub struct SceneConfig {
 #[derive(Default, Clone)]
 pub struct PluginLoader {
     cache: HashMap<String, Arc<Library>>,
+    pub plugins_path: String,
 }
 
 impl PluginLoader {
+    pub fn new(plugins_path: String) -> Self {
+        Self {
+            cache: HashMap::new(),
+            plugins_path,
+        }
+    }
     pub fn get_library(&mut self, path: &str) -> Result<Arc<Library>, String> {
         if let Some(lib) = self.cache.get(path) {
             return Ok(Arc::clone(lib));
