@@ -209,7 +209,7 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
     if raytracer.settings.gui {
         raytracer.gui().await?;
     } else {
-        raytracer.render();
+        raytracer.render_once(raytracer.settings.adv);
         println!();
 
         raytracer.camera.update_screen();

@@ -11,29 +11,29 @@ use std::{
     time::Duration,
 };
 
-use sfml::{
-    graphics::{Color as SfColor, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Vertex},
-    system::Vector2f,
-    window::{Event, Key, Style},
-};
+use sfml::{graphics::RenderWindow, window::Style};
 
 use crate::{
     Error,
     config::loader::PluginLoader,
     ffi::bridge::{LightBridge, ObjectBridge},
     print_progress_bar,
-    raytracer::{camera::Camera, ray::Ray, structs::Color},
+    raytracer::{
+        camera::Camera,
+        gui::{InputState, SharedInput, SharedPixels, apply_input, loop_window_threaded},
+        ray::Ray,
+        structs::Color,
+    },
     utils::vector::{Vector2, Vector3},
 };
 
 pub mod camera;
+pub mod gui;
 pub mod objects;
 pub mod ray;
 pub mod structs;
 
 const PPM_MAGIC: u8 = 22;
-
-type SharedPixels = Arc<Mutex<Vec<Color>>>;
 
 fn merge_color(color1: Color, color2: Color, intensity: f32) -> Color {
     let new_color = Vector3::new(
@@ -239,6 +239,7 @@ fn process_camera_chunk(
 }
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     pub viewer: bool,
     pub ppm_path: String,
@@ -290,33 +291,93 @@ pub trait Factory<T> {
     fn factory(&self, name: &str) -> &T;
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Raytracer {
     pub settings: Settings,
-
     pub camera: camera::Viewer,
     pub objects: Vec<ObjectBridge>,
     pub lights: Vec<LightBridge>,
-
     pub plugins: Option<PluginLoader>,
 }
 
-struct RenderState {
-    camera: camera::Viewer,
-    objects: Vec<ObjectBridge>,
-    lights: Vec<LightBridge>,
-}
+#[allow(dead_code)]
+impl Raytracer {
+    pub fn new(
+        camera: camera::Viewer,
+        objects: Vec<ObjectBridge>,
+        lights: Vec<LightBridge>,
+    ) -> Self {
+        Self {
+            settings: Settings::default(),
+            objects,
+            lights,
+            camera,
+            plugins: None,
+        }
+    }
 
-impl RenderState {
+    pub async fn load_render(&mut self) -> Result<(), Error> {
+        let path = &self.settings.ppm_path;
+
+        let file =
+            File::open(path).map_err(|_| format!("Failed to open file for reading: {}", path))?;
+
+        let mut reader = BufReader::new(file);
+
+        let mut magic_buf = [0u8; 1];
+        let mut width_buf = [0u8; 2];
+        let mut height_buf = [0u8; 2];
+
+        reader.read_exact(&mut magic_buf)?;
+        reader.read_exact(&mut width_buf)?;
+        reader.read_exact(&mut height_buf)?;
+
+        let magic = magic_buf[0];
+        let width = u16::from_ne_bytes(width_buf);
+        let height = u16::from_ne_bytes(height_buf);
+
+        if magic != PPM_MAGIC {
+            return Err(format!("Invalid magic number in file: {}", path).into());
+        }
+
+        let buffer_size = width as usize * height as usize * 3;
+        let mut buffer = vec![0u8; buffer_size];
+
+        reader
+            .read_exact(&mut buffer)
+            .map_err(|_| format!("Error during the file reading: {}", path))?;
+
+        let rays = self.camera.get_rays_mut();
+
+        for (i, ray) in rays.iter_mut().enumerate() {
+            let r = buffer[i * 3];
+            let g = buffer[i * 3 + 1];
+            let b = buffer[i * 3 + 2];
+
+            ray.set_color(Color::new(r, g, b));
+        }
+
+        Ok(())
+    }
+
     fn render_thread_loop(
         &mut self,
         shared_pixels: SharedPixels,
+        shared_input: SharedInput,
         running: Arc<AtomicBool>,
         width: usize,
         height: usize,
         show_progress: bool,
     ) {
         while running.load(Ordering::Relaxed) {
+            let input = {
+                let input = shared_input.lock().expect("shared input mutex poisoned");
+
+                *input
+            };
+
+            apply_input(&mut self.camera, input);
+
             self.render_once(show_progress);
 
             self.camera.update_screen();
@@ -343,7 +404,7 @@ impl RenderState {
         }
     }
 
-    fn render_once(&mut self, show_progress: bool) {
+    pub fn render_once(&mut self, show_progress: bool) {
         self.camera.reset();
 
         let rays = self.camera.get_rays_mut();
@@ -396,85 +457,10 @@ impl RenderState {
             }
         });
     }
-}
-
-#[allow(dead_code)]
-impl Raytracer {
-    pub fn new(
-        camera: camera::Viewer,
-        objects: Vec<ObjectBridge>,
-        lights: Vec<LightBridge>,
-    ) -> Self {
-        Self {
-            settings: Settings::default(),
-            objects,
-            lights,
-            camera,
-            plugins: None,
-        }
-    }
-    pub async fn load_render(&mut self) -> Result<(), Error> {
-        let path = &self.settings.ppm_path;
-
-        let file =
-            File::open(path).map_err(|_| format!("Failed to open file for reading: {}", path))?;
-
-        let mut reader = BufReader::new(file);
-
-        let mut magic_buf = [0u8; 1];
-        let mut width_buf = [0u8; 2];
-        let mut height_buf = [0u8; 2];
-
-        reader.read_exact(&mut magic_buf)?;
-        reader.read_exact(&mut width_buf)?;
-        reader.read_exact(&mut height_buf)?;
-
-        let magic = magic_buf[0];
-        let width = u16::from_ne_bytes(width_buf);
-        let height = u16::from_ne_bytes(height_buf);
-
-        if magic != PPM_MAGIC {
-            return Err(format!("Invalid magic number in file: {}", path).into());
-        }
-
-        /*self.camera.set_resolution(width as u32, height as u32);
-        self.camera.init();
-        self.camera.kill();*/
-
-        let buffer_size = width as usize * height as usize * 3;
-        let mut buffer = vec![0u8; buffer_size];
-
-        reader
-            .read_exact(&mut buffer)
-            .map_err(|_| format!("Error during the file reading: {}", path))?;
-
-        let rays = self.camera.get_rays_mut();
-
-        for (i, ray) in rays.iter_mut().enumerate() {
-            let r = buffer[i * 3];
-            let g = buffer[i * 3 + 1];
-            let b = buffer[i * 3 + 2];
-
-            ray.set_color(Color::new(r, g, b));
-        }
-
-        Ok(())
-    }
-
-    pub fn render(&mut self) {
-        let mut render_state = self.take_render_state();
-        render_state.render_once(self.settings.adv);
-
-        self.camera = render_state.camera;
-        self.objects = render_state.objects;
-        self.lights = render_state.lights;
-    }
 
     pub async fn gui(&mut self) -> Result<(), Error> {
         if self.settings.viewer {
             self.load_render().await?;
-        } else {
-            self.light()?;
         }
 
         let resolution = self.camera.get_resolution();
@@ -484,6 +470,7 @@ impl Raytracer {
 
         let shared_pixels: SharedPixels =
             Arc::new(Mutex::new(vec![Color::default(); width * height]));
+        let shared_input: SharedInput = Arc::new(Mutex::new(InputState::default()));
 
         let running = Arc::new(AtomicBool::new(true));
 
@@ -500,18 +487,20 @@ impl Raytracer {
             pixels[..copy_len].copy_from_slice(&screen[..copy_len]);
         }
 
-        let mut render_state = self.take_render_state();
-
         let render_pixels = Arc::clone(&shared_pixels);
+        let render_input = Arc::clone(&shared_input);
         let render_running = Arc::clone(&running);
         let gui_enabled = self.settings.gui;
 
         let show_progress = self.settings.adv;
 
+        let mut render_state = self.clone();
+
         let render_handle = thread::spawn(move || {
             if gui_enabled {
                 render_state.render_thread_loop(
                     render_pixels,
+                    render_input,
                     render_running,
                     width,
                     height,
@@ -529,9 +518,10 @@ impl Raytracer {
 
         window.set_vertical_sync_enabled(true);
 
-        Self::loop_window_threaded(
+        loop_window_threaded(
             &mut window,
             shared_pixels,
+            shared_input,
             Arc::clone(&running),
             width,
             height,
@@ -545,87 +535,7 @@ impl Raytracer {
 
         window.close();
 
-        self.adv_end();
-
         Ok(())
-    }
-
-    fn take_render_state(&mut self) -> RenderState {
-        RenderState {
-            camera: std::mem::take(&mut self.camera),
-            objects: std::mem::take(&mut self.objects),
-            lights: std::mem::take(&mut self.lights),
-        }
-    }
-
-    fn loop_window_threaded(
-        window: &mut RenderWindow,
-        shared_pixels: SharedPixels,
-        running: Arc<AtomicBool>,
-        width: usize,
-        height: usize,
-    ) {
-        while window.is_open() {
-            while let Some(event) = window.poll_event() {
-                match event {
-                    Event::Closed
-                    | Event::KeyPressed {
-                        code: Key::Escape, ..
-                    } => {
-                        window.close();
-                    }
-                    _ => {}
-                }
-            }
-
-            let pixels_snapshot = {
-                let pixels = shared_pixels
-                    .lock()
-                    .expect("shared pixel buffer mutex poisoned");
-
-                pixels.clone()
-            };
-
-            Self::draw_pixels(window, &pixels_snapshot, width, height);
-        }
-
-        running.store(false, Ordering::Relaxed);
-    }
-
-    fn draw_pixels(window: &mut RenderWindow, pixels: &[Color], width: usize, height: usize) {
-        let mut vertices = Vec::with_capacity(width * height);
-
-        for y in 0..height {
-            for x in 0..width {
-                let index = y * width + x;
-
-                let Some(color) = pixels.get(index) else {
-                    continue;
-                };
-
-                let position = Vector2f::new(x as f32, y as f32);
-                let sfml_color = SfColor::rgb(color.x, color.y, color.z);
-
-                vertices.push(Vertex::with_pos_color(position, sfml_color));
-            }
-        }
-
-        window.clear(SfColor::BLACK);
-
-        window.draw_primitives(&vertices, PrimitiveType::POINTS, &RenderStates::default());
-
-        window.display();
-    }
-
-    pub fn light(&mut self) -> Result<(), Error> {
-        // TODO: port real C++ Raytracer::light()
-        Ok(())
-    }
-
-    pub fn adv_end(&self) {
-        if self.settings.adv {
-            println!();
-        }
     }
 
     pub fn parse_flags(&mut self, args: Vec<String>) {

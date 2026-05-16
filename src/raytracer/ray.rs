@@ -5,6 +5,7 @@ use crate::raytracer::{
     structs::{CFrame, Chunk, Color, Type, get_space_chunk},
 };
 
+#[derive(Debug, Clone)]
 pub struct RayBase {
     pub cframe: CFrame,
     pub alive: bool,
@@ -75,6 +76,7 @@ impl RayBase {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Ray {
     pub base: RayBase,
     pub color: Color,

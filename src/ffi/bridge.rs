@@ -70,6 +70,7 @@ type FnIsMirror = unsafe extern "C" fn(*mut c_void) -> bool;
 type FnDestroy = unsafe extern "C" fn(*mut c_void);
 type FnFactory = unsafe extern "C" fn() -> *mut c_void;
 
+#[derive(Debug, Clone)]
 pub struct ObjectBridge {
     _lib: Arc<Library>,
     pub obj_type: String,
@@ -248,6 +249,7 @@ type FnLightIsGlobal = unsafe extern "C" fn(*mut c_void, *mut bool);
 type FnLightSetColor = unsafe extern "C" fn(*mut c_void, u8, u8, u8);
 type FnLightSetIntensity = unsafe extern "C" fn(*mut c_void, f64);
 
+#[derive(Debug, Clone)]
 pub struct LightBridge {
     _lib: Arc<Library>,
     pub instance: *mut c_void,
