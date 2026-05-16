@@ -1,7 +1,7 @@
 use colored::*;
 use libloading::Library;
 use serde::Deserialize;
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{raytracer::structs::Coord, utils::vector::Vector3};
 

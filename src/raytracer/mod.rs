@@ -24,7 +24,7 @@ use crate::{
         ray::Ray,
         structs::Color,
     },
-    utils::vector::{Vector2, Vector3},
+    utils::vector::Vector3,
 };
 
 pub mod camera;
@@ -254,7 +254,7 @@ pub struct Settings {
     pub obj_path: PathBuf,
     pub resolution: (u32, u32),
     pub nproc_set: bool,
-    pub nproc: u8,
+    pub nproc: usize,
     pub camera_set: bool,
     pub plugins_set: bool,
     pub rendered_set: bool,
@@ -318,7 +318,7 @@ impl Raytracer {
         }
     }
 
-    pub async fn load_render(&mut self) -> Result<(), Error> {
+    pub fn load_render(&mut self) -> Result<(), Error> {
         let path = &self.settings.ppm_path;
 
         let file =
@@ -417,9 +417,13 @@ impl Raytracer {
 
         let total_rays = rays.len();
         let progress_counter = Arc::new(AtomicUsize::new(0));
-        let num_threads = thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
+        let num_threads = if self.settings.nproc_set {
+            self.settings.nproc
+        } else {
+            thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1)
+        };
 
         let chunk_size = rays.len().div_ceil(num_threads);
 
@@ -460,9 +464,9 @@ impl Raytracer {
         });
     }
 
-    pub async fn gui(&mut self) -> Result<(), Error> {
+    pub fn gui(&mut self) -> Result<(), Error> {
         if self.settings.viewer {
-            self.load_render().await?;
+            self.load_render()?;
         }
 
         let resolution = self.camera.get_resolution();
@@ -553,7 +557,7 @@ impl Raytracer {
                 }
                 "-n" | "--nproc" => {
                     if let Some(nproc_str) = args.get(i + 1)
-                        && let Ok(n) = nproc_str.parse::<u8>()
+                        && let Ok(n) = nproc_str.parse::<usize>()
                     {
                         self.settings.nproc = n;
                         self.settings.nproc_set = true;

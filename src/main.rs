@@ -1,5 +1,5 @@
 use colored::*;
-use std::{env, fs::File, io::Write, ops::Deref, path::PathBuf};
+use std::{env, fs::File, io::Write, path::PathBuf};
 
 use crate::{
     config::loader::PluginLoader,
@@ -190,7 +190,7 @@ fn save_as_ppm(
     Ok(())
 }
 
-async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
+fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
     raytracer.parse_flags(args);
     let filepath = if raytracer.settings.viewer {
         raytracer.settings.ppm_path.clone()
@@ -230,7 +230,7 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
     };
 
     if raytracer.settings.gui {
-        raytracer.gui().await?;
+        raytracer.gui()?;
     } else {
         raytracer.render_once(raytracer.settings.adv);
         println!();
@@ -259,18 +259,18 @@ async fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> 
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
+fn main() {
     let mut raytracer = Raytracer::default();
     let args: Vec<String> = env::args().collect();
 
     for arg in &args {
         if arg == "-h" || arg == "--help" {
             print_help();
-            return Ok(());
+            return;
         }
     }
 
-    run(&mut raytracer, args).await?;
-    Ok(())
+    if let Err(e) = run(&mut raytracer, args) {
+        eprintln!("{e}");
+    }
 }
