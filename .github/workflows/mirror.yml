@@ -49,6 +49,8 @@ jobs:
             libx11-dev \
             libxrandr-dev \
             libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
             libudev-dev \
             libopenal-dev \
             libflac-dev \
@@ -118,6 +120,8 @@ jobs:
             libx11-dev \
             libxrandr-dev \
             libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
             libudev-dev \
             libopenal-dev \
             libflac-dev \
