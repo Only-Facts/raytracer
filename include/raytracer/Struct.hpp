@@ -157,15 +157,15 @@ struct ObjectDescriptor {
 
     /* obj */
     std::string obj;
-    std::vector<raytracer::Chunk> chunks;
-    std::vector<raytracer::Face> faces;
+    std::vector<raytracer::Face> fallbackFaces;
+    std::unordered_map<raytracer::Chunk, std::vector<raytracer::Face>, raytracer::ChunkHash> faces;
     float scale = 1.0f;
 
     /* newton */
     raytracer::Newton gravity;
 
     // ---------- Constructor --------- //
-    ObjectDescriptor() = default;
+    ObjectDescriptor() {this->faces.max_load_factor(LOAD_FACTOR);};
     ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe}, cframeOrigin{cframe} {};
 
     // -------- Static-Function ------- //

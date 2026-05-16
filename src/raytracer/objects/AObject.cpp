@@ -185,16 +185,16 @@ cold void raytracer::AObject::loadObj(const std::string& path, raytracer::Object
                 face.push_back(vertice);
             }
 
-            // Store the face
+            // Store the face by chunck
             chunkMin = raytracer::getSpaceChunk(verticeMin);
             chunkMax = raytracer::getSpaceChunk(verticeMax);
             for (int z = chunkMin.z; z <= chunkMax.z; ++z)
             for (int y = chunkMin.y; y <= chunkMax.y; ++y)
             for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
                 chunk = {x, y, z};
-                descriptor.chunks.push_back(chunk);
+                descriptor.faces[chunk].push_back(face);
             }
-            descriptor.faces.push_back(face);
+            descriptor.fallbackFaces.push_back(face);
             indexOffset += verticesCount;
         }
     }
@@ -344,7 +344,10 @@ hot std::pair<float, const raytracer::Face*> raytracer::AObject::computeSDF(cons
     const raytracer::Face* sdfFace = nullptr;
 
     // For each face
-    for (const raytracer::Face& face: this->getObjectDescriptor().faces) {
+    raytracer::Chunk chunk = raytracer::getSpaceChunk(point);
+    const auto& faces = this->getObjectDescriptor().faces;
+    auto it = faces.find(chunk);
+    for (const raytracer::Face& face: unlikely_c(it == faces.end()) ? this->getObjectDescriptor().fallbackFaces : it->second) {
         // Dispatch the computing
         switch (face.size()) {
             case 1: dist = (point - face[0]).lengthSquared();               break;

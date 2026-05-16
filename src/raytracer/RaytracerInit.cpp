@@ -449,7 +449,7 @@ void raytracer::Raytracer::init(void)
     // Init internal optimisation for SDF
     for (raytracer::IObject* object: this->_objects) {
         raytracer::Newton& gravity = object->getNewton();
-        for (const raytracer::Chunk& chunk: object->getObjectDescriptor().chunks)
+        for (const auto& [chunk, _]: object->getObjectDescriptor().faces)
             this->_objectsChunks[chunk].push_back(object);
         // Update mass for singularity
         if (object->isSingularity()) gravity.mass *= SOLAR_MASS;
