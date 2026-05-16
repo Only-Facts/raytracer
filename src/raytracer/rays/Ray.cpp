@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -11,6 +11,7 @@ File Description:
 \**************************************************************/
 
 #include "raytracer/rays/Ray.hpp"
+#include "raytracer/special/Utils.hpp"
 
 void raytracer::Ray::reset(void)
 {
@@ -19,4 +20,23 @@ void raytracer::Ray::reset(void)
     this->_color = DEFAULT_COLOR;
     this->_distance = 0.0f;
     this->_coef = 1.0f;
+}
+
+nodiscard void* raytracer::Ray::clone(void)
+{
+    raytracer::Ray* ray = new Ray();
+    ray->_alive = true; // Security
+    ray->_color = this->_color;
+    ray->_coef = this->_coef;
+    ray->_descriptor = this->_descriptor;
+    ray->_distance = this->_distance;
+    ray->_ray = this->_ray ? this->_ray : this;
+    return ray;
+}
+
+raytracer::Ray::~Ray()
+{
+    // Apply values to the parent
+    if (!this->_ray) return;
+    this->_ray->setColor(raytracer::moyColor(this->_ray->getColor(), this->getColor()));
 }

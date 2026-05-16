@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -103,13 +103,18 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
                         window.close();
                         break;
 
+                    // Reset
+                    case sf::Keyboard::R:
+                        cframe = this->_camera->getCFrameOrigin();
+                        break;
+
                     // Translation
                     case sf::Keyboard::Q:
-                        cframe.position.x -= MOVE_SPEED;
+                        cframe.position.x += MOVE_SPEED;
                         break;
 
                     case sf::Keyboard::D:
-                        cframe.position.x += MOVE_SPEED;
+                        cframe.position.x -= MOVE_SPEED;
                         break;
 
                     case sf::Keyboard::Z:
@@ -129,33 +134,34 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
                         break;
 
                     // Rotation
-                    case sf::Keyboard::W:
-                        cframe.rotation -= ROTATE_SPEED;
-                        break;
-
-                    case sf::Keyboard::X:
-                        cframe.rotation += ROTATE_SPEED;
-                        break;
-
                     case sf::Keyboard::Left:
-                        cframe.orientation.x -= ORIENTATION_SPEED;
-                        break;
-
-                    case sf::Keyboard::Right:
-                        cframe.orientation.x += ORIENTATION_SPEED;
-                        break;
-
-                    case sf::Keyboard::Up:
                         cframe.orientation.y += ORIENTATION_SPEED;
                         break;
 
-                    case sf::Keyboard::Down:
+                    case sf::Keyboard::Right:
                         cframe.orientation.y -= ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Up:
+                        cframe.orientation.x += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::Down:
+                        cframe.orientation.x -= ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::W:
+                        cframe.orientation.z += ORIENTATION_SPEED;
+                        break;
+
+                    case sf::Keyboard::X:
+                        cframe.orientation.z -= ORIENTATION_SPEED;
                         break;
 
                     default: break;
                 }
-                this->_camera->setCFrame(cframe);
+                cframe.look = raytracer::toLook(cframe.orientation);
+                this->_camera->setCFrame(cframe, false);
             }
 
         }
@@ -210,8 +216,10 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     ss << "(" << cframe.orientation.x;
     ss << ", " << cframe.orientation.y;
     ss << ", " << cframe.orientation.z << ")\n";
-    ss << "Rotation: ";
-    ss << cframe.rotation << " deg";
+    ss << "Look: ";
+    ss << "(" << cframe.look.x;
+    ss << ", " << cframe.look.y;
+    ss << ", " << cframe.look.z << ")";
 
     // Setup the text
     sf::Text text;
@@ -248,24 +256,28 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
     std::vector<raytracer::LightRay*>& rays, std::size_t start, std::size_t end,
     const std::vector<raytracer::IObject*>& objects,
     const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
-    raytracer::ICamera* camera)
+    raytracer::ICamera* camera,
+    std::size_t depth = 0)
 {
     std::vector<raytracer::LightRay*> raysClones;
     raytracer::IObject* nearestObject = nullptr;
     raytracer::Type distanceUnit = 0.0;
     const raytracer::IMaterial* material = nullptr;
     const raytracer::Face* faceHit = nullptr;
-    raytracer::Direction orientation;
+    raytracer::Direction look;
     raytracer::Angle angle = 0.0;
     float sdf = 0.0;
 
+    // Check depth
+    if (depth > RAY_MAX_DEPTH) return;
+
     for (std::size_t i = start; i < end; ++i) {
         raytracer::LightRay* ray = rays[i];
-        distanceUnit = ray->getCFrame().orientation.length();
+        distanceUnit = ray->getCFrame().look.length();
         ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
         while (ray->isAlive()) {
             // Kill those with no direction
-            if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
+            if (ray->getCFrame().look <= 1e-8 && ray->getCFrame().look >= -1e-8) {
                 ray->kill();
                 continue;
             }
@@ -289,16 +301,19 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
             }
 
             // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation * sdf);
+            ray->translate(ray->getCFrame().look * sdf);
             ray->addDistance(distanceUnit * sdf);
 
             // Kill conditions
             if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->kill();
+                continue;
             } else if (ray->getDistance() >= camera->getRenderDistance() * RAY_DISTANCE_COEF) { // Live distance
                 ray->kill();
+                continue;
             } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
                 ray->kill();
+                continue;
             }
 
             // 3 - Check SDF
@@ -306,30 +321,34 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                 material = nearestObject->getObjectDescriptor().material;
                 // Transparency & Refraction
                 if (material->getTransparency() > 1e-8) {
-                    raysClones.push_back(ray->clone());
+                    raysClones.push_back(static_cast<raytracer::LightRay*>(ray->clone()));
                     raysClones.back()->setImmunity(nearestObject);
-                    raysClones.back()->setIntensity(raysClones.back()->getIntensity() * material->getTransparency() * (1.0f - material->getLightReflectionCoef()));
+                    raysClones.back()->setIntensity(raysClones.back()->getIntensity() * material->getTransparency() * (1.0f - material->getReflection()));
                     raysClones.back()->setColor(raytracer::mergeColor(material->getColor(), raysClones.back()->getColor(), raysClones.back()->getIntensity()));
                 }
 
                 // Normal computing
-                orientation = ray->getCFrame().orientation;
+                look = ray->getCFrame().look;
                 nearestObject->reflectRay(ray, faceHit);
-                ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
-                angle = raytracer::radToDeg(std::atan2(orientation.dot(ray->getCFrame().orientation), orientation.length() * ray->getCFrame().orientation.length()));
+                angle = raytracer::radToDeg(std::atan2(look.dot(ray->getCFrame().look), look.length() * ray->getCFrame().look.length()));
                 float localIntensityCoef = 1.0f - (angle / 180.0f); // 0° = 1.0f, 180° = 0.0f
-                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getLuminescence() * localIntensityCoef * (1.0f - material->getLightReflectionCoef()));
-                ray->setIntensity(ray->getIntensity() * material->getLightReflectionCoef());
+                nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getLuminescence() * localIntensityCoef * (1.0f - material->getReflection()));
+                ray->setIntensity(ray->getIntensity() * material->getReflection());
                 ray->setColor(raytracer::mergeColor(material->getColor(), ray->getColor(), ray->getIntensity()));
 
-                // To counter collision with the same object on the next iteration
-                ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
-                ray->setImmunity(nearestObject);
+                // Only if the light will be alive after
+                if (ray->getIntensity() > LIGHT_INTENSITY_LIMIT) {
+                    ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
+
+                    // To counter collision with the same object on the next iteration
+                    ray->translate(ray->getCFrame().look * SDF_COLLINDING_LIMIT * 2);
+                    ray->setImmunity(nearestObject);
+                }
             } else if (ray->getImmunity() == nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision on the other side
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getLuminescence());
 
                 // To counter collision with the same object on the next iteration
-                ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
+                ray->translate(ray->getCFrame().look * SDF_COLLINDING_LIMIT * 2);
             }
 
             // Kill conditions
@@ -341,13 +360,14 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                 ray->kill();
             }
         }
+        if (depth > 0) delete ray;
         raytracer.adv(); // Update advencement
     }
 
     // Rec for the clonned ones
     if (raysClones.size() > 0) {
         raytracer.advAddMax(raysClones.size()); // Update advencement max
-        processLightChunk(raytracer, raysClones, 0, raysClones.size(), objects, objectsChunks, camera);
+        processLightChunk(raytracer, raysClones, 0, raysClones.size(), objects, objectsChunks, camera, depth + 1);
     }
 }
 
@@ -356,8 +376,10 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
     const std::vector<raytracer::IObject*>& objects,
     const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks,
     raytracer::ICamera* camera, const raytracer::Sky& sky,
-    raytracer::FColor globalLightColor, std::size_t globalLightCount)
+    raytracer::FColor globalLightColor, std::size_t globalLightCount,
+    std::size_t depth = 0)
 {
+    std::vector<raytracer::Ray*> raysClones;
     raytracer::FColor color = DEFAULT_COLOR;
     raytracer::IObject* nearestObject = nullptr;
     raytracer::Type distanceUnit = 0.0;
@@ -368,10 +390,10 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
     for (std::size_t i = start; i < end; ++i) {
         raytracer::Ray* ray = rays[i];
         ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
-        distanceUnit = ray->getCFrame().orientation.length();
+        distanceUnit = ray->getCFrame().look.length();
         while (ray->isAlive()) {
             // Kill those with no direction
-            if (ray->getCFrame().orientation <= 1e-8 && ray->getCFrame().orientation >= -1e-8) {
+            if (ray->getCFrame().look <= 1e-8 && ray->getCFrame().look >= -1e-8) {
                 ray->kill();
                 continue;
             }
@@ -396,59 +418,67 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
             }
 
             // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().orientation * sdf);
+            ray->translate(ray->getCFrame().look * sdf);
             ray->addDistance(distanceUnit * sdf);
 
             // Kill conditions
             if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
                 ray->setColor(raytracer::mergeColor(ray->getColor(), sky.getColor(), ray->getCoef()));
                 ray->kill();
+                continue;
             } else if (ray->getDistance() >= camera->getRenderDistance() * RAY_DISTANCE_COEF) { // Live distance
                 ray->kill();
+                continue;
+            } else if (ray->getCoef() <= CAMERA_COEF_LIMIT) { // Too low intensity
+                ray->kill();
+                continue;
             }
 
             // 3 - Check SDF
             if (sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) {
                 material = nearestObject->getObjectDescriptor().material;
-                if (material->isMirror()) { // Mirror material
+                // Transparency & Refraction
+                if (material->getTransparency() > 1e-8) {
+                    raysClones.push_back(static_cast<raytracer::Ray*>(ray->clone()));
+                    raysClones.back()->setImmunity(nearestObject);
+                    raysClones.back()->setCoef(raysClones.back()->getCoef() * material->getTransparency() * (1.0f - material->getReflection()));
+                    raysClones.back()->setColor(raytracer::mergeColor(material->getColor(), raysClones.back()->getColor(), raysClones.back()->getCoef()));
+                }
+
+                // Normal computing
+                float d = (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance();
+                float localIntensityCoef = std::exp(-EXP_K * d * d * d * d);
+                auto [pointColor, ok] = nearestObject->getPointColor(ray->getCFrame().position);
+                color = pointColor;
+
+                // Apply the global light modifier
+                if (globalLightCount > 0 && !ok) color = raytracer::mergeColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
+                else if (globalLightCount > 0) color = raytracer::moyColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
+
+                // Generate the noise
+                if (material->hasNoise()) {
+                    auto [strength, size] = material->getNoiseSettings();
+                    raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
+                }
+
+                // Set the color
+                color = raytracer::mergeColor(ray->getColor(), color, ray->getCoef() * localIntensityCoef);
+                ray->setColor(color);
+
+                // Update coef
+                ray->setCoef(ray->getCoef() * material->getReflection());
+
+                // Only if the camera will be alive after
+                if (ray->getCoef() > CAMERA_COEF_LIMIT) {
+                    // Apply the reflection
                     nearestObject->reflectRay(ray, faceHit);
                     ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
 
                     // To counter collision with the same object on the next iteration
-                    ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
+                    ray->translate(ray->getCFrame().look * SDF_COLLINDING_LIMIT * 2);
                     ray->setImmunity(nearestObject);
-                } else {
-                    // Normal computing
-                    float d = (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance();
-                    float localIntensityCoef = std::exp(-EXP_K * d * d * d * d);
-                    auto [pointColor, ok] = nearestObject->getPointColor(ray->getCFrame().position);
-                    color = pointColor;
-
-                    // Apply the global light modifier
-                    if (globalLightCount > 0 && !ok) color = raytracer::mergeColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
-                    else if (globalLightCount > 0) color = raytracer::moyColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
-
-                    // Generate the noise
-                    if (material->hasNoise()) {
-                        auto [strength, size] = material->getNoiseSettings();
-                        raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
-                    }
-
-                    // Set the color
-                    color = raytracer::mergeColor(ray->getColor(), color, ray->getCoef() * localIntensityCoef * (1.0f - material->getTransparency()));
-                    ray->setColor(color);
-
-                    // Transparency & Refraction
-                    if (material->getTransparency() > 1e-8) {
-                        ray->setCoef(ray->getCoef() * material->getTransparency());
-
-                        // To counter collision with the same object on the next iteration
-                        ray->translate(ray->getCFrame().orientation * SDF_COLLINDING_LIMIT * 2);
-                        ray->setImmunity(nearestObject);
-                    } else {
-                        ray->kill();
-                    }
                 }
+                
             }
 
             // Kill conditions
@@ -457,9 +487,18 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
                 ray->kill();
             } else if (ray->getDistance() >= camera->getRenderDistance() * RAY_DISTANCE_COEF) { // Live distance
                 ray->kill();
+            } else if (ray->getCoef() <= CAMERA_COEF_LIMIT) { // Too low intensity
+                ray->kill();
             }
         }
+        if (depth > 0) delete ray;
         raytracer.adv(); // Update advencement
+    }
+
+    // Rec for the clonned ones
+    if (raysClones.size() > 0) {
+        raytracer.advAddMax(raysClones.size()); // Update advencement max
+        processCameraChunk(raytracer, raysClones, 0, raysClones.size(), objects, objectsChunks, camera, sky, globalLightColor, globalLightCount, depth + 1);
     }
 }
 
@@ -513,7 +552,8 @@ void raytracer::Raytracer::light(void)
                 std::ref(lightRays), start, end,
                 std::cref(this->_objects),
                 std::cref(this->_objectsChunks),
-                this->_camera
+                this->_camera,
+                0
             );
         }
 
@@ -535,9 +575,10 @@ void raytracer::Raytracer::light(void)
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
     3 - Check SDF
     collision ->
-        - Reflect (only for mirror material)
-        - Apply color (not for mirror material)
-        - kill (not for mirror material)
+        - Reflect
+        - Reduce intensity
+        - Apply color fusion
+    too low intensity -> kill
     too far -> kill
  2.2 - Store computed value
 */
@@ -581,7 +622,8 @@ void raytracer::Raytracer::render(void)
             std::cref(this->_objects),
             std::cref(this->_objectsChunks),
             this->_camera, std::cref(this->_sky),
-            this->_globalLightColor, this->_globalLightCount
+            this->_globalLightColor, this->_globalLightCount,
+            0
         );
     }
  

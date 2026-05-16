@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -148,7 +148,7 @@ class Raytracer {
         Raytracer& operator=(Raytracer&& object) = delete;
 
         // ---------- Constructor --------- //
-        Raytracer() = default;
+        Raytracer() {this->_objectsChunks.max_load_factor(LOAD_FACTOR); this->_rays.max_load_factor(LOAD_FACTOR);};
         Raytracer(const Raytracer& object) = delete;
         Raytracer(Raytracer&& object) = delete;
 

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 06/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.cpp
@@ -22,7 +22,7 @@ void raytracer::LightRay::reset(void)
     this->_lumen = -1.0f;
 }
 
-nodiscard raytracer::LightRay* raytracer::LightRay::clone(void) const
+nodiscard void* raytracer::LightRay::clone(void)
 {
     raytracer::LightRay* ray = new LightRay();
     ray->_alive = true; // Security

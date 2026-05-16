@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 03/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.hpp
@@ -32,9 +32,11 @@ class Ray: public raytracer::ARay {
     private:
         raytracer::Color _color; // RGB color that what hit, add a percentage of the color from the surface hitted each time
         float _coef = 1.0f; // Coef reduced at each color added
+        Ray* _ray = nullptr; // Internal parent
 
     public:
         // ---------- Pre-Function -------- //
+        void* clone(void) final;
         void reset(void);
 
         // ------------ Function ---------- //
@@ -53,7 +55,7 @@ class Ray: public raytracer::ARay {
         Ray(Ray&& object) = delete;
 
         // ----------- Destructor --------- //
-        ~Ray() = default;
+        ~Ray();
 };
 
 } // namespace end

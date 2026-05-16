@@ -34,8 +34,7 @@ class IMaterial {
         virtual void parse(const libconfig::Setting& node) = 0;
         virtual raytracer::Color getColor(void) const = 0;
         virtual float getTransparency(void) const = 0;
-        virtual float getLightReflectionCoef(void) const = 0;
-        virtual bool isMirror(void) const = 0;
+        virtual float getReflection(void) const = 0;
         virtual std::pair<float, float> getNoiseSettings(void) const = 0;
         virtual bool hasNoise(void) const = 0;
 

@@ -35,10 +35,6 @@ void raytracer::Default::parse(const libconfig::Setting& node)
     if (node.lookupValue("reflection", reflection))
         this->_reflection = reflection;
 
-    bool mirror = false;
-    if (node.lookupValue("mirror", mirror))
-        this->_mirror = mirror;
-
     /* noise */
     bool noise = false;
     if (node.lookupValue("noise", noise))

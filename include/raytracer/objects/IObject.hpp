@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -47,7 +47,7 @@ class IObject {
         virtual raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face = nullptr) const = 0;
         virtual void setImmunity(raytracer::IObject* object) = 0;
         virtual raytracer::IObject* getImmunity(void) const = 0;
-        virtual bool willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const = 0;
+        virtual bool willCollide(const raytracer::Coord& point, const raytracer::Direction& orientation) const = 0;
 
         /* movement */
         virtual void translate(const raytracer::Coord& v) = 0;

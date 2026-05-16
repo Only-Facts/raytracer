@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 15/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -35,14 +35,4 @@ hot std::pair<float, const raytracer::Face*> raytracer::Point::computeSDF(const 
 hot raytracer::Direction raytracer::Point::computeHit(unused const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
     return {0.0, 0.0, 0.0}; // Nop
-}
-
-hot nodiscard bool raytracer::Point::willColide(const raytracer::Coord& point, const raytracer::Direction& orientation) const
-{
-    static const raytracer::Type limit = SDF_COLLINDING_LIMIT * SDF_COLLINDING_LIMIT;
-    raytracer::Coord local = point - this->getCFrame().position;
-    raytracer::Type t = local.dot(orientation);
-    if (t < 0) return false;
-    raytracer::Coord closest = this->getCFrame().position + orientation * t;
-    return (closest - point).lengthSquared() <= limit;
 }

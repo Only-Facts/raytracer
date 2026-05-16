@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -58,7 +58,7 @@ class AObject: public raytracer::IObject {
         /* 3D logic */
         hot inline void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
         hot inline nodiscard raytracer::IObject* getImmunity(void) const final {return this->_immunity;};
-        hot inline nodiscard bool willColide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const override {return true;};
+        hot inline nodiscard bool willCollide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const override {return true;};
 
         /* movement */
         hot inline void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};

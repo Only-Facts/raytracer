@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 04/05/2026 by @author Tsukini
+##  @date 13/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IRay.hpp
@@ -27,6 +27,7 @@ namespace raytracer { // namespace start
 class IRay: public raytracer::AObject {
     public:
         // ---------- Pre-Function -------- //
+        virtual void* clone(void) = 0;
         virtual void reset(void) = 0; // Reset ray values
         virtual void computeObjects(raytracer::Type renderDistance, const std::vector<raytracer::IObject*>& objects, const std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash>& objectsChunks) = 0;
         virtual const std::vector<raytracer::IObject*>& getObjects(void) const = 0;
