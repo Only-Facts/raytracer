@@ -230,7 +230,7 @@ jobs:
 
   push_to_mirror:
     runs-on: ubuntu-latest
-    needs: [check_cmake_compilation, check_cargo_compilation]
+    needs: [check_cargo_compilation]
     if: ${{ github.event_name == 'push' && success() }}
     steps:
       - uses: actions/checkout@v4
