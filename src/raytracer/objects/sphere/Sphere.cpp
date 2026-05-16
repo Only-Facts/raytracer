@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 14/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Sphere.cpp
@@ -34,13 +34,10 @@ cold void raytracer::Sphere::parse(const libconfig::Setting& node)
 
 hot std::pair<float, const raytracer::Face*> raytracer::Sphere::computeSDF(const raytracer::Coord& point) const
 {
-    return {(point - this->getCFrame().position).length() - (this->_radius / 2), nullptr};
+    return {(point - this->getCFrame().position).length() - (this->_radius / 2.0), nullptr};
 }
 
 hot raytracer::Direction raytracer::Sphere::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
     return (point - this->getCFrame().position).normalize();
 }
-
-hot nodiscard bool raytracer::Sphere::willColide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const
-{return true;}

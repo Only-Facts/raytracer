@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 14/05/2026 by @author Tsukini
+##  @date 15/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -36,6 +36,3 @@ hot raytracer::Direction raytracer::Point::computeHit(unused const raytracer::Co
 {
     return {0.0, 0.0, 0.0}; // Nop
 }
-
-hot nodiscard bool raytracer::Point::willColide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const
-{return true;}
