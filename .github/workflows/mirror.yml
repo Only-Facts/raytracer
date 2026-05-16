@@ -93,6 +93,7 @@ jobs:
 
       - name: Build & Compile Repo
         run: |
+          export CMAKE_PREFIX_PATH=/tmp/sfml-install
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/tmp/sfml-install
           cmake --build build --parallel $(nproc)
 
@@ -191,7 +192,9 @@ jobs:
           rust-version: "1.88.0"
 
       - name: Pre-build project
-        run: cargo build
+        run: |
+          export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          cargo build --verbose
 
       - name: Check formatting
         run: cargo fmt --check
