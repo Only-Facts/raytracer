@@ -51,7 +51,7 @@ extern "C" {
         bool ok;
     };
 
-    CColorResult object_get_point_color(void* instance, double px, double py, double pz) {
+    CColorResult object_get_point_color(void* instance, double, double, double) {
         raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
  
         if (obj->getObjectDescriptor().material == nullptr) {
