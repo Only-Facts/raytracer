@@ -84,7 +84,11 @@ jobs:
           cd /tmp
           git clone --depth 1 --branch 3.1.0 https://github.com/SFML/SFML.git
           cd SFML
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install -DSFML_BUILD_AUDIO=ON
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install \
+            -DSFML_BUILD_NETWORK=OFF \
+            -DSFML_BUILD_AUDIO=OFF
           cmake --build build --target install --parallel $(nproc)
 
       - name: Build & Compile Repo
@@ -155,7 +159,11 @@ jobs:
           cd /tmp
           git clone --depth 1 --branch 3.1.0 https://github.com/SFML/SFML.git
           cd SFML
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install -DSFML_BUILD_AUDIO=ON
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/tmp/sfml-install \
+            -DSFML_BUILD_NETWORK=OFF \
+            -DSFML_BUILD_AUDIO=OFF
           cmake --build build --target install --parallel $(nproc)
 
       - name: Cache Cargo Dependencies
