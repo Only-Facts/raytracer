@@ -42,7 +42,7 @@ jobs:
         with:
           repository: ""
 
-      - name: Install System Dependencies (X11, libconfig, tinyobjloader)
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -51,10 +51,8 @@ jobs:
             libxcursor-dev \
             libxi-dev \
             libxinerama-dev \
+            libfreetype-dev \
             libudev-dev \
-            libopenal-dev \
-            libflac-dev \
-            libvorbis-dev \
             libgl1-mesa-dev \
             libegl1-mesa-dev \
             libxcb-composite0-dev \
@@ -117,7 +115,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies (X11, libconfig, tinyobjloader)
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -126,10 +124,8 @@ jobs:
             libxcursor-dev \
             libxi-dev \
             libxinerama-dev \
+            libfreetype-dev \
             libudev-dev \
-            libopenal-dev \
-            libflac-dev \
-            libvorbis-dev \
             libgl1-mesa-dev \
             libegl1-mesa-dev \
             libxcb-composite0-dev \
