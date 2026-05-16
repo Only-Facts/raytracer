@@ -561,6 +561,7 @@ impl Raytracer {
                     {
                         self.settings.nproc = n;
                         self.settings.nproc_set = true;
+                        i += 1;
                     }
                 }
                 "-g" | "--newton" => {

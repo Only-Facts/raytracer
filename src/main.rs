@@ -192,8 +192,8 @@ fn save_as_ppm(
 
 fn run(raytracer: &mut Raytracer, args: Vec<String>) -> Result<(), Error> {
     raytracer.parse_flags(args);
-    let filepath = if raytracer.settings.viewer {
-        raytracer.settings.ppm_path.clone()
+    let filepath = if !raytracer.settings.cfg_path.is_empty() {
+        raytracer.settings.cfg_path.clone()
     } else {
         "scene.json".to_string()
     };
