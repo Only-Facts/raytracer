@@ -252,6 +252,49 @@ hot void raytracer::Raytracer::display(sf::RenderWindow& window)
     window.display();
 }
 
+//template<bool onObject = false>
+raytracer::Direction raytracer::Raytracer::computeUniversalGravitationForce(const raytracer::IObject *const object)
+{
+    std::lock_guard<std::mutex> lock(this->_forcesMutex);
+    raytracer::Direction totalForce = {0.0, 0.0, 0.0};
+    raytracer::Direction forceVector;
+    raytracer::Coord r;
+    raytracer::Type distance = 0.0, force = 0.0;
+    raytracer::Coord position = object->getCFrame().position;
+    raytracer::Type mass = object->getNewton().mass;
+    const raytracer::ForceKey key = {position, mass};
+
+    // Check for already computed values
+    auto it = this->_forces.find(key);
+    if (it != this->_forces.end())
+        return it->second;
+
+    // For each object
+    for (const raytracer::IObject *const actualObject: this->_newtonianObjects) {
+        //if constexpr (onObject) {
+        //    if (actualObject == object) unlikely {continue;}
+        //}
+
+        // Get the distance
+        r = actualObject->getCFrame().position - position;
+        distance = r.length();
+
+        // Compute the force: F = G * m1 * m2 / r^2
+        // G: Newtonian constant of gravitation
+        force = G_NEWTON * mass * actualObject->getNewton().mass / (distance * distance);
+
+        // Apply the force for a vector3f (on the direction)
+        forceVector = r.normalize() * force;
+
+        totalForce += forceVector;
+    }
+
+    // Store computed value
+    this->_forces.try_emplace(key, totalForce);
+
+    return totalForce;
+}
+
 static hot void processLightChunk(raytracer::Raytracer& raytracer,
     std::vector<raytracer::LightRay*>& rays, std::size_t start, std::size_t end,
     const std::vector<raytracer::IObject*>& objects,
@@ -266,6 +309,7 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
     const raytracer::Face* faceHit = nullptr;
     raytracer::Direction look;
     raytracer::Angle angle = 0.0;
+    const raytracer::Type delta = raytracer.getDelta();
     float sdf = 0.0;
 
     // Check depth
@@ -300,9 +344,18 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                 continue;
             }
 
-            // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().look * sdf);
-            ray->addDistance(distanceUnit * sdf);
+            // 2 - Apply SDF (discrete gravity curve, only in newton mode)
+            if (raytracer.hasNewtonianObject() && raytracer.isNewton()) {
+                float mv = std::min(static_cast<float>(delta), sdf);
+                raytracer::Newton& gravity = ray->getNewton();
+                gravity.acceleration = raytracer.computeUniversalGravitationForce(ray);
+                gravity.velocity += gravity.acceleration * mv;
+                ray->translate(gravity.velocity * mv);
+                ray->addDistance(gravity.velocity.length() * mv);
+            } else {
+                ray->translate(ray->getCFrame().look * sdf);
+                ray->addDistance(distanceUnit * sdf);
+            }
 
             // Kill conditions
             if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
@@ -319,6 +372,13 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
             // 3 - Check SDF
             if (ray->getImmunity() != nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision
                 material = nearestObject->getObjectDescriptor().material;
+
+                // Handle singularity
+                if (nearestObject->isSingularity()) {
+                    ray->kill();
+                    continue;
+                }
+
                 // Transparency & Refraction
                 if (material->getTransparency() > 1e-8) {
                     raysClones.push_back(static_cast<raytracer::LightRay*>(ray->clone()));
@@ -385,6 +445,7 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
     raytracer::Type distanceUnit = 0.0;
     const raytracer::IMaterial* material = nullptr;
     const raytracer::Face* faceHit = nullptr;
+    const raytracer::Type delta = raytracer.getDelta();
     float sdf = 0.0;
 
     for (std::size_t i = start; i < end; ++i) {
@@ -417,9 +478,18 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
                 continue;
             }
 
-            // 2 - Apply SDF (aproximative gravity curve, only in newton mode)
-            ray->translate(ray->getCFrame().look * sdf);
-            ray->addDistance(distanceUnit * sdf);
+            // 2 - Apply SDF (discrete gravity curve, only in newton mode)
+            if (raytracer.hasNewtonianObject() && raytracer.isNewton()) {
+                float mv = std::min(static_cast<float>(delta), sdf);
+                raytracer::Newton& gravity = ray->getNewton();
+                gravity.acceleration = raytracer.computeUniversalGravitationForce(ray);
+                gravity.velocity += gravity.acceleration * mv;
+                ray->translate(gravity.velocity * mv);
+                ray->addDistance(gravity.velocity.length() * mv);
+            } else {
+                ray->translate(ray->getCFrame().look * sdf);
+                ray->addDistance(distanceUnit * sdf);
+            }
 
             // Kill conditions
             if (std::isnan(sdf) || (ray->getCFrame().position - camera->getCFrame().position).lengthSquared() >= camera->getRenderDistance() * camera->getRenderDistance()) { // Too far
@@ -437,6 +507,14 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
             // 3 - Check SDF
             if (sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) {
                 material = nearestObject->getObjectDescriptor().material;
+
+                // Handle singularity
+                if (nearestObject->isSingularity()) {
+                    ray->setColor({0, 0, 0});
+                    ray->kill();
+                    continue;
+                }
+
                 // Transparency & Refraction
                 if (material->getTransparency() > 1e-8) {
                     raysClones.push_back(static_cast<raytracer::Ray*>(ray->clone()));

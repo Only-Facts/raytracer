@@ -65,6 +65,9 @@ class IObject {
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
         virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;
+        virtual raytracer::Newton& getNewton(void) = 0;
+        virtual const raytracer::Newton& getNewton(void) const = 0;
+        virtual bool isSingularity(void) const = 0;
 
         // ------------ Operator ---------- //
         IObject& operator=(const IObject& object) = delete;

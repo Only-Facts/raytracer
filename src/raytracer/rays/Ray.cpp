@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Ray.cpp
@@ -20,6 +20,8 @@ void raytracer::Ray::reset(void)
     this->_color = DEFAULT_COLOR;
     this->_distance = 0.0f;
     this->_coef = 1.0f;
+    this->_descriptor.gravity.acceleration = {0.0, 0.0, 0.0};
+    this->_descriptor.gravity.velocity = {0.0, 0.0, 0.0};
 }
 
 nodiscard void* raytracer::Ray::clone(void)

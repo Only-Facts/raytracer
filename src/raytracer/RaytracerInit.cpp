@@ -46,6 +46,22 @@ static void isFile(const std::string& path, const std::string& extensionWanted =
     }
 }
 
+static std::size_t isNumber(const std::string& str)
+{
+    try {
+        if (str.empty())
+            throw std::invalid_argument("empty");
+        if (!std::all_of(str.begin(), str.end(), ::isdigit))
+            throw std::invalid_argument("not numeric");
+        unsigned long long tmp = std::stoull(str);
+        if (tmp > std::numeric_limits<std::size_t>::max())
+            throw std::out_of_range("overflow");
+        return static_cast<std::size_t>(tmp);
+    } catch (const std::exception& e) {
+        throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
+    }
+}
+
 static nodiscard bool checkWritablePath(const std::string& rawPath)
 {
     std::filesystem::path path(rawPath);
@@ -159,14 +175,20 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
         // -g, --newton
         else if (arg == "-g" || arg == "--newton") {
+            if (i + 1 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-g requires <delta>");
+
             // Check the option argument
-            if (this->_settings.newton) {
+            if (this->_settings.newton_set) {
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
+            this->_settings.delta = isNumber(argv[++i]);
+            if (this->_settings.delta == 0)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-g Invalid delta, need to be superior to 0");
 
             // Set the newton mode
-            this->_settings.newton = true;
+            this->_settings.newton_set = true;
         }
 
         // -n, --nproc
@@ -179,19 +201,7 @@ void raytracer::Raytracer::load(int argc, char *argv[])
                 utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
                 std::cout << e.formated() << std::endl;
             }
-            try {
-                std::string str = argv[++i];
-                if (str.empty())
-                    throw std::invalid_argument("empty");
-                if (!std::all_of(str.begin(), str.end(), ::isdigit))
-                    throw std::invalid_argument("not numeric");
-                unsigned long long tmp = std::stoull(str);
-                if (tmp > std::numeric_limits<std::size_t>::max())
-                    throw std::out_of_range("overflow");
-                this->_settings.nproc = static_cast<std::size_t>(tmp);
-            } catch (const std::exception& e) {
-                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, std::string("-n Invalid number of processus: ") + e.what());
-            }
+            this->_settings.nproc = isNumber(argv[++i]);
             if (this->_settings.nproc != 0 && this->_settings.nproc < 2)
                 throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-n Invalid number of processus, need to be superior to 1 or equal to 0 (auto)");
 
@@ -438,8 +448,13 @@ void raytracer::Raytracer::init(void)
 
     // Init internal optimisation for SDF
     for (raytracer::IObject* object: this->_objects) {
+        raytracer::Newton& gravity = object->getNewton();
         for (const raytracer::Chunk& chunk: object->getObjectDescriptor().chunks)
             this->_objectsChunks[chunk].push_back(object);
+        // Update mass for singularity
+        if (object->isSingularity()) gravity.mass *= SOLAR_MASS;
+        if (gravity.mass < -1e-8 || gravity.mass > 1e-8)
+            this->_newtonianObjects.push_back(object);
     }
 }
 

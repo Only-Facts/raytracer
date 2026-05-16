@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 15/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Point.cpp
@@ -20,8 +20,9 @@ cold void raytracer::Point::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Setup the cframe
+    // Setup the cframe & newton
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::trySetNewton(descriptor, node);   
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);

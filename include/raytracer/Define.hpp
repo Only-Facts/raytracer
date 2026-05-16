@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 15/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -18,7 +18,7 @@ File Description:
 
     /* limits */
     #define RENDER_DISTANCE 400 // Kill the ray if the SDF is above or equal to that value (can be redefined in the camera)
-    #define MAX_LIGHT_RAY 1000000 // Max number of rays by light
+    #define MAX_LIGHT_RAY 10000//00 // Max number of rays by light
     #define LIGHT_INTENSITY_LIMIT 1e-5 // Kill the ray under this intensity
     #define CAMERA_COEF_LIMIT 1e-5 // Kill the ray under this coef
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
@@ -43,6 +43,9 @@ File Description:
     #define NOISE_SIZE 0.1f // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
     #define MOVE_SPEED 10.0f
     #define ORIENTATION_SPEED 1.0f
+    #define SOLAR_MASS 1.988e30 // Used as unit for singularity (default: kg)
+    #define PHOTON_MASS 1e-10 // Mass of the rays used for newton
+    #define G_NEWTON 6.674e-11 // Newtonian constant of gravitation
 
     /* default */
     #define PLUGINS_PATH "./plugins/"

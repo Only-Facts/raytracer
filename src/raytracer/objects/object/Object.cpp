@@ -19,18 +19,19 @@ void raytracer::Object::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Setup the cframe
+    // Setup the cframe & newton
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::trySetNewton(descriptor, node);   
 
     // Other settings
     double scale = 1.0;
     if (node.lookupValue("scale", scale))
         descriptor.scale = scale;
 
-    // Set the descriptor
-    this->setObjectDescriptor(descriptor);
-
     // Get the obj path & load the shape with vertices
     if (!node.lookupValue("obj", descriptor.obj))
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The obj field isn't defined for the object");
+
+    // Set the descriptor
+    this->setObjectDescriptor(descriptor);
 }

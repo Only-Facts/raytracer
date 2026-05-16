@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 15/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -83,6 +83,39 @@ struct CFrameHash {
     }
 };
 
+struct Newton {
+    bool singularity = false; // Cancel any light that will encounter this
+    raytracer::Type mass = 0.0; // In kg or Solar mass for singularity
+    /* only used by rays for now */
+    raytracer::Direction acceleration = {0.0, 0.0, 0.0};
+    raytracer::Direction velocity = {0.0, 0.0, 0.0};
+};
+
+struct ForceKey {
+    raytracer::Coord position = {0.0, 0.0, 0.0};
+    raytracer::Type mass = 0.0;
+    inline hot nodiscard bool operator==(const ForceKey& other) const noexcept {
+        return (
+            position.x == other.position.x &&
+            position.y == other.position.y &&
+            position.z == other.position.z &&
+            mass == mass
+        );
+    }
+};
+
+struct ForceHash {
+    inline hot nodiscard std::size_t operator()(const raytracer::ForceKey& force) const noexcept {
+        auto bits = [](double v) -> std::uint64_t {
+            return std::bit_cast<std::uint64_t>(v);
+        };
+        std::size_t h = bits(force.position.x) * 73856093ull;
+        h ^= bits(force.position.y) * 19349663ull;
+        h ^= bits(force.position.z) * 83492791ull;
+        return h ^ (bits(force.mass) * 3266489917ull);
+    }
+};
+
 enum class Shape {
     None,
     Point,
@@ -128,11 +161,33 @@ struct ObjectDescriptor {
     std::vector<raytracer::Face> faces;
     float scale = 1.0f;
 
+    /* newton */
+    raytracer::Newton gravity;
+
     // ---------- Constructor --------- //
     ObjectDescriptor() = default;
     ObjectDescriptor(const raytracer::CFrame& cframe): cframe{cframe}, cframeOrigin{cframe} {};
 
     // -------- Static-Function ------- //
+    static void trySetNewton(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
+    {setNewton(descriptor, node, true);}
+    static void setNewton(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node, bool failSafe = false)
+    {
+        // Check existantce
+        if (!node.exists("newton")) {
+            if (failSafe) return;
+            else throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The Newton field isn't defined");
+        }
+        const libconfig::Setting& newton = node["newton"];
+
+        // Set values
+        bool singularity = false;
+        if (newton.lookupValue("singularity", singularity))
+            descriptor.gravity.singularity = singularity;
+        double mass = 0.0;
+        if (newton.lookupValue("mass", mass))
+            descriptor.gravity.mass = mass;
+    }
     static void setCFrame(raytracer::ObjectDescriptor& descriptor, const libconfig::Setting& node)
     {
         // Check existantce
@@ -154,6 +209,7 @@ struct ObjectDescriptor {
         descriptor.cframe.orientation.y = rot[1];
         descriptor.cframe.orientation.z = rot[2];
         descriptor.cframe.look = raytracer::toLook(descriptor.cframe.orientation);
+        descriptor.gravity.velocity = descriptor.cframe.look;
 
         descriptor.cframeOrigin = descriptor.cframe;
     }

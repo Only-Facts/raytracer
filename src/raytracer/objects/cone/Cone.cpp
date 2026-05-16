@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 14/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.cpp
@@ -19,17 +19,18 @@ void raytracer::Cone::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Setup the cframe
+    // Setup the cframe & newton
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
+    raytracer::ObjectDescriptor::trySetNewton(descriptor, node);   
 
     // Other settings
     double scale = 1.0;
     if (node.lookupValue("scale", scale))
         descriptor.scale = scale;
 
-    // Set the descriptor
-    this->setObjectDescriptor(descriptor);
-
     // Load the obj sub path (to load the vertex in the future)
     descriptor.obj = "cone.obj";
+
+    // Set the descriptor
+    this->setObjectDescriptor(descriptor);
 }
