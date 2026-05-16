@@ -42,7 +42,7 @@ jobs:
         with:
           repository: ""
 
-      - name: Install SFML and X11 dependencies
+      - name: Install SFML, X11, libconfig and tinyobjloader dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -65,7 +65,10 @@ jobs:
             libxcb-shape0-dev \
             libxcb-shm0-dev \
             libxcb-util-dev \
-            libxcb-xfixes0-dev
+            libxcb-xfixes0-dev \
+            libconfig-dev \
+            libconfig++-dev \
+            libtinyobjloader-dev
 
       - name: Compile Repo
         run: |
@@ -98,7 +101,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install SFML and X11 dependencies
+      - name: Install SFML, X11, libconfig and tinyobjloader dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -121,7 +124,10 @@ jobs:
             libxcb-shape0-dev \
             libxcb-shm0-dev \
             libxcb-util-dev \
-            libxcb-xfixes0-dev
+            libxcb-xfixes0-dev \
+            libconfig-dev \
+            libconfig++-dev \
+            libtinyobjloader-dev
 
       - name: Cache Cargo Dependencies
         uses: actions/cache@v4
