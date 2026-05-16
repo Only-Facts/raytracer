@@ -42,6 +42,31 @@ jobs:
         with:
           repository: ""
 
+      - name: Install SFML and X11 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsfml-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libudev-dev \
+            libopenal-dev \
+            libflac-dev \
+            libvorbis-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libxcb-composite0-dev \
+            libxcb-cursor-dev \
+            libxcb-image0-dev \
+            libxcb-keysyms1-dev \
+            libxcb-randr0-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-shm0-dev \
+            libxcb-util-dev \
+            libxcb-xfixes0-dev
+
       - name: Compile Repo
         run: |
           if [ -f "CMakeLists.txt" ]; then
@@ -72,6 +97,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install SFML and X11 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsfml-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libudev-dev \
+            libopenal-dev \
+            libflac-dev \
+            libvorbis-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libxcb-composite0-dev \
+            libxcb-cursor-dev \
+            libxcb-image0-dev \
+            libxcb-keysyms1-dev \
+            libxcb-randr0-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-shm0-dev \
+            libxcb-util-dev \
+            libxcb-xfixes0-dev
 
       - name: Cache Cargo Dependencies
         uses: actions/cache@v4
