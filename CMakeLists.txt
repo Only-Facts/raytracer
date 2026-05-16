@@ -19,7 +19,7 @@ add_definitions(-D_NoWarning) # Remove warnings from utils
 # Requirement
 # =========================
 find_package(Python3 REQUIRED) # Try to find python for the dependencies
-#find_package(SFML 3.1.0 COMPONENTS graphics window system REQUIRED)
+find_package(SFML 3 REQUIRED COMPONENTS Graphics)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBCONFIG REQUIRED libconfig++)
 
@@ -81,6 +81,8 @@ set(SRC
 add_executable(${TARGET} ${SRC})
 #add_library(${TARGET} STATIC ${SRC})
 #add_library(${TARGET} SHARED ${SRC})
+
+target_link_libraries(raytracer PRIVATE SFML::Graphics)
 
 set(SRC_LIBS
     src-cpp/raytracer/special/Utils.cpp

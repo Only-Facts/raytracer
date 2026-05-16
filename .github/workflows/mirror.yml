@@ -94,6 +94,7 @@ jobs:
       - name: Build & Compile Repo
         run: |
           export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          export CXXFLAGS="-I/tmp/sfml-install/include"
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/tmp/sfml-install
           cmake --build build --parallel $(nproc)
 
@@ -194,6 +195,7 @@ jobs:
       - name: Pre-build project
         run: |
           export CMAKE_PREFIX_PATH=/tmp/sfml-install
+          export CXXFLAGS="-I/tmp/sfml-install/include"
           cargo build --verbose
 
       - name: Check formatting
