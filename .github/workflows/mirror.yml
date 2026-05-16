@@ -42,7 +42,8 @@ jobs:
         with:
           repository: ""
 
-      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype)
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype,
+          harfbuzz)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -52,6 +53,7 @@ jobs:
             libxi-dev \
             libxinerama-dev \
             libfreetype-dev \
+            libharfbuzz-dev \
             libudev-dev \
             libgl1-mesa-dev \
             libegl1-mesa-dev \
@@ -115,7 +117,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype)
+      - name: Install System Dependencies (X11, libconfig, tinyobjloader, freetype,
+          harfbuzz)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -125,6 +128,7 @@ jobs:
             libxi-dev \
             libxinerama-dev \
             libfreetype-dev \
+            libharfbuzz-dev \
             libudev-dev \
             libgl1-mesa-dev \
             libegl1-mesa-dev \
