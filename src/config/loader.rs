@@ -38,7 +38,7 @@ pub struct SceneConfig {
     pub lights: Vec<LightConfig>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct PluginLoader {
     cache: HashMap<String, Arc<Library>>,
 }

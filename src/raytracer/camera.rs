@@ -6,7 +6,7 @@ use crate::{
         ray::{Ray, RayBase},
         structs::{CFrame, Color, Coord, Direction, Face},
     },
-    utils::vector::Vector2,
+    utils::vector::{Vector2, Vector3},
 };
 
 pub trait Camera: Object {
@@ -19,15 +19,13 @@ pub trait Camera: Object {
     fn get_rays_mut(&mut self) -> &mut Vec<Ray>;
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Viewer {
     pub descriptor: ObjectDescriptor,
     pub resolution: (u32, u32),
     pub fov: f64,
     pub screen: Vec<Color>,
     pub rays: Vec<Ray>,
-    #[allow(dead_code)]
-    pub immunity: Option<Box<dyn Object>>,
 }
 
 impl Viewer {
@@ -42,7 +40,6 @@ impl Viewer {
             fov,
             screen: vec![Color::default(); (res_x * res_y) as usize],
             rays: Vec::new(),
-            immunity: None,
         };
         viewer.init();
         viewer
@@ -52,6 +49,39 @@ impl Viewer {
             x: self.resolution.0 as u16,
             y: self.resolution.1 as u16,
         }
+    }
+
+    pub fn translate_local(&mut self, x: f64, y: f64, z: f64) {
+        let forward = self.descriptor.cframe.orientation.normalize();
+
+        let world_up = Vector3::new(0.0, 1.0, 0.0);
+
+        let right = world_up.cross(forward).normalize();
+
+        self.descriptor.cframe.position += right * x;
+        self.descriptor.cframe.position += world_up * y;
+        self.descriptor.cframe.position += forward * z;
+
+        self.reset();
+    }
+
+    pub fn rotate(&mut self, yaw: f64, pitch: f64) {
+        let mut direction = self.descriptor.cframe.orientation.normalize();
+
+        if yaw != 0.0 {
+            direction = rotate_y(direction, yaw);
+        }
+
+        if pitch != 0.0 {
+            let world_up = Vector3::new(0.0, 1.0, 0.0);
+            let right = world_up.cross(direction).normalize();
+
+            direction = rotate_around_axis(direction, right, pitch);
+        }
+
+        self.descriptor.cframe.orientation = direction.normalize();
+
+        self.reset();
     }
 }
 
@@ -160,7 +190,20 @@ impl Object for Viewer {
     fn compute_hit(&self, _point: &Coord, _face: Option<&Face>) -> Coord {
         Coord::new(0.0, 0.0, 0.0)
     }
-    fn set_immunity(&mut self, object: Option<Box<dyn Object>>) {
-        self.immunity = object;
-    }
+}
+
+fn rotate_y(v: Vector3<f64>, angle: f64) -> Vector3<f64> {
+    let cos = angle.cos();
+    let sin = angle.sin();
+
+    Vector3::new(v.x * cos + v.z * sin, v.y, -v.x * sin + v.z * cos)
+}
+
+fn rotate_around_axis(v: Vector3<f64>, axis: Vector3<f64>, angle: f64) -> Vector3<f64> {
+    let axis = axis.normalize();
+
+    let cos = angle.cos();
+    let sin = angle.sin();
+
+    v * cos + axis.cross(v) * sin + axis * (axis.dot(v) * (1.0 - cos))
 }
