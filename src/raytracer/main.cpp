@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file main.cpp
@@ -16,6 +16,14 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include <iostream>
+#include <csignal>
+
+// Global signal handling
+static volatile std::sig_atomic_t stopped = false;
+void signalHandler(int signal)
+{if (signal == SIGINT) stopped = true;}
+hot nodiscard bool raytracer::Raytracer::signal(void)
+{return stopped;}
 
 static cold void printHelp()
 {
@@ -86,6 +94,7 @@ static cold void run(raytracer::Raytracer& raytracer, int argc, char *argv[])
     if (raytracer.isGui() || raytracer.isViewer()) {
         raytracer.gui(); // Launch gui
     } else {
+        std::signal(SIGINT, signalHandler);
         raytracer.light(); // Update light rendering
         raytracer.render(); // Update camera rendering
         raytracer.saveRender(); // Save the updated rendering

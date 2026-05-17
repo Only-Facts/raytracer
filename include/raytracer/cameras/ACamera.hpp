@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ACamera.hpp
@@ -40,7 +40,7 @@ class ACamera: public raytracer::ICamera {
 
     public:
         // ---------- Pre-Function -------- //
-        void updateScreen(void) override;
+        void updateScreen(bool deadColor) override;
         void kill(void) final;
  
         // ------------ Function ---------- //

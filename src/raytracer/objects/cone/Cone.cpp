@@ -67,7 +67,7 @@ hot std::pair<float, const raytracer::Face*> raytracer::Cone::computeSDF(const r
     }
 }
 
-hot raytracer::Direction raytracer::Cone::computeHit(const raytracer::Coord& point, unused const raytracer::Face* face) const
+hot raytracer::Direction raytracer::Cone::computeHit(unused const raytracer::Coord& point, unused const raytracer::Face* face) const
 {
     return {0.0, 0.0, 0.0};
 }

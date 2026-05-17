@@ -262,7 +262,7 @@ raytracer::Direction raytracer::Raytracer::computeUniversalGravitationForce(cons
     raytracer::Type distance = 0.0, force = 0.0;
     raytracer::Coord position = object->getCFrame().position;
     raytracer::Type mass = object->getNewton().mass;
-    const raytracer::ForceKey key = {raytracer::getForceChunk(position), mass};
+    //const raytracer::ForceKey key = {raytracer::getForceChunk(position), mass};
 
     // Check for already computed values
     /*
@@ -318,6 +318,7 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
     if (depth > RAY_MAX_DEPTH) return;
 
     for (std::size_t i = start; i < end; ++i) {
+        if (raytracer.signal()) return;
         raytracer::LightRay* ray = rays[i];
         distanceUnit = ray->getCFrame().look.length();
         ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
@@ -451,6 +452,7 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
     float sdf = 0.0;
 
     for (std::size_t i = start; i < end; ++i) {
+        if (raytracer.signal()) return;
         raytracer::Ray* ray = rays[i];
         ray->computeObjects(camera->getRenderDistance(), objects, objectsChunks);
         distanceUnit = ray->getCFrame().look.length();
@@ -597,6 +599,7 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
 */
 void raytracer::Raytracer::light(void)
 {
+    if (this->signal()) return;
     std::vector<std::thread> threads;
     std::size_t countThreads = 1, chunkSize = 1;
     std::size_t start = 0, end = 0;
@@ -612,6 +615,7 @@ void raytracer::Raytracer::light(void)
     for (raytracer::ILight* light: this->_lights) this->advAddMax(light->getRays().size());
     this->adv(true, false);
     for (raytracer::ILight* light: this->_lights) {
+        if (this->signal()) return;
         if (light->isGlobal()) { // Handle global light
             this->_globalLightColor += light->getColor() * light->getIntensity();
             ++this->_globalLightCount;
@@ -663,6 +667,7 @@ void raytracer::Raytracer::light(void)
 */
 void raytracer::Raytracer::render(void)
 {
+    if (this->signal()) return;
     std::vector<std::thread> threads;
     std::vector<raytracer::Ray*> aliveRays;
     aliveRays.reserve(this->_camera->getRays().size());
@@ -766,7 +771,7 @@ cold void raytracer::Raytracer::loadRender(void)
 cold void raytracer::Raytracer::saveRender(void)
 {
     // Update screen pixels using rays color
-    this->_camera->updateScreen();
+    this->_camera->updateScreen(true); // Allow dead color
 
     // Setup the file path
     std::filesystem::path cfg = this->_settings.cfg_path;

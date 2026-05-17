@@ -136,6 +136,7 @@ class Raytracer {
 
         /* global */
         raytracer::Direction computeUniversalGravitationForce(const raytracer::IObject *const object); // Newton
+        bool signal(void); // Check signal status
         void light(void); // Update light
         void render(void); // Update camera screen
         void loadRender(void); // Load the given ppm file

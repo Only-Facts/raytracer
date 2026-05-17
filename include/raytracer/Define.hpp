@@ -18,7 +18,7 @@ File Description:
 
     /* limits */
     #define RENDER_DISTANCE 400 // Kill the ray if the SDF is above or equal to that value (can be redefined in the camera)
-    #define MAX_LIGHT_RAY 10000//00 // Max number of rays by light
+    #define MAX_LIGHT_RAY 1000000 // Max number of rays by light
     #define LIGHT_INTENSITY_LIMIT 1e-5 // Kill the ray under this intensity
     #define CAMERA_COEF_LIMIT 1e-5 // Kill the ray under this coef
     #define SDF_COLLINDING_LIMIT 1e-2 // Detect colliding if the SDF is below or equal to that value
@@ -54,6 +54,7 @@ File Description:
     #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
     #define DEFAULT_COLOR {0, 0, 0}
+    #define DEAD_COLOR {222, 0, 222}
     #define DEFAULT_LIGHT false // Enable or disable seeing object without light
 
 #endif /* DEFINE_H */
