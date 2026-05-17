@@ -19,6 +19,15 @@ File Description:
 // Return the type of the lib
 extern "C" {
     /* Wrapper for Rust Bridge */
+    struct CAabb { double min_x, min_y, min_z, max_x, max_y, max_z; };
+
+    CAabb object_get_aabb(void* instance) {
+        raytracer::AObject* obj = static_cast<raytracer::AObject*>(instance);
+        auto min = obj->getObjectDescriptor().aabbMin;
+        auto max = obj->getObjectDescriptor().aabbMax;
+        return CAabb{ min.x, min.y, min.z, max.x, max.y, max.z };
+    }
+
     struct CSdfResult {
         double distance;
         const void* face_ptr;

@@ -147,6 +147,10 @@ pub fn load_scene(filepath: &str, loader: &mut PluginLoader) -> Result<Scene, St
                         bridge.set_color(255, 255, 255);
                     }
 
+                    if obj_type == "object" || obj_type == "obj" {
+                        bridge.fetch_aabb();
+                    }
+
                     objects.push(bridge);
                 }
                 Err(e) => {

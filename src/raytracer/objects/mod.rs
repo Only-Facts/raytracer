@@ -3,6 +3,8 @@ use crate::raytracer::{
     structs::{CFrame, Chunk, Color, Coord, Direction, Face},
 };
 
+pub mod sphere;
+
 #[allow(dead_code)]
 #[derive(Default, Debug, Clone)]
 pub struct ObjectDescriptor {
