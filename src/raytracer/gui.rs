@@ -33,16 +33,18 @@ pub fn loop_window_threaded(
     height: usize,
 ) {
     while window.is_open() {
-        while let Some(event) = window.poll_event() {
-            match event {
+        match window.poll_event() {
+            Some(
                 Event::Closed
                 | Event::KeyPressed {
                     code: Key::Escape, ..
-                } => {
-                    window.close();
-                }
-                _ => {}
+                },
+            ) => {
+                window.close();
+                return;
             }
+            Some(_) => {}
+            None => {}
         }
 
         {
@@ -118,19 +120,19 @@ fn read_input_state() -> InputState {
     }
 
     if Key::Left.is_pressed() {
-        input.rotate_yaw -= 1.0;
-    }
-
-    if Key::Right.is_pressed() {
         input.rotate_yaw += 1.0;
     }
 
+    if Key::Right.is_pressed() {
+        input.rotate_yaw -= 1.0;
+    }
+
     if Key::Up.is_pressed() {
-        input.rotate_pitch += 1.0;
+        input.rotate_pitch -= 1.0;
     }
 
     if Key::Down.is_pressed() {
-        input.rotate_pitch -= 1.0;
+        input.rotate_pitch += 1.0;
     }
 
     input

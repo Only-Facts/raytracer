@@ -577,9 +577,6 @@ impl Raytracer {
         if render_handle.join().is_err() {
             eprintln!("Render thread panicked");
         }
-
-        window.close();
-
         Ok(())
     }
 
