@@ -35,8 +35,8 @@ static cold void printHelp()
 
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
-    std::cout << "\t./raytracer <scene_cfg_path> [-a] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s (<ppm_directory_path>|<ppm_file_path>)] [-r \"wxh\"]" << std::endl;
-    std::cout << "\t./raytracer <scene_cfg_path> -gui [-a] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> [-a] [-g <delta>] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [(-ss <sub>)|(-ass <sub>)] [-s (<ppm_directory_path>|<ppm_file_path>)] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> -gui [-a] [-g <delta>] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [(-ss <sub>)|(-ass <sub>)] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
     std::cout << utils::write::reset() << std::endl;
@@ -62,6 +62,10 @@ static cold void printHelp()
     std::cout << "\t\tSet the plugins path, can also be set by the env var RAYTRACER_PLUGINS_PATH (default: \"" << utils::write::color(utils::write::Color::Red) << "./plugins/" << utils::write::reset() << "\")" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-o, --obj " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "obj_directory_path" << utils::write::reset() << ">" << std::endl;
     std::cout << "\t\tSet the obj path, can also be set by the env var RAYTRACER_OBJ_PATH (default: \"" << utils::write::color(utils::write::Color::Red) << "./obj/" << utils::write::reset() << "\")" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-ss, --super-sampling " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "sub" << utils::write::reset() << ">" << std::endl;
+    std::cout << "\t\tEnable supersampling" << std::endl;
+    std::cout << utils::write::color(utils::write::Color::Green) << "\t-ass, --adaptative-super-sampling <max_depth> <sub> " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "max_depth" << utils::write::reset() << "> <" << utils::write::color(utils::write::Color::Red) << "sub" << utils::write::reset() << ">" << std::endl;
+    std::cout << "\t\tEnable adaptative supersampling " << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-s, --save " << utils::write::reset() << "(<" << utils::write::color(utils::write::Color::Red) << "ppm_directory_path" << utils::write::reset() << ">|<" << utils::write::color(utils::write::Color::Red) << "ppm_file_path" << utils::write::reset() << ">)" << std::endl;
     std::cout << "\t\tSet the ppm save path (directory: name = auto), can also be set by the env var RAYTRACER_RENDERED_PATH (default: \"" << utils::write::color(utils::write::Color::Red) << "./rendered/" << utils::write::reset() << "\")" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-r, --resolution " << utils::write::reset() << "\"" << utils::write::color(utils::write::Color::Red) << "w" << utils::write::reset() << "x" << utils::write::color(utils::write::Color::Red) << "h" << utils::write::reset() << "\"" << std::endl;

@@ -59,6 +59,7 @@ struct Settings {
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     std::string obj_path = OBJ_PATH; // -o, --obj
+    std::size_t sub = 0; // -ss, --super-sampling | -ass, --adaptative-super-sampling
     raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
@@ -68,6 +69,8 @@ struct Settings {
     bool plugins_set = false; // plugins_path
     bool rendered_set = false; // rendered_path
     bool obj_set = false; // obj_path
+    bool ss_set = false;
+    bool ass_set = false;
     bool resolution_set = false; // resolution
 };
 
@@ -157,6 +160,8 @@ class Raytracer {
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         hot inline nodiscard bool isNewton(void) const {return this->_settings.newton_set;};
+        hot inline nodiscard bool isSs(void) const {return this->_settings.ss_set;};
+        hot inline nodiscard bool isAss(void) const {return this->_settings.ass_set;};
         hot inline nodiscard bool isLightNewton(void) const {return this->_settings.newton_light;};
         hot inline nodiscard bool isCameraNewton(void) const {return this->_settings.newton_camera;};
         hot inline nodiscard bool hasNewtonianObject(void) const {return (this->_newtonianObjects.size() > 0);};

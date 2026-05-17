@@ -554,10 +554,11 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
 
                 // Transparency & Refraction
                 if (material->getTransparency() > 1e-8) {
-                    raysClones.push_back(static_cast<raytracer::Ray*>(ray->clone()));
-                    raysClones.back()->setImmunity(nearestObject);
-                    raysClones.back()->setCoef(raysClones.back()->getCoef() * material->getTransparency() * (1.0f - material->getReflection()));
-                    raysClones.back()->setColor(raytracer::mergeColor(color, raysClones.back()->getColor(), raysClones.back()->getCoef()));
+                    raytracer::Ray* clone = static_cast<raytracer::Ray*>(ray->clone());
+                    clone->setImmunity(nearestObject);
+                    clone->setCoef(clone->getCoef() * material->getTransparency() * (1.0f - material->getReflection()));
+                    clone->setColor(raytracer::mergeColor(color, clone->getColor(), clone->getCoef()));
+                    raysClones.push_back(clone);
                 }
 
                 // Set the color
@@ -591,6 +592,11 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
         }
         if (depth > 0) delete ray;
         raytracer.adv(); // Update advencement
+    }
+
+    // Handle adaptative super-sampling sub division
+    if (raytracer.isAss()) {
+
     }
 
     // Rec for the clonned ones
@@ -670,7 +676,7 @@ void raytracer::Raytracer::light(void)
 /*
  1 - Reset rays (camera)
  2.0 - Check for already computed ray
- 2 - Compute camera rays
+ 2.1 - Compute camera rays
     1 - Compute SDF
     2 - Apply SDF (and aproximative gravity curve, only in newton mode)
     3 - Check SDF

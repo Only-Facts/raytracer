@@ -282,6 +282,42 @@ void raytracer::Raytracer::load(int argc, char *argv[])
             this->_settings.obj_path = argv[i];
         }
 
+        // -ss, --super-sampling <sub>
+        else if (arg == "-ss" || arg == "--super-sampling" || arg == "--schutzstaffel") {
+            if (i + 1 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-ss requires <sub>");
+
+            // Check the option argument
+            if (this->_settings.ss_set) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+            this->_settings.sub = isNumber(argv[++i]);
+            if (this->_settings.sub == 0)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-ss Invalid sub, need to be superior to 0");
+
+            // Set the plugins search path
+            this->_settings.ss_set = true;
+        }
+
+        // -ass, --adaptative-super-sampling <sub>
+        else if (arg == "-ass" || arg == "--adaptative-super-sampling") {
+            if (i + 2 >= argc)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-ass requires <sub>");
+
+            // Check the option argument
+            if (this->_settings.ass_set) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+            this->_settings.sub = isNumber(argv[++i]);
+            if (this->_settings.sub == 0)
+                throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::MissingOptionArgument, "-ass Invalid sub, need to be superior to 0");
+
+            // Set the plugins search path
+            this->_settings.ass_set = true;
+        }
+
         // -s, --save (<ppm_directory_path>|<ppm_file_path>)
         else if (arg == "-s" || arg == "--save") {
             if (i + 1 >= argc)
