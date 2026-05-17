@@ -332,7 +332,7 @@ pub trait Factory<T> {
     fn factory(&self, name: &str) -> &T;
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct Raytracer {
     pub settings: Settings,
     pub camera: camera::Viewer,
@@ -354,6 +354,16 @@ impl Raytracer {
             lights,
             camera,
             plugins: None,
+        }
+    }
+
+    pub fn clone_extract(&mut self) -> Self {
+        Self {
+            settings: self.settings.clone(),
+            camera: std::mem::take(&mut self.camera),
+            objects: std::mem::take(&mut self.objects),
+            lights: std::mem::take(&mut self.lights),
+            plugins: self.plugins.clone(),
         }
     }
 
@@ -539,7 +549,7 @@ impl Raytracer {
 
         let show_progress = self.settings.adv;
 
-        let mut render_state = self.clone();
+        let mut render_state = self.clone_extract();
 
         let render_handle = thread::spawn(move || {
             if gui_enabled {
