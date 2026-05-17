@@ -26,6 +26,7 @@ File Description:
     #include "Define.hpp"               // values
     #include "special/Sky.hpp"          // raytracer::Sky
     #include "cameras/ICamera.hpp"      // raytracer::ICamera
+    #include "shaders/IShader.hpp"      // raytracer::IShader
     #include "materials/IMaterial.hpp"  // raytracer::IMaterial
     #include "lights/ILight.hpp"        // raytracer::ILight
     #include "objects/IObject.hpp"      // raytracer::IObject
@@ -91,7 +92,9 @@ class Raytracer {
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
         std::vector<raytracer::IObject*> _newtonianObjects;
-        mutable std::vector<raytracer::IMaterial*> _materials;
+        std::vector<raytracer::IShader*> _cameraShaders;
+        std::vector<raytracer::IShader*> _shaders;
+        std::vector<raytracer::IMaterial*> _materials;
 
         /* Light */
         raytracer::FColor _globalLightColor = DEFAULT_COLOR;
@@ -124,9 +127,11 @@ class Raytracer {
         /* parsing */
         void scene(void); // Load scene file
         void parseSceneFile(const std::string& path, std::string& content) const; // Parse the cfg file for custom tokens
-        raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
+        raytracer::IShader* parseShader(const libconfig::Setting& node);
+        raytracer::IMaterial* parseMaterial(const libconfig::Setting& node);
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
+        void parseCameraShader(const libconfig::Setting& node);
 
         /* frontend */
         void gui(void); // Handle opening, closing of the gui

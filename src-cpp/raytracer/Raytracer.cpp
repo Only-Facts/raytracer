@@ -178,14 +178,26 @@ void raytracer::Raytracer::loop(sf::RenderWindow& window)
 
 hot void raytracer::Raytracer::display(sf::RenderWindow& window)
 {
+    raytracer::Resolution resolution = this->_camera->getResolution();
+
     // Clear the window
     window.clear(sf::Color::Black);
+
+    // Apply material shader
+    std::vector<raytracer::Ray*> rays = this->_camera->getRays();
+    for (std::uint16_t y = 0; y < resolution.y; ++y) {
+        for (std::uint16_t x = 0; x < resolution.x; ++x) {
+            raytracer::Ray* ray = rays[y * resolution.x + x];
+            if (ray->isAlive()) continue;
+            for (raytracer::IShader* shader: this->_cameraShaders)
+                ray->setColor(shader->screen({x, y}, ray->getColor()));
+        }
+    }
 
     // Update screen pixels using rays color
     this->_camera->updateScreen();
 
     // Draw each pixel
-    raytracer::Resolution resolution = this->_camera->getResolution();
     const std::vector<raytracer::Color>& pixels = this->_camera->getScreen();
     sf::VertexArray points(sf::Points, resolution.x * resolution.y);
     for (std::uint16_t y = 0; y < resolution.y; ++y) {
@@ -347,15 +359,20 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                 continue;
             }
 
+            // Shader (can overwrite the light behavior with object)
+            bool ret = false;
+            for (raytracer::IShader* shader: nearestObject->getObjectDescriptor().shaders)
+                ret |= shader->light(ray, nearestObject, sdf);
+
             // 2 - Apply SDF (discrete gravity curve, only in newton mode)
-            if (raytracer.hasNewtonianObject() && raytracer.isLightNewton() && raytracer.isNewton()) {
+            if (!ret && raytracer.hasNewtonianObject() && raytracer.isLightNewton() && raytracer.isNewton()) {
                 float mv = std::min(static_cast<float>(delta), sdf);
                 raytracer::Newton& gravity = ray->getNewton();
                 gravity.acceleration = raytracer.computeUniversalGravitationForce(ray);
                 gravity.velocity += gravity.acceleration * mv;
                 ray->translate(gravity.velocity * mv);
                 ray->addDistance(gravity.velocity.length() * mv);
-            } else {
+            } else if (!ret) {
                 ray->translate(ray->getCFrame().look * sdf);
                 ray->addDistance(distanceUnit * sdf);
             }
@@ -370,10 +387,12 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
             } else if (ray->getIntensity() <= LIGHT_INTENSITY_LIMIT) { // Too low intensity
                 ray->kill();
                 continue;
+            } else if (ret) {
+                continue;
             }
 
             // 3 - Check SDF
-            if (ray->getImmunity() != nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision
+            if (!ret && ray->getImmunity() != nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision
                 material = nearestObject->getObjectDescriptor().material;
 
                 // Handle singularity
@@ -407,7 +426,7 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                     ray->translate(ray->getCFrame().look * SDF_COLLINDING_LIMIT * 2);
                     ray->setImmunity(nearestObject);
                 }
-            } else if (ray->getImmunity() == nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision on the other side
+            } else if (!ret && ray->getImmunity() == nearestObject && sdf > -SDF_COLLINDING_LIMIT && sdf < SDF_COLLINDING_LIMIT) { // Collision on the other side
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getLuminescence());
 
                 // To counter collision with the same object on the next iteration
@@ -529,11 +548,9 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
                 if (globalLightCount > 0 && !ok) color = raytracer::mergeColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
                 else if (globalLightCount > 0) color = raytracer::moyColor(color, raytracer::mergeLight(material->getColor(), globalLightColor, globalLightCount));
 
-                // Generate the noise
-                if (material->hasNoise()) {
-                    auto [strength, size] = material->getNoiseSettings();
-                    raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
-                }
+                // Apply scene shader
+                for (raytracer::IShader* shader: nearestObject->getObjectDescriptor().shaders)
+                    color = shader->scene(ray->getCFrame().position, ray->getCFrame().position - nearestObject->getCFrame().position, color);
 
                 // Transparency & Refraction
                 if (material->getTransparency() > 1e-8) {

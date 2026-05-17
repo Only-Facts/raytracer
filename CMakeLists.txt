@@ -196,17 +196,37 @@ set(SRC_CONE
 add_library(object_cone SHARED ${SRC_LIBS} ${SRC_OBJECTS} ${SRC_CONE})
 
 # =========================
+# Shaders
+# =========================
+set(SRC_SHADERS
+    src-cpp/raytracer/shaders/lib.cpp
+)
+
+set(SRC_DEFAULT_S
+    src-cpp/raytracer/shaders/default/lib.cpp
+    src-cpp/raytracer/shaders/default/Default.cpp
+)
+add_library(shader_default SHARED ${SRC_LIBS} ${SRC_SHADERS} ${SRC_DEFAULT_S})
+
+set(SRC_NOISE
+    src-cpp/raytracer/shaders/noise/lib.cpp
+    src-cpp/raytracer/shaders/noise/Noise.cpp
+)
+add_library(shader_noise SHARED ${SRC_LIBS} ${SRC_SHADERS} ${SRC_NOISE})
+
+# =========================
 # Materials
 # =========================
 set(SRC_MATERIALS
     src-cpp/raytracer/materials/lib.cpp
+    src-cpp/raytracer/materials/AMaterial.cpp
 )
 
-set(SRC_DEFAULT
+set(SRC_DEFAULT_M
     src-cpp/raytracer/materials/default/lib.cpp
     src-cpp/raytracer/materials/default/Default.cpp
 )
-add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT})
+add_library(material_default SHARED ${SRC_LIBS} ${SRC_MATERIALS} ${SRC_DEFAULT_M})
 
 # =========================
 # Compilation parameters
@@ -240,6 +260,13 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/objects
 )
 set_target_properties(
+    shader_default
+    shader_noise
+    PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/plugins/shaders
+)
+set_target_properties(
     material_default
     PROPERTIES
         PREFIX ""
@@ -260,6 +287,8 @@ set(PLUGINS
     object_sphere
     object_cylinder
     object_cone
+    shader_default
+    shader_noise
     material_default
 )
 

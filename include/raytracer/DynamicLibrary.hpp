@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 21/04/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file DynamicLibrary.hpp
@@ -33,6 +33,7 @@ File Description:
     #define LIGHT 1
     #define OBJECT 2
     #define MATERIAL 3
+    #define SHADER 4
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//

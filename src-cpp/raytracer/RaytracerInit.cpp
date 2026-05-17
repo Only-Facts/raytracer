@@ -435,11 +435,11 @@ void raytracer::Raytracer::init(void)
             }
 
             // Plugins type check (just stored)
-            if (type == CAMERA || type == LIGHT || type == OBJECT || type == MATERIAL) {
+            if (type == CAMERA || type == LIGHT || type == OBJECT || type == MATERIAL || type == SHADER) {
                 std::transform(name.begin(), name.end(), name.begin(), ::tolower);
                 this->_libs[name + std::to_string(type)] = lib;
             } else unlikely {
-                std::cout << utils::write::color_rgb(0, 255, 0) << utils::write::strong() << path << utils::write::reset() << ": plugins has a different type than those accepted" << std::endl;
+                std::cout << utils::write::color_rgb(255, 0, 0) << utils::write::strong() << path << utils::write::reset() << ": plugins has a different type than those accepted" << std::endl;
                 continue;
             }
         } else unlikely {
@@ -523,6 +523,7 @@ void raytracer::Raytracer::scene(void)
         const libconfig::Setting& node = root[i];
 
         // Get the type of the node
+        type.clear();
         node.lookupValue("type", type);
         std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
@@ -550,6 +551,8 @@ void raytracer::Raytracer::scene(void)
             this->parseLight(node);
         } else if (type == "object") {
             this->parseObject(node);
+        } else if (type == "shader") {
+            this->parseCameraShader(node);
         } else {
             throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "Unknow node type: " + type);
         }
@@ -604,9 +607,23 @@ void raytracer::Raytracer::parseSceneFile(const std::string& path, std::string& 
     }
 }
 
-raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setting& node) const
+raytracer::IShader* raytracer::Raytracer::parseShader(const libconfig::Setting& node)
 {
-    // Get the light name
+    // Get the shader name
+    std::string name;
+    node.lookupValue("name", name);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    // Create the material using factory & call it's parser
+    raytracer::IShader* shader = this->factory<raytracer::IShader>(name + std::to_string(SHADER));
+    shader->parse(node);
+    this->_shaders.push_back(shader);
+    return shader;
+}
+
+raytracer::IMaterial* raytracer::Raytracer::parseMaterial(const libconfig::Setting& node)
+{
+    // Get the material name
     std::string name;
     node.lookupValue("name", name);
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -648,6 +665,16 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
         throw utils::exception::CustomException(utils::exception::Error, utils::exception::Code::Parser, "The material field isn't defined for the object");
     descriptor.material = this->parseMaterial(node["material"]);
 
+    // Init the shaders
+    if (node.exists("shaders")) {
+        const auto& shaders = node["shaders"];
+        for (int i = 0; i < shaders.getLength(); ++i)
+            descriptor.shaders.push_back(this->parseShader(shaders[i]));
+    }
+    // Apply material shader
+    for (raytracer::IShader* shader: descriptor.shaders)    
+        shader->material(descriptor.material);
+
     // Init the obj if set
     if (!descriptor.obj.empty())
         object->loadObj(this->ObjPath(descriptor.obj));
@@ -655,6 +682,19 @@ void raytracer::Raytracer::parseObject(const libconfig::Setting& node)
         object->loadObj(this->ObjPath(descriptor.obj));
 
     this->_objects.push_back(object);
+}
+
+void raytracer::Raytracer::parseCameraShader(const libconfig::Setting& node)
+{
+    // Get the shader name
+    std::string name;
+    node.lookupValue("name", name);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    // Create the material using factory & call it's parser
+    raytracer::IShader* shader = this->factory<raytracer::IShader>(name + std::to_string(SHADER));
+    shader->parse(node);
+    this->_cameraShaders.push_back(shader);
 }
 
 raytracer::Raytracer::~Raytracer()

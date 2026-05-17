@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AMaterial.hpp
@@ -37,18 +37,19 @@ class AMaterial: public raytracer::IMaterial {
         float _transparency = 0.0f; // Material transparency
         float _reflection = 0.0f; // Material reflection
 
-        /* noise */
-        bool _noise = false; // Enable noise on the surface color
-        float _strength = NOISE_STRENGTH; // Strength of the noise on the shape color
-        float _size = NOISE_SIZE; // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
-
     public:
+        // ---------- Pre-Function -------- //
+        void parse(const libconfig::Setting& node) override;
+
         // ------------ Function ---------- //
         nodiscard raytracer::Color getColor(void) const final {return this->_color;};
         nodiscard float getTransparency(void) const final {return this->_transparency;};
         nodiscard float getReflection(void) const final {return this->_reflection;};
-        nodiscard std::pair<float, float> getNoiseSettings(void) const final {return {this->_strength, this->_size};};
-        nodiscard bool hasNoise(void) const final {return this->_noise;};
+
+        /* used by material shader */
+        void setColor(const raytracer::Color& color) final {this->_color = color;};
+        void setTransparency(float transparency) final {this->_transparency = transparency;};
+        void setReflection(float reflection) final {this->_reflection = reflection;};
 
         // ------------ Operator ---------- //
         AMaterial& operator=(const AMaterial& object) = delete;

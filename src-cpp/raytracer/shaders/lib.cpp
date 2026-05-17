@@ -3,11 +3,20 @@ Edition:
 ##  @date 17/05/2026 by @author Tsukini
 
 File Name:
-##  @file Default.cpp
+##  @file lib.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
 ##  for me, life is all about functions...
 \**************************************************************/
 
-/* Nothing */
+#include "raytracer/DynamicLibrary.hpp"
+#include <cstddef>
+
+// Return the type of the lib
+extern "C" {
+    std::size_t type(void)
+    {
+        return SHADER;
+    }
+}
