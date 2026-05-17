@@ -53,6 +53,20 @@ pub struct CColorResult {
     pub ok: bool,
 }
 
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct CAabb {
+    pub min_x: f64,
+    pub min_y: f64,
+    pub min_z: f64,
+
+    pub max_x: f64,
+    pub max_y: f64,
+    pub max_z: f64,
+}
+
+type FnGetAabb = unsafe extern "C" fn(*mut c_void) -> CAabb;
+
 type FnSetPosition = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
 type FnSetOrientation = unsafe extern "C" fn(*mut c_void, f64, f64, f64);
 type FnSetRadius = unsafe extern "C" fn(*mut c_void, f64);
@@ -76,6 +90,12 @@ pub struct ObjectBridge {
     pub obj_type: String,
     pub instance: *mut c_void,
     pub position: Coord,
+    pub radius: f64,
+
+    pub use_aabb: bool,
+    pub aabb_center: Coord,
+    pub aabb_extents: Coord,
+    get_aabb_ptr: Option<FnGetAabb>,
 
     set_material_ptr: Option<FnSetMaterial>,
 
@@ -115,6 +135,12 @@ impl ObjectBridge {
                 instance,
                 obj_type,
                 position: Vector3::default(),
+                radius: 1.0,
+
+                use_aabb: false,
+                aabb_center: Vector3::new(0.0, 0.0, 0.0),
+                aabb_extents: Vector3::new(0.0, 0.0, 0.0),
+                get_aabb_ptr: lib.get(b"object_get_aabb\0").ok().map(|sym| *sym),
 
                 set_material_ptr: *lib
                     .get(b"object_set_material\0")
@@ -156,6 +182,27 @@ impl ObjectBridge {
     }
 
     #[inline(always)]
+    pub fn fetch_aabb(&mut self) {
+        if let Some(func) = self.get_aabb_ptr {
+            let aabb = unsafe { func(self.instance) };
+
+            self.aabb_center = Vector3::new(
+                (aabb.max_x + aabb.min_x) * 0.5,
+                (aabb.max_y + aabb.min_y) * 0.5,
+                (aabb.max_z + aabb.min_z) * 0.5,
+            );
+
+            self.aabb_extents = Vector3::new(
+                (aabb.max_x + aabb.min_x).abs() * 0.5,
+                (aabb.max_y + aabb.min_y).abs() * 0.5,
+                (aabb.max_z + aabb.min_z).abs() * 0.5,
+            );
+
+            self.use_aabb = true;
+        }
+    }
+
+    #[inline(always)]
     pub fn set_material(&self, material_instance: *mut c_void) {
         if let Some(ref func) = self.set_material_ptr {
             unsafe { (func)(self.instance, material_instance) };
@@ -174,7 +221,8 @@ impl ObjectBridge {
     }
 
     #[inline(always)]
-    pub fn set_radius(&self, r: f64) {
+    pub fn set_radius(&mut self, r: f64) {
+        self.radius = r;
         if let Some(func) = self.set_radius_ptr {
             unsafe { func(self.instance, r) }
         }

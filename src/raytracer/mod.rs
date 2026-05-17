@@ -79,12 +79,42 @@ fn process_camera_chunk(
                     continue;
                 }
 
-                let actual_sdf = object.compute_sdf(ray.base.cframe.position);
+                let actual_distance;
+                let mut actual_face_ptr: *const std::ffi::c_void = std::ptr::null();
 
-                if actual_sdf.distance < min_sdf {
-                    min_sdf = actual_sdf.distance;
+                if object.obj_type == "sphere" {
+                    actual_distance =
+                        (ray.base.cframe.position - object.position).length() - object.radius;
+                } else if object.use_aabb {
+                    let p = ray.base.cframe.position;
+                    let c = object.aabb_center;
+                    let e = object.aabb_extents;
+
+                    let dx = (p.x - c.x).abs() - e.x;
+                    let dy = (p.y - c.y).abs() - e.y;
+                    let dz = (p.z - c.z).abs() - e.z;
+
+                    let max_d = dx.max(dy).max(dy);
+
+                    if max_d > 0.05 {
+                        let out_dist =
+                            dx.max(0.0).powi(2) + dy.max(0.0).powi(2) + dz.max(0.0).powi(2);
+                        actual_distance = out_dist.sqrt() + max_d.min(0.0);
+                    } else {
+                        let res = object.compute_sdf(ray.base.cframe.position);
+                        actual_distance = res.distance;
+                        actual_face_ptr = res.face_ptr;
+                    }
+                } else {
+                    let res = object.compute_sdf(ray.base.cframe.position);
+                    actual_distance = res.distance;
+                    actual_face_ptr = res.face_ptr;
+                }
+
+                if actual_distance < min_sdf {
+                    min_sdf = actual_distance;
                     nearest_object = Some(object);
-                    face_hit = actual_sdf.face_ptr;
+                    face_hit = actual_face_ptr;
                 }
             }
 
@@ -97,9 +127,13 @@ fn process_camera_chunk(
             let nearest = nearest_object.unwrap();
 
             if min_sdf < sdf_colliding_limit {
-                let normal = nearest
-                    .compute_hit(ray.base.cframe.position, face_hit)
-                    .normalize();
+                let normal = if nearest.obj_type == "sphere" {
+                    (ray.base.cframe.position - nearest.position).normalize()
+                } else {
+                    nearest
+                        .compute_hit(ray.base.cframe.position, face_hit)
+                        .normalize()
+                };
 
                 if nearest.is_mirror() {
                     let dot = ray.base.cframe.orientation.dot(normal);
@@ -142,10 +176,15 @@ fn process_camera_chunk(
                                     continue;
                                 }
 
-                                let shadow_res = obstacle.compute_sdf(current_shadow_pos);
+                                let shadow_res_distance = if obstacle.obj_type == "sphere" {
+                                    (current_shadow_pos - obstacle.position).length()
+                                        - obstacle.radius
+                                } else {
+                                    obstacle.compute_sdf(current_shadow_pos).distance
+                                };
 
-                                if shadow_res.distance < min_obstacle_dist {
-                                    min_obstacle_dist = shadow_res.distance;
+                                if shadow_res_distance < min_obstacle_dist {
+                                    min_obstacle_dist = shadow_res_distance;
                                 }
                             }
 
