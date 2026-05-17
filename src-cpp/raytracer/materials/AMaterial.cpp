@@ -1,9 +1,9 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
-##  @file Default.cpp
+##  @file AMaterial.cpp
 
 File Description:
 ##  You know, I don t think there are good or bad descriptions,
@@ -12,9 +12,9 @@ File Description:
 
 #define _Attribute
 #include "utils/utils.hpp"
-#include "raytracer/materials/Default.hpp"
+#include "raytracer/materials/AMaterial.hpp"
 
-void raytracer::Default::parse(const libconfig::Setting& node)
+void raytracer::AMaterial::parse(const libconfig::Setting& node)
 {
     // Other settings
     if (node.exists("color")) {
@@ -34,17 +34,4 @@ void raytracer::Default::parse(const libconfig::Setting& node)
     double reflection = 0.f;
     if (node.lookupValue("reflection", reflection))
         this->_reflection = reflection;
-
-    /* noise */
-    bool noise = false;
-    if (node.lookupValue("noise", noise))
-        this->_noise = noise;
-
-    double strength = 0.0;
-    if (node.lookupValue("strength", strength))
-        this->_strength = strength;
-
-    double size = 0.0;
-    if (node.lookupValue("size", size))
-        this->_size = size;
 }

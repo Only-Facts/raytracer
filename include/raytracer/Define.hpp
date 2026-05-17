@@ -31,6 +31,7 @@ File Description:
     #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / SPACE_CHUNK_SIZE) // Number of useless loop allowed before getting killed
     #define RAY_MAX_DEPTH 25 // Depth maximal of cloning for the rays
     #define MAX_STEP 3 // Number of adv max step
+    #define ASS_DIFF_MIN 0.25 // Percent limit for sub disivision
 
     /* convertion */
     #define UNIT_METER_COEF 50.0f // Number of local unit that equal to a meter

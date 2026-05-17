@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IMaterial.hpp
@@ -26,8 +26,6 @@ namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Raytracer;
-
 class IMaterial {
     public:
         // ---------- Pre-Function -------- //
@@ -35,8 +33,9 @@ class IMaterial {
         virtual raytracer::Color getColor(void) const = 0;
         virtual float getTransparency(void) const = 0;
         virtual float getReflection(void) const = 0;
-        virtual std::pair<float, float> getNoiseSettings(void) const = 0;
-        virtual bool hasNoise(void) const = 0;
+        virtual void setColor(const raytracer::Color& color) = 0;
+        virtual void setTransparency(float transparency) = 0;
+        virtual void setReflection(float reflection) = 0;
 
         // ------------ Operator ---------- //
         IMaterial& operator=(const IMaterial& object) = delete;

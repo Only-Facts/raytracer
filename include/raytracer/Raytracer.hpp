@@ -26,6 +26,7 @@ File Description:
     #include "Define.hpp"               // values
     #include "special/Sky.hpp"          // raytracer::Sky
     #include "cameras/ICamera.hpp"      // raytracer::ICamera
+    #include "shaders/IShader.hpp"      // raytracer::IShader
     #include "materials/IMaterial.hpp"  // raytracer::IMaterial
     #include "lights/ILight.hpp"        // raytracer::ILight
     #include "objects/IObject.hpp"      // raytracer::IObject
@@ -58,6 +59,7 @@ struct Settings {
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
     std::string rendered_path = RENDERED_PATH; // -s, --save
     std::string obj_path = OBJ_PATH; // -o, --obj
+    std::size_t sub = 0; // -ss, --super-sampling | -ass, --adaptative-super-sampling
     raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
@@ -67,6 +69,8 @@ struct Settings {
     bool plugins_set = false; // plugins_path
     bool rendered_set = false; // rendered_path
     bool obj_set = false; // obj_path
+    bool ss_set = false;
+    bool ass_set = false;
     bool resolution_set = false; // resolution
 };
 
@@ -91,7 +95,9 @@ class Raytracer {
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
         std::vector<raytracer::IObject*> _newtonianObjects;
-        mutable std::vector<raytracer::IMaterial*> _materials;
+        std::vector<raytracer::IShader*> _cameraShaders;
+        std::vector<raytracer::IShader*> _shaders;
+        std::vector<raytracer::IMaterial*> _materials;
 
         /* Light */
         raytracer::FColor _globalLightColor = DEFAULT_COLOR;
@@ -124,9 +130,11 @@ class Raytracer {
         /* parsing */
         void scene(void); // Load scene file
         void parseSceneFile(const std::string& path, std::string& content) const; // Parse the cfg file for custom tokens
-        raytracer::IMaterial* parseMaterial(const libconfig::Setting& node) const;
+        raytracer::IShader* parseShader(const libconfig::Setting& node);
+        raytracer::IMaterial* parseMaterial(const libconfig::Setting& node);
         void parseLight(const libconfig::Setting& node);
         void parseObject(const libconfig::Setting& node);
+        void parseCameraShader(const libconfig::Setting& node);
 
         /* frontend */
         void gui(void); // Handle opening, closing of the gui
@@ -152,6 +160,8 @@ class Raytracer {
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         hot inline nodiscard bool isNewton(void) const {return this->_settings.newton_set;};
+        hot inline nodiscard bool isSs(void) const {return this->_settings.ss_set;};
+        hot inline nodiscard bool isAss(void) const {return this->_settings.ass_set;};
         hot inline nodiscard bool isLightNewton(void) const {return this->_settings.newton_light;};
         hot inline nodiscard bool isCameraNewton(void) const {return this->_settings.newton_camera;};
         hot inline nodiscard bool hasNewtonianObject(void) const {return (this->_newtonianObjects.size() > 0);};

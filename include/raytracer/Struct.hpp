@@ -146,6 +146,7 @@ struct ChunkLightData {
     float intensity;
 };
 
+class IShader;
 class IMaterial;
 raytracer::Direction toLook(const raytracer::Direction& orientation);
 
@@ -156,6 +157,7 @@ struct ObjectDescriptor {
     raytracer::CFrame cframe;
     raytracer::CFrame cframeOrigin;
     raytracer::IMaterial* material = nullptr;
+    std::vector<raytracer::IShader*> shaders;
 
     /* obj */
     std::string obj;

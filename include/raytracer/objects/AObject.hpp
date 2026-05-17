@@ -55,6 +55,9 @@ class AObject: public raytracer::IObject {
         void addLightData(raytracer::Coord position, raytracer::Color color, float intensity) final;
 
         // ------------ Function ---------- //
+        /* loading */
+        void parse(unused const libconfig::Setting& node) override {/* nothing */};
+
         /* 3D logic */
         hot inline void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
         hot inline nodiscard raytracer::IObject* getImmunity(void) const final {return this->_immunity;};

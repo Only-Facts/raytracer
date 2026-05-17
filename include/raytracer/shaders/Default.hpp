@@ -20,14 +20,15 @@ File Description:
     #define _Vector
     #define _Attribute
     #include "utils/utils.hpp"  // utils::vector::Vector3, nodiscard
-    #include "AMaterial.hpp"    // raytracer:AMaterial    
+    #include "../Define.hpp"    // values
+    #include "AShader.hpp"      // raytracer:AShader    
     #include <vector>           // std::vector
 
 namespace raytracer { // namespace start
 //----------------------------------------------------------------//
 /* CLASS */
 
-class Default: public raytracer::AMaterial {
+class Default: public raytracer::AShader {
     public:
         // ------------ Operator ---------- //
         Default& operator=(const Default& object) = delete;
