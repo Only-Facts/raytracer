@@ -10,8 +10,8 @@ pub type Chunk = Vector3<i64>;
 pub type Vertice = Vector3<Type>;
 pub type Face = Vec<Vertice>;
 
-#[derive(Default, Clone)]
 #[allow(dead_code)]
+#[derive(Default, Debug, Clone)]
 pub struct CFrame {
     pub position: Coord,
     pub orientation: Direction,

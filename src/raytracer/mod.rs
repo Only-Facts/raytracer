@@ -11,29 +11,29 @@ use std::{
     time::Duration,
 };
 
-use sfml::{
-    graphics::{Color as SfColor, PrimitiveType, RenderStates, RenderTarget, RenderWindow, Vertex},
-    system::Vector2f,
-    window::{Event, Key, Style},
-};
+use sfml::{graphics::RenderWindow, window::Style};
 
 use crate::{
     Error,
     config::loader::PluginLoader,
     ffi::bridge::{LightBridge, ObjectBridge},
     print_progress_bar,
-    raytracer::{camera::Camera, ray::Ray, structs::Color},
-    utils::vector::{Vector2, Vector3},
+    raytracer::{
+        camera::Camera,
+        gui::{InputState, SharedInput, SharedPixels, apply_input, loop_window_threaded},
+        ray::Ray,
+        structs::Color,
+    },
+    utils::vector::Vector3,
 };
 
 pub mod camera;
+pub mod gui;
 pub mod objects;
 pub mod ray;
 pub mod structs;
 
 const PPM_MAGIC: u8 = 22;
-
-type SharedPixels = Arc<Mutex<Vec<Color>>>;
 
 fn merge_color(color1: Color, color2: Color, intensity: f32) -> Color {
     let new_color = Vector3::new(
@@ -79,12 +79,42 @@ fn process_camera_chunk(
                     continue;
                 }
 
-                let actual_sdf = object.compute_sdf(ray.base.cframe.position);
+                let actual_distance;
+                let mut actual_face_ptr: *const std::ffi::c_void = std::ptr::null();
 
-                if actual_sdf.distance < min_sdf {
-                    min_sdf = actual_sdf.distance;
+                if object.obj_type == "sphere" {
+                    actual_distance =
+                        (ray.base.cframe.position - object.position).length() - object.radius;
+                } else if object.use_aabb {
+                    let p = ray.base.cframe.position;
+                    let c = object.aabb_center;
+                    let e = object.aabb_extents;
+
+                    let dx = (p.x - c.x).abs() - e.x;
+                    let dy = (p.y - c.y).abs() - e.y;
+                    let dz = (p.z - c.z).abs() - e.z;
+
+                    let max_d = dx.max(dy).max(dy);
+
+                    if max_d > 0.05 {
+                        let out_dist =
+                            dx.max(0.0).powi(2) + dy.max(0.0).powi(2) + dz.max(0.0).powi(2);
+                        actual_distance = out_dist.sqrt() + max_d.min(0.0);
+                    } else {
+                        let res = object.compute_sdf(ray.base.cframe.position);
+                        actual_distance = res.distance;
+                        actual_face_ptr = res.face_ptr;
+                    }
+                } else {
+                    let res = object.compute_sdf(ray.base.cframe.position);
+                    actual_distance = res.distance;
+                    actual_face_ptr = res.face_ptr;
+                }
+
+                if actual_distance < min_sdf {
+                    min_sdf = actual_distance;
                     nearest_object = Some(object);
-                    face_hit = actual_sdf.face_ptr;
+                    face_hit = actual_face_ptr;
                 }
             }
 
@@ -97,9 +127,13 @@ fn process_camera_chunk(
             let nearest = nearest_object.unwrap();
 
             if min_sdf < sdf_colliding_limit {
-                let normal = nearest
-                    .compute_hit(ray.base.cframe.position, face_hit)
-                    .normalize();
+                let normal = if nearest.obj_type == "sphere" {
+                    (ray.base.cframe.position - nearest.position).normalize()
+                } else {
+                    nearest
+                        .compute_hit(ray.base.cframe.position, face_hit)
+                        .normalize()
+                };
 
                 if nearest.is_mirror() {
                     let dot = ray.base.cframe.orientation.dot(normal);
@@ -142,10 +176,15 @@ fn process_camera_chunk(
                                     continue;
                                 }
 
-                                let shadow_res = obstacle.compute_sdf(current_shadow_pos);
+                                let shadow_res_distance = if obstacle.obj_type == "sphere" {
+                                    (current_shadow_pos - obstacle.position).length()
+                                        - obstacle.radius
+                                } else {
+                                    obstacle.compute_sdf(current_shadow_pos).distance
+                                };
 
-                                if shadow_res.distance < min_obstacle_dist {
-                                    min_obstacle_dist = shadow_res.distance;
+                                if shadow_res_distance < min_obstacle_dist {
+                                    min_obstacle_dist = shadow_res_distance;
                                 }
                             }
 
@@ -239,6 +278,7 @@ fn process_camera_chunk(
 }
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     pub viewer: bool,
     pub ppm_path: String,
@@ -251,8 +291,9 @@ pub struct Settings {
     pub plugins_path: PathBuf,
     pub rendered_path: PathBuf,
     pub obj_path: PathBuf,
-    pub resolution: Vector2<u16>,
-
+    pub resolution: (u32, u32),
+    pub nproc_set: bool,
+    pub nproc: usize,
     pub camera_set: bool,
     pub plugins_set: bool,
     pub rendered_set: bool,
@@ -271,11 +312,12 @@ impl Default for Settings {
             adv: false,
             newton: false,
             camera_path: PathBuf::new(),
-            plugins_path: PathBuf::from_str("./plugins/").unwrap_or_default(),
-            rendered_path: PathBuf::from_str("./rendered/").unwrap_or_default(),
-            obj_path: PathBuf::from_str("./obj/").unwrap_or_default(),
-            resolution: Vector2 { x: 0, y: 0 },
-
+            plugins_path: PathBuf::from_str("./plugins").unwrap_or_default(),
+            rendered_path: PathBuf::from_str("./rendered").unwrap_or_default(),
+            obj_path: PathBuf::from_str("./obj").unwrap_or_default(),
+            resolution: (0, 0),
+            nproc_set: false,
+            nproc: 0,
             camera_set: false,
             plugins_set: false,
             rendered_set: false,
@@ -293,30 +335,100 @@ pub trait Factory<T> {
 #[derive(Default)]
 pub struct Raytracer {
     pub settings: Settings,
-
     pub camera: camera::Viewer,
     pub objects: Vec<ObjectBridge>,
     pub lights: Vec<LightBridge>,
-
     pub plugins: Option<PluginLoader>,
 }
 
-struct RenderState {
-    camera: camera::Viewer,
-    objects: Vec<ObjectBridge>,
-    lights: Vec<LightBridge>,
-}
+#[allow(dead_code)]
+impl Raytracer {
+    pub fn new(
+        camera: camera::Viewer,
+        objects: Vec<ObjectBridge>,
+        lights: Vec<LightBridge>,
+    ) -> Self {
+        Self {
+            settings: Settings::default(),
+            objects,
+            lights,
+            camera,
+            plugins: None,
+        }
+    }
 
-impl RenderState {
+    pub fn clone_extract(&mut self) -> Self {
+        Self {
+            settings: self.settings.clone(),
+            camera: std::mem::take(&mut self.camera),
+            objects: std::mem::take(&mut self.objects),
+            lights: std::mem::take(&mut self.lights),
+            plugins: self.plugins.clone(),
+        }
+    }
+
+    pub fn load_render(&mut self) -> Result<(), Error> {
+        let path = &self.settings.ppm_path;
+
+        let file =
+            File::open(path).map_err(|_| format!("Failed to open file for reading: {}", path))?;
+
+        let mut reader = BufReader::new(file);
+
+        let mut magic_buf = [0u8; 1];
+        let mut width_buf = [0u8; 2];
+        let mut height_buf = [0u8; 2];
+
+        reader.read_exact(&mut magic_buf)?;
+        reader.read_exact(&mut width_buf)?;
+        reader.read_exact(&mut height_buf)?;
+
+        let magic = magic_buf[0];
+        let width = u16::from_ne_bytes(width_buf);
+        let height = u16::from_ne_bytes(height_buf);
+
+        if magic != PPM_MAGIC {
+            return Err(format!("Invalid magic number in file: {}", path).into());
+        }
+
+        let buffer_size = width as usize * height as usize * 3;
+        let mut buffer = vec![0u8; buffer_size];
+
+        reader
+            .read_exact(&mut buffer)
+            .map_err(|_| format!("Error during the file reading: {}", path))?;
+
+        let rays = self.camera.get_rays_mut();
+
+        for (i, ray) in rays.iter_mut().enumerate() {
+            let r = buffer[i * 3];
+            let g = buffer[i * 3 + 1];
+            let b = buffer[i * 3 + 2];
+
+            ray.set_color(Color::new(r, g, b));
+        }
+
+        Ok(())
+    }
+
     fn render_thread_loop(
         &mut self,
         shared_pixels: SharedPixels,
+        shared_input: SharedInput,
         running: Arc<AtomicBool>,
         width: usize,
         height: usize,
         show_progress: bool,
     ) {
         while running.load(Ordering::Relaxed) {
+            let input = {
+                let input = shared_input.lock().expect("shared input mutex poisoned");
+
+                *input
+            };
+
+            apply_input(&mut self.camera, input);
+
             self.render_once(show_progress);
 
             self.camera.update_screen();
@@ -343,7 +455,7 @@ impl RenderState {
         }
     }
 
-    fn render_once(&mut self, show_progress: bool) {
+    pub fn render_once(&mut self, show_progress: bool) {
         self.camera.reset();
 
         let rays = self.camera.get_rays_mut();
@@ -354,9 +466,13 @@ impl RenderState {
 
         let total_rays = rays.len();
         let progress_counter = Arc::new(AtomicUsize::new(0));
-        let num_threads = thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
+        let num_threads = if self.settings.nproc_set {
+            self.settings.nproc
+        } else {
+            thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1)
+        };
 
         let chunk_size = rays.len().div_ceil(num_threads);
 
@@ -396,85 +512,10 @@ impl RenderState {
             }
         });
     }
-}
 
-#[allow(dead_code)]
-impl Raytracer {
-    pub fn new(
-        camera: camera::Viewer,
-        objects: Vec<ObjectBridge>,
-        lights: Vec<LightBridge>,
-    ) -> Self {
-        Self {
-            settings: Settings::default(),
-            objects,
-            lights,
-            camera,
-            plugins: None,
-        }
-    }
-    pub async fn load_render(&mut self) -> Result<(), Error> {
-        let path = &self.settings.ppm_path;
-
-        let file =
-            File::open(path).map_err(|_| format!("Failed to open file for reading: {}", path))?;
-
-        let mut reader = BufReader::new(file);
-
-        let mut magic_buf = [0u8; 1];
-        let mut width_buf = [0u8; 2];
-        let mut height_buf = [0u8; 2];
-
-        reader.read_exact(&mut magic_buf)?;
-        reader.read_exact(&mut width_buf)?;
-        reader.read_exact(&mut height_buf)?;
-
-        let magic = magic_buf[0];
-        let width = u16::from_ne_bytes(width_buf);
-        let height = u16::from_ne_bytes(height_buf);
-
-        if magic != PPM_MAGIC {
-            return Err(format!("Invalid magic number in file: {}", path).into());
-        }
-
-        /*self.camera.set_resolution(width as u32, height as u32);
-        self.camera.init();
-        self.camera.kill();*/
-
-        let buffer_size = width as usize * height as usize * 3;
-        let mut buffer = vec![0u8; buffer_size];
-
-        reader
-            .read_exact(&mut buffer)
-            .map_err(|_| format!("Error during the file reading: {}", path))?;
-
-        let rays = self.camera.get_rays_mut();
-
-        for (i, ray) in rays.iter_mut().enumerate() {
-            let r = buffer[i * 3];
-            let g = buffer[i * 3 + 1];
-            let b = buffer[i * 3 + 2];
-
-            ray.set_color(Color::new(r, g, b));
-        }
-
-        Ok(())
-    }
-
-    pub fn render(&mut self) {
-        let mut render_state = self.take_render_state();
-        render_state.render_once(self.settings.adv);
-
-        self.camera = render_state.camera;
-        self.objects = render_state.objects;
-        self.lights = render_state.lights;
-    }
-
-    pub async fn gui(&mut self) -> Result<(), Error> {
+    pub fn gui(&mut self) -> Result<(), Error> {
         if self.settings.viewer {
-            self.load_render().await?;
-        } else {
-            self.light()?;
+            self.load_render()?;
         }
 
         let resolution = self.camera.get_resolution();
@@ -484,6 +525,7 @@ impl Raytracer {
 
         let shared_pixels: SharedPixels =
             Arc::new(Mutex::new(vec![Color::default(); width * height]));
+        let shared_input: SharedInput = Arc::new(Mutex::new(InputState::default()));
 
         let running = Arc::new(AtomicBool::new(true));
 
@@ -500,18 +542,20 @@ impl Raytracer {
             pixels[..copy_len].copy_from_slice(&screen[..copy_len]);
         }
 
-        let mut render_state = self.take_render_state();
-
         let render_pixels = Arc::clone(&shared_pixels);
+        let render_input = Arc::clone(&shared_input);
         let render_running = Arc::clone(&running);
         let gui_enabled = self.settings.gui;
 
         let show_progress = self.settings.adv;
 
+        let mut render_state = self.clone_extract();
+
         let render_handle = thread::spawn(move || {
             if gui_enabled {
                 render_state.render_thread_loop(
                     render_pixels,
+                    render_input,
                     render_running,
                     width,
                     height,
@@ -529,9 +573,10 @@ impl Raytracer {
 
         window.set_vertical_sync_enabled(true);
 
-        Self::loop_window_threaded(
+        loop_window_threaded(
             &mut window,
             shared_pixels,
+            shared_input,
             Arc::clone(&running),
             width,
             height,
@@ -542,97 +587,85 @@ impl Raytracer {
         if render_handle.join().is_err() {
             eprintln!("Render thread panicked");
         }
-
-        window.close();
-
-        self.adv_end();
-
         Ok(())
-    }
-
-    fn take_render_state(&mut self) -> RenderState {
-        RenderState {
-            camera: std::mem::take(&mut self.camera),
-            objects: std::mem::take(&mut self.objects),
-            lights: std::mem::take(&mut self.lights),
-        }
-    }
-
-    fn loop_window_threaded(
-        window: &mut RenderWindow,
-        shared_pixels: SharedPixels,
-        running: Arc<AtomicBool>,
-        width: usize,
-        height: usize,
-    ) {
-        while window.is_open() {
-            while let Some(event) = window.poll_event() {
-                match event {
-                    Event::Closed
-                    | Event::KeyPressed {
-                        code: Key::Escape, ..
-                    } => {
-                        window.close();
-                    }
-                    _ => {}
-                }
-            }
-
-            let pixels_snapshot = {
-                let pixels = shared_pixels
-                    .lock()
-                    .expect("shared pixel buffer mutex poisoned");
-
-                pixels.clone()
-            };
-
-            Self::draw_pixels(window, &pixels_snapshot, width, height);
-        }
-
-        running.store(false, Ordering::Relaxed);
-    }
-
-    fn draw_pixels(window: &mut RenderWindow, pixels: &[Color], width: usize, height: usize) {
-        let mut vertices = Vec::with_capacity(width * height);
-
-        for y in 0..height {
-            for x in 0..width {
-                let index = y * width + x;
-
-                let Some(color) = pixels.get(index) else {
-                    continue;
-                };
-
-                let position = Vector2f::new(x as f32, y as f32);
-                let sfml_color = SfColor::rgb(color.x, color.y, color.z);
-
-                vertices.push(Vertex::with_pos_color(position, sfml_color));
-            }
-        }
-
-        window.clear(SfColor::BLACK);
-
-        window.draw_primitives(&vertices, PrimitiveType::POINTS, &RenderStates::default());
-
-        window.display();
-    }
-
-    pub fn light(&mut self) -> Result<(), Error> {
-        // TODO: port real C++ Raytracer::light()
-        Ok(())
-    }
-
-    pub fn adv_end(&self) {
-        if self.settings.adv {
-            println!();
-        }
     }
 
     pub fn parse_flags(&mut self, args: Vec<String>) {
-        self.settings.gui = args.contains(&"-gui".to_string());
-        self.settings.adv =
-            args.contains(&"-a".to_string()) || args.contains(&"--advencement".to_string());
-        self.settings.newton =
-            args.contains(&"-n".to_string()) || args.contains(&"--newton".to_string());
+        let mut i = 1;
+
+        while i < args.len() {
+            match args[i].as_str() {
+                "-gui" => {
+                    self.settings.gui = true;
+                }
+                "-a" | "--advencement" => {
+                    self.settings.adv = true;
+                }
+                "-n" | "--nproc" => {
+                    if let Some(nproc_str) = args.get(i + 1)
+                        && let Ok(n) = nproc_str.parse::<usize>()
+                    {
+                        self.settings.nproc = n;
+                        self.settings.nproc_set = true;
+                        i += 1;
+                    }
+                }
+                "-g" | "--newton" => {
+                    self.settings.newton = true;
+                }
+                "-c" | "--camera" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.camera_path = PathBuf::from(path);
+                        self.settings.camera_set = true;
+                        i += 1;
+                    }
+                }
+                "-p" | "--plugins" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.plugins_path = PathBuf::from(path);
+                        self.settings.plugins_set = true;
+                        i += 1;
+                    }
+                }
+                "-o" | "--obj" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.obj_path = PathBuf::from(path);
+                        self.settings.obj_set = true;
+                        i += 1;
+                    }
+                }
+                "-s" | "--save" => {
+                    if let Some(path) = args.get(i + 1) {
+                        self.settings.rendered_path = PathBuf::from(path);
+                        self.settings.rendered_set = true;
+                        i += 1;
+                    }
+                }
+                "-r" | "--resolution" => {
+                    if let Some(res_str) = args.get(i + 1) {
+                        let parts: Vec<&str> = res_str.split('x').collect();
+                        if parts.len() == 2
+                            && let (Ok(w), Ok(h)) =
+                                (parts[0].parse::<u32>(), parts[1].parse::<u32>())
+                        {
+                            self.settings.resolution = (w, h);
+                            self.settings.resolution_set = true;
+                        }
+                        i += 1;
+                    }
+                }
+                s => {
+                    if !s.starts_with('-') {
+                        if s.ends_with(".ppm") {
+                            self.settings.ppm_path = s.to_string();
+                            self.settings.viewer = true;
+                        } else {
+                            self.settings.cfg_path = s.to_string();
+                        }
+                    }
+                }
+            }
+            i += 1;
+        }
     }
 }

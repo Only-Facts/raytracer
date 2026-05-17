@@ -6,6 +6,6 @@ fn main() {
 
     Config::new(".")
         .define("CMAKE_BUILD_TYPE", "Released")
-        .build_target("all")
+        .build_target("plugins")
         .build();
 }
