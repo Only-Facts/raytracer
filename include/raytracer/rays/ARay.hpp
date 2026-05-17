@@ -50,7 +50,7 @@ class ARay: public raytracer::IRay {
         ARay& operator=(ARay&& object) = delete;
 
         // ---------- Constructor --------- //
-        ARay() = default;
+        ARay() {this->_descriptor.gravity.mass = PHOTON_MASS;};
         ARay(const ARay& object) = delete;
         ARay(ARay&& object) = delete;
 

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 14/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Cylinder.cpp
@@ -20,17 +20,42 @@ void raytracer::Cylinder::parse(const libconfig::Setting& node)
 {
     raytracer::ObjectDescriptor descriptor;
 
-    // Setup the cframe
+    // Setup the cframe & newton
     raytracer::ObjectDescriptor::setCFrame(descriptor, node);
-    
+    raytracer::ObjectDescriptor::trySetNewton(descriptor, node);   
+
     // Other settings
-    double scale = 1.0;
-    if (node.lookupValue("scale", scale))
-        descriptor.scale = scale;
+    bool infinite = false;
+    if (node.lookupValue("infinite", infinite))
+        this->_infinite = infinite;
+
+    double radius = 0.0;
+    if (node.lookupValue("radius", radius))
+        this->_radius = radius;
+
+    double height = 0.0;
+    if (node.lookupValue("height", height))
+        this->_height = height;
 
     // Set the descriptor
     this->setObjectDescriptor(descriptor);
+}
 
-    // Load the obj sub path (to load the vertex in the future)
-    descriptor.obj = "cylinder.obj";
+hot std::pair<float, const raytracer::Face*> raytracer::Cylinder::computeSDF(const raytracer::Coord& point) const
+{
+    raytracer::Coord p = point - this->getCFrame().position;
+    if (this->_infinite) {
+        return {std::sqrt(p.x * p.x + p.z * p.z) - (this->_radius / 2), nullptr};
+    } else {
+        float dx = std::sqrt(p.x * p.x + p.z * p.z) - (this->_radius / 2);
+        float dy = std::abs(p.y) - this->_height * 0.5f;
+        float ax = std::max(dx, 0.f);
+        float ay = std::max(dy, 0.f);
+        return {std::min(std::max(dx, dy), 0.f) + std::sqrt(ax * ax + ay * ay), nullptr};
+    }
+}
+
+hot raytracer::Direction raytracer::Cylinder::computeHit(unused const raytracer::Coord& point, unused const raytracer::Face* face) const
+{
+    return {0.0, 0.0, 0.0};
 }

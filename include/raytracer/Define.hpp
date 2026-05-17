@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 15/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -25,8 +25,9 @@ File Description:
     #define LIGHT_COLOR_LIMIT 4.0f // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
     #define LOAD_FACTOR 0.5f // Load factor used for the unordered map
-    #define SPACE_CHUNK_SIZE 100.0f // Size of the chunk used (color, face, sdf)
-    #define COLOR_CHUNK_SIZE (LIGHT_COLOR_LIMIT * 2.5) // Size of the chunk used (color, face, sdf)
+    #define SPACE_CHUNK_SIZE 100.0f // Size of the chunk used for: face, sdf, ...
+    #define COLOR_CHUNK_SIZE (LIGHT_COLOR_LIMIT * 2.5) // Size of the chunk used for: color
+    #define FORCE_CHUNK_SIZE 5.0f // Size of the chunk used for newton
     #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / SPACE_CHUNK_SIZE) // Number of useless loop allowed before getting killed
     #define RAY_MAX_DEPTH 25 // Depth maximal of cloning for the rays
     #define MAX_STEP 3 // Number of adv max step
@@ -43,6 +44,9 @@ File Description:
     #define NOISE_SIZE 0.1f // Size of the noise (0.05 = big stain, 0.2 = ~normal, 1 = thin, 2 = point)
     #define MOVE_SPEED 10.0f
     #define ORIENTATION_SPEED 1.0f
+    #define SOLAR_MASS 1.988e30 // Used as unit for singularity (default: kg)
+    #define PHOTON_MASS 1e-10 // Mass of the rays used for newton
+    #define G_NEWTON 6.674e-11 // Newtonian constant of gravitation
 
     /* default */
     #define PLUGINS_PATH "./plugins/"
@@ -50,6 +54,7 @@ File Description:
     #define OBJ_PATH "./obj/"
     #define PPM_MAGIC 0x22
     #define DEFAULT_COLOR {0, 0, 0}
+    #define DEAD_COLOR {222, 0, 222}
     #define DEFAULT_LIGHT false // Enable or disable seeing object without light
 
 #endif /* DEFINE_H */

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerAdv.cpp
@@ -24,7 +24,7 @@ File Description:
 #include <vector>
 #include <cmath>
 
-static hot std::string formatNumber(double n)
+static hot nodiscard std::string formatNumber(double n)
 {
     static const char* const suffixes[] = {"", "K", "M", "B", "T"};
     std::size_t i = 0;
@@ -43,6 +43,14 @@ static hot std::string formatNumber(double n)
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(precision) << n << suffixes[i];
     return oss.str();
+}
+
+static hot nodiscard std::string formatTime(long long seconds)
+{
+    long long h = seconds / 3600;
+    long long m = (seconds % 3600) / 60;
+    long long s = seconds % 60;
+    return std::to_string(h) + "h " + std::to_string(m) + "min " + std::to_string(s) + "s";
 }
 
 hot void raytracer::Raytracer::adv(bool forced, bool increment)
@@ -64,6 +72,50 @@ hot void raytracer::Raytracer::adv(bool forced, bool increment)
     float percent = (this->_advMax == 0) ? 1.0f : (static_cast<float>(this->_adv) / static_cast<float>(this->_advMax));
     std::size_t done = std::ceil(percent * ADV_SIZE);
 
+    // Compute timer
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    long long elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - this->_timer).count();
+    std::string elapsedStr = formatTime(elapsed);
+
+    // Build bar
+    std::string bar(ADV_SIZE, '-');
+    for (std::size_t i = 0; i < done && i < ADV_SIZE; ++i)
+        bar[i] = '/';
+    if (!this->isGui()) {
+        std::size_t start = (ADV_SIZE > elapsedStr.size()) ? (ADV_SIZE - elapsedStr.size()) / 2 : 0;
+        for (std::size_t i = 0; i < elapsedStr.size() && start + i < ADV_SIZE; ++i)
+            bar[start + i] = elapsedStr[i];
+    }
+    std::ostringstream out;
+    for (std::size_t i = 0; i < ADV_SIZE; ++i) {
+        switch (bar[i]) {
+            case '/':
+                out << utils::write::color_rgb(0, 255, 0) << "/";
+                break;
+            case '-':
+                out << utils::write::color_rgb(255, 0, 0) << "-";
+                break;
+            default:
+                out << utils::write::reset() << utils::write::strong() << bar[i];
+                break;
+        }
+    }
+
+    // Display bar
+    std::cout << utils::write::line() << "\r" << utils::write::reset();
+    std::cout << utils::write::strong() << "[";
+    std::cout << out.str();
+    std::cout << utils::write::reset() << utils::write::strong() << "] ";
+
+    // Counters
+    if (this->_settings.debug) std::cout << this->_adv << "/" << this->_advMax;
+    else std::cout << formatNumber(this->_adv) << "/" << formatNumber(this->_advMax);
+
+    // Step
+    std::cout << " Step (" << this->_step + 1 << "/" << MAX_STEP << "): " << steps[this->_step % MAX_STEP];
+    std::cout << utils::write::reset() << std::flush;
+
+    /*
     // Advencement display
     std::cout << utils::write::line() << "\r" << utils::write::reset();
     std::cout << utils::write::strong() << "[";
@@ -76,4 +128,5 @@ hot void raytracer::Raytracer::adv(bool forced, bool increment)
     else std::cout << " - " << formatNumber(this->_adv) << "/" << formatNumber(this->_advMax);
     std::cout << " Step (" << this->_step + 1 << "/" << MAX_STEP << "): " << steps[this->_step % MAX_STEP];
     std::cout << utils::write::reset() << std::flush;
+    */
 }

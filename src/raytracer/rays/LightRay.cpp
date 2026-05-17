@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 16/05/2026 by @author Tsukini
 
 File Name:
 ##  @file LightRay.cpp
@@ -20,6 +20,8 @@ void raytracer::LightRay::reset(void)
     this->_intensity = 1.0f;
     this->_distance = 0.0f;
     this->_lumen = -1.0f;
+    this->_descriptor.gravity.acceleration = {0.0, 0.0, 0.0};
+    this->_descriptor.gravity.velocity = {0.0, 0.0, 0.0};
 }
 
 nodiscard void* raytracer::LightRay::clone(void)

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 12/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ICamera.hpp
@@ -34,7 +34,7 @@ class ICamera: public raytracer::AObject {
         // ---------- Pre-Function -------- //
         virtual void init(void) = 0; // Create default rays
         virtual void reset(void) = 0; // Reset rays values (don't recreate it)
-        virtual void updateScreen(void) = 0; // Take rays and apply them to the screen
+        virtual void updateScreen(bool deadColor = false) = 0; // Take rays and apply them to the screen
         virtual void kill(void) = 0; // Kill all rays
         virtual const std::vector<raytracer::Color>& getScreen(void) const = 0;
         virtual std::vector<raytracer::Ray*> getRays(void) const = 0;

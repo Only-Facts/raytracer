@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 15/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file main.cpp
@@ -16,6 +16,14 @@ File Description:
 #include "utils/utils.hpp"
 #include "raytracer/Raytracer.hpp"
 #include <iostream>
+#include <csignal>
+
+// Global signal handling
+static volatile std::sig_atomic_t stopped = false;
+void signalHandler(int signal)
+{if (signal == SIGINT) stopped = true;}
+hot nodiscard bool raytracer::Raytracer::signal(void)
+{return stopped;}
 
 static cold void printHelp()
 {
@@ -28,7 +36,7 @@ static cold void printHelp()
     std::cout << utils::write::format("<strong>USAGE<>") << std::endl;
     std::cout << utils::write::color(utils::write::Color::Magenta);
     std::cout << "\t./raytracer <scene_cfg_path> [-a] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-s (<ppm_directory_path>|<ppm_file_path>)] [-r \"wxh\"]" << std::endl;
-    std::cout << "\t./raytracer <scene_cfg_path> -gui [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
+    std::cout << "\t./raytracer <scene_cfg_path> -gui [-a] [-n <nproc>] [-c <camera_file_path>] [-p <plugins_directory_path>] [-o <obj_directory_path>] [-r \"wxh\"]" << std::endl;
     std::cout << "\t./raytracer <ppm_file_path>" << std::endl;
     std::cout << "\t./raytracer -h" << std::endl;
     std::cout << utils::write::reset() << std::endl;
@@ -45,9 +53,9 @@ static cold void printHelp()
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-a, --advencement" << utils::write::reset() << std::endl;
     std::cout << "\t\tEnable the advencement display of the actual frame rendering " << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-g, --newton " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "delta" << utils::write::reset() << ">" << std::endl;
-    std::cout << "\t\tSet the number of processus (0 = auto), can also be set by the env var RAYTRACER_NPROC (default: " << utils::write::color(utils::write::Color::Red) << "0" << utils::write::reset() << ")" << std::endl;
+    std::cout << "\t\tActivate the newton mode, apply discrete gravity on rays" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-n, --nproc " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "np_proc" << utils::write::reset() << ">" << std::endl;
-    std::cout << "\t\tActivate the newton mode, apply aproximative gravity on rays" << std::endl;
+    std::cout << "\t\tSet the number of processus (0 = auto), can also be set by the env var RAYTRACER_NPROC (default: " << utils::write::color(utils::write::Color::Red) << "0" << utils::write::reset() << ")" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-c, --camera " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "camera_file_path" << utils::write::reset() << ">" << std::endl;
     std::cout << "\t\tForce the camera plugin used (default: first found)" << std::endl;
     std::cout << utils::write::color(utils::write::Color::Green) << "\t-p, --plugins " << utils::write::reset() << "<" << utils::write::color(utils::write::Color::Red) << "plugins_directory_path" << utils::write::reset() << ">" << std::endl;
@@ -86,6 +94,7 @@ static cold void run(raytracer::Raytracer& raytracer, int argc, char *argv[])
     if (raytracer.isGui() || raytracer.isViewer()) {
         raytracer.gui(); // Launch gui
     } else {
+        std::signal(SIGINT, signalHandler);
         raytracer.light(); // Update light rendering
         raytracer.render(); // Update camera rendering
         raytracer.saveRender(); // Save the updated rendering
@@ -96,6 +105,10 @@ int main(int argc, char *argv[])
 {
     // Init the raytracer (in the main to keep the longer the plugins charged)
     raytracer::Raytracer raytracer;
+
+    // Setup term
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
 
     // Basic flag help detection
     for (int i = 1; i < argc; ++i) {

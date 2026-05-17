@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file IObject.hpp
@@ -47,7 +47,6 @@ class IObject {
         virtual raytracer::Coord computeHit(const raytracer::Coord& point, const raytracer::Face* face = nullptr) const = 0;
         virtual void setImmunity(raytracer::IObject* object) = 0;
         virtual raytracer::IObject* getImmunity(void) const = 0;
-        virtual bool willCollide(const raytracer::Coord& point, const raytracer::Direction& orientation) const = 0;
 
         /* movement */
         virtual void translate(const raytracer::Coord& v) = 0;
@@ -65,6 +64,9 @@ class IObject {
         virtual const raytracer::ObjectDescriptor& getObjectDescriptor(void) const = 0;
         virtual raytracer::CFrame getCFrameOrigin(void) const = 0;
         virtual raytracer::CFrame getCFrame(void) const = 0;
+        virtual raytracer::Newton& getNewton(void) = 0;
+        virtual const raytracer::Newton& getNewton(void) const = 0;
+        virtual bool isSingularity(void) const = 0;
 
         // ------------ Operator ---------- //
         IObject& operator=(const IObject& object) = delete;

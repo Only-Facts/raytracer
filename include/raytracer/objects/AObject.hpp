@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file AObject.hpp
@@ -58,7 +58,6 @@ class AObject: public raytracer::IObject {
         /* 3D logic */
         hot inline void setImmunity(raytracer::IObject* object) final {this->_immunity = object;};
         hot inline nodiscard raytracer::IObject* getImmunity(void) const final {return this->_immunity;};
-        hot inline nodiscard bool willCollide(unused const raytracer::Coord& point, unused const raytracer::Direction& orientation) const override {return true;};
 
         /* movement */
         hot inline void translate(const raytracer::Coord& v) final {this->_descriptor.cframe.position += v;};
@@ -69,11 +68,14 @@ class AObject: public raytracer::IObject {
 
         /* getter & setter */
         inline void setObjectDescriptor(const raytracer::ObjectDescriptor& descriptor) final {this->_descriptor = descriptor;};
-        inline void setCFrame(const raytracer::CFrame& cframe, bool origin = true) final {this->_descriptor.cframe = cframe; if (origin) this->_descriptor.cframeOrigin = cframe;};
+        inline void setCFrame(const raytracer::CFrame& cframe, bool origin = true) final {this->_descriptor.cframe = cframe; this->_descriptor.gravity.velocity = cframe.look; if (origin) this->_descriptor.cframeOrigin = cframe;};
         hot inline nodiscard raytracer::ObjectDescriptor& getObjectDescriptor(void) final {return this->_descriptor;};
         hot inline nodiscard const raytracer::ObjectDescriptor& getObjectDescriptor(void) const final {return this->_descriptor;};
         hot inline nodiscard raytracer::CFrame getCFrameOrigin(void) const final {return this->_descriptor.cframeOrigin;};
         hot inline nodiscard raytracer::CFrame getCFrame(void) const final {return this->_descriptor.cframe;};
+        hot inline nodiscard raytracer::Newton& getNewton(void) final {return this->_descriptor.gravity;};
+        hot inline nodiscard const raytracer::Newton& getNewton(void) const final {return this->_descriptor.gravity;};
+        hot inline nodiscard bool isSingularity(void) const final {return this->_descriptor.gravity.singularity;};
 
         // ------------ Operator ---------- //
         AObject& operator=(const AObject& object) = delete;

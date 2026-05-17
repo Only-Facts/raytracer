@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -33,6 +33,7 @@ File Description:
     #include <libconfig.h++>            // libconfig::Setting
     #include <unordered_map>            // std::unordered_map
     #include <cstddef>                  // std::size_t
+    #include <chrono>                   // std::chrono
     #include <memory>                   // std::shared_ptr
     #include <vector>                   // std::vector
     #include <string>                   // std::string
@@ -49,7 +50,9 @@ struct Settings {
     bool gui = false; // -gui
     bool debug = false; // -d, --debug
     bool adv = false; // -a, --advencement | -A, --Advencement
-    bool newton = false; // -g, --newton (unused for now)
+    std::size_t delta = 0; // -g, --newton (unused for now)
+    bool newton_light = true; // -gl, --newton-light
+    bool newton_camera = true; // -gc, --newton-camera
     std::size_t nproc = 0; // -n, --nproc (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
@@ -58,6 +61,7 @@ struct Settings {
     raytracer::Resolution resolution = {0, 0}; // -r, --resolution
 
     /* edited variables */
+    bool newton_set = false; // newton
     bool nproc_set = false; // nproc
     bool camera_set = false; // camera_path
     bool plugins_set = false; // plugins_path
@@ -78,6 +82,7 @@ class Raytracer {
         std::uint8_t _step = 0; // 0 = scene, 1 = light, 2 = camera
         std::size_t _adv = 0;
         std::size_t _advMax = 0;
+        std::chrono::steady_clock::time_point _timer;
 
         /* plugins */
         std::unordered_map<std::string, std::shared_ptr<raytracer::DynamicLibrary>> _libs; // Keep them load until the end
@@ -85,6 +90,7 @@ class Raytracer {
         raytracer::ICamera* _camera = nullptr;
         std::vector<raytracer::ILight*> _lights;
         std::vector<raytracer::IObject*> _objects;
+        std::vector<raytracer::IObject*> _newtonianObjects;
         mutable std::vector<raytracer::IMaterial*> _materials;
 
         /* Light */
@@ -94,6 +100,8 @@ class Raytracer {
         /* optimisation */
         std::unordered_map<raytracer::Chunk, std::vector<raytracer::IObject*>, raytracer::ChunkHash> _objectsChunks;
         std::unordered_map<raytracer::CFrame, raytracer::Color, raytracer::CFrameHash> _rays;
+        std::mutex _forcesMutex;
+        std::unordered_map<raytracer::ForceKey, raytracer::Direction, raytracer::ForceHash> _forces;
 
         // ------------ Function ---------- //
         template<typename T>
@@ -127,20 +135,27 @@ class Raytracer {
         void adv(bool forced = false, bool increment = true); // Display advencement of the actual frame
 
         /* global */
+        raytracer::Direction computeUniversalGravitationForce(const raytracer::IObject *const object); // Newton
+        bool signal(void); // Check signal status
         void light(void); // Update light
         void render(void); // Update camera screen
         void loadRender(void); // Load the given ppm file
         void saveRender(void); // Save the actual render to a ppm file
 
         // ------------ Function ---------- //
-        void advReset(std::size_t advMax) {this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
-        void advNext(std::size_t advMax) {++this->_step; this->_adv = 0; this->_advMax = advMax;}; // Next step
-        void advAddMax(std::size_t adv) {this->_advMax += adv;};
-        void advFull(void) {this->_adv = this->_advMax; this->adv(true, false);};
-        void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};
+        hot inline void advReset(std::size_t advMax) {this->_timer = std::chrono::steady_clock::now(); this->_adv = 0; this->_advMax = advMax;}; // Reset the whole advencement
+        inline void advNext(std::size_t advMax) {++this->_step; this->advReset(advMax);}; // Next step
+        inline void advAddMax(std::size_t adv) {this->_advMax += adv;};
+        inline void advFull(void) {this->_adv = this->_advMax; this->adv(true, false);};
+        inline void advEnd(void) {if (this->_settings.adv) std::cout << std::endl;};
         raytracer::ICamera* getCamera(void) const {return this->_camera;};
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
+        hot inline nodiscard bool isNewton(void) const {return this->_settings.newton_set;};
+        hot inline nodiscard bool isLightNewton(void) const {return this->_settings.newton_light;};
+        hot inline nodiscard bool isCameraNewton(void) const {return this->_settings.newton_camera;};
+        hot inline nodiscard bool hasNewtonianObject(void) const {return (this->_newtonianObjects.size() > 0);};
+        hot inline nodiscard std::size_t getDelta(void) const {return this->_settings.delta;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};
 
         // ------------ Operator ---------- //
@@ -148,7 +163,7 @@ class Raytracer {
         Raytracer& operator=(Raytracer&& object) = delete;
 
         // ---------- Constructor --------- //
-        Raytracer() {this->_objectsChunks.max_load_factor(LOAD_FACTOR); this->_rays.max_load_factor(LOAD_FACTOR);};
+        Raytracer() {this->_objectsChunks.max_load_factor(LOAD_FACTOR); this->_rays.max_load_factor(LOAD_FACTOR); this->_forces.max_load_factor(LOAD_FACTOR);};
         Raytracer(const Raytracer& object) = delete;
         Raytracer(Raytracer&& object) = delete;
 

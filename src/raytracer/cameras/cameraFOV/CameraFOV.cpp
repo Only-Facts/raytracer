@@ -89,8 +89,8 @@ void raytracer::CameraFOV::reset(void)
             angleY = ((x / (resolution.x - 1.0f)) * 2.0f - 1.0f) * fieldOfViewW;
             // Orientation
             cframe.orientation = orientation;
-            cframe.orientation.x += angleX;
-            cframe.orientation.y += angleY;
+            cframe.orientation.x -= angleX;
+            cframe.orientation.y -= angleY;
             // Look (orientation modified)
             cframe.look = raytracer::toLook(cframe.orientation);
             // Apply (roll)
