@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Cone.hpp
@@ -28,9 +28,17 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class Cone: public raytracer::AObject {
+    private:
+        bool _infinite = false;
+        raytracer::Angle _angle = 25.0;
+        raytracer::Type _radius = 1.0;
+        raytracer::Type _height = 1.0;
+
     public:
         // ---------- Pre-Function -------- //
         void parse(const libconfig::Setting& node) final;
+        std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const final;
+        raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const final;
 
         // ------------ Operator ---------- //
         Cone& operator=(const Cone& object) = delete;

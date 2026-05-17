@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Define.hpp
@@ -25,8 +25,9 @@ File Description:
     #define LIGHT_COLOR_LIMIT 4.0f // Radius of the circle to take color on a shape pixel hit point
     #define MAX_VERTICES 3 // Allow point, segment, triangle
     #define LOAD_FACTOR 0.5f // Load factor used for the unordered map
-    #define SPACE_CHUNK_SIZE 100.0f // Size of the chunk used (color, face, sdf)
-    #define COLOR_CHUNK_SIZE (LIGHT_COLOR_LIMIT * 2.5) // Size of the chunk used (color, face, sdf)
+    #define SPACE_CHUNK_SIZE 100.0f // Size of the chunk used for: face, sdf, ...
+    #define COLOR_CHUNK_SIZE (LIGHT_COLOR_LIMIT * 2.5) // Size of the chunk used for: color
+    #define FORCE_CHUNK_SIZE 5.0f // Size of the chunk used for newton
     #define RAY_MAX_USELESS_LOOP(renderDistance) (renderDistance / SPACE_CHUNK_SIZE) // Number of useless loop allowed before getting killed
     #define RAY_MAX_DEPTH 25 // Depth maximal of cloning for the rays
     #define MAX_STEP 3 // Number of adv max step

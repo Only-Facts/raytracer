@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file ARay.cpp
@@ -53,7 +53,7 @@ void raytracer::ARay::computeObjects(raytracer::Type renderDistance, const std::
         if (it != objectsChunks.end()) {
             for (raytracer::IObject* object: it->second) {
                 if (!seen.insert(object).second) continue;
-                if (!object->willCollide(cframe.position, cframe.look)) continue; // Check if it will collide in the future at least one
+                //if (!object->willProbablyCollide(cframe.position, cframe.look)) continue; // Check if it will collide in the future at least one
                 this->_objects.push_back(object);
             }
         }

@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Struct.hpp
@@ -92,7 +92,7 @@ struct Newton {
 };
 
 struct ForceKey {
-    raytracer::Coord position = {0.0, 0.0, 0.0};
+    raytracer::Chunk position = {0, 0, 0};
     raytracer::Type mass = 0.0;
     inline hot nodiscard bool operator==(const ForceKey& other) const noexcept {
         return (
@@ -129,6 +129,8 @@ inline hot nodiscard raytracer::Chunk getSpaceChunk(const raytracer::Coord& poin
 {return {point.x / SPACE_CHUNK_SIZE, point.y / SPACE_CHUNK_SIZE, point.z / SPACE_CHUNK_SIZE};}
 inline hot nodiscard raytracer::Chunk getColorChunk(const raytracer::Coord& point)
 {return {point.x / COLOR_CHUNK_SIZE, point.y / COLOR_CHUNK_SIZE, point.z / COLOR_CHUNK_SIZE};}
+inline hot nodiscard raytracer::Chunk getForceChunk(const raytracer::Coord& point)
+{return {point.x / FORCE_CHUNK_SIZE, point.y / FORCE_CHUNK_SIZE, point.z / FORCE_CHUNK_SIZE};}
 
 struct ChunkHash {
     inline hot nodiscard std::size_t operator()(const raytracer::Chunk& chunk) const noexcept {

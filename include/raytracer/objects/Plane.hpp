@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 13/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Plane.hpp
@@ -28,9 +28,16 @@ namespace raytracer { // namespace start
 /* CLASS */
 
 class Plane: public raytracer::AObject {
+    private:
+        bool _infinite = false;
+        raytracer::Type _width = 1.0;
+        raytracer::Type _height = 1.0;
+
     public:
         // ---------- Pre-Function -------- //
         void parse(const libconfig::Setting& node) final;
+        std::pair<float, const raytracer::Face*> computeSDF(const raytracer::Coord& point) const final;
+        raytracer::Direction computeHit(const raytracer::Coord& point, const raytracer::Face* face) const final;
 
         // ------------ Operator ---------- //
         Plane& operator=(const Plane& object) = delete;

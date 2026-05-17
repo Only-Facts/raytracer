@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.hpp
@@ -51,6 +51,8 @@ struct Settings {
     bool debug = false; // -d, --debug
     bool adv = false; // -a, --advencement | -A, --Advencement
     std::size_t delta = 0; // -g, --newton (unused for now)
+    bool newton_light = true; // -gl, --newton-light
+    bool newton_camera = true; // -gc, --newton-camera
     std::size_t nproc = 0; // -n, --nproc (unused for now)
     std::string camera_path; // -c, --camera
     std::string plugins_path = PLUGINS_PATH; // -p, --plugins
@@ -149,6 +151,8 @@ class Raytracer {
         bool isViewer(void) const {return this->_settings.viewer;};
         bool isGui(void) const {return this->_settings.gui;};
         hot inline nodiscard bool isNewton(void) const {return this->_settings.newton_set;};
+        hot inline nodiscard bool isLightNewton(void) const {return this->_settings.newton_light;};
+        hot inline nodiscard bool isCameraNewton(void) const {return this->_settings.newton_camera;};
         hot inline nodiscard bool hasNewtonianObject(void) const {return (this->_newtonianObjects.size() > 0);};
         hot inline nodiscard std::size_t getDelta(void) const {return this->_settings.delta;};
         std::string ObjPath(const std::string& path) const {return this->_settings.obj_path + path;};

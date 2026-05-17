@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerInit.hpp
@@ -189,6 +189,28 @@ void raytracer::Raytracer::load(int argc, char *argv[])
 
             // Set the newton mode
             this->_settings.newton_set = true;
+        }
+
+        // -gl, --newton-light
+        else if (arg == "-gl" || arg == "--newton-light") {
+            // Check the option argument
+            if (!this->_settings.newton_light) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.newton_light = false;
+        }
+
+        // -gc, --newton-camera
+        else if (arg == "-gc" || arg == "--newton-camera") {
+            // Check the option argument
+            if (!this->_settings.newton_camera) {
+                utils::exception::CustomException e(utils::exception::Type::Warning, utils::exception::Code::OptionOverride, arg);
+                std::cout << e.formated() << std::endl;
+            }
+
+            this->_settings.newton_camera = false;
         }
 
         // -n, --nproc

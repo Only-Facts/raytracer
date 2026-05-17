@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file RaytracerAdv.cpp
@@ -102,7 +102,7 @@ hot void raytracer::Raytracer::adv(bool forced, bool increment)
     }
 
     // Display bar
-    std::cout << "\r" << utils::write::reset();
+    std::cout << utils::write::line() << "\r" << utils::write::reset();
     std::cout << utils::write::strong() << "[";
     std::cout << out.str();
     std::cout << utils::write::reset() << utils::write::strong() << "] ";

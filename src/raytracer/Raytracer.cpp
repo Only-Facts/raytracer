@@ -1,6 +1,6 @@
 /**************************************************************\
 Edition:
-##  @date 16/05/2026 by @author Tsukini
+##  @date 17/05/2026 by @author Tsukini
 
 File Name:
 ##  @file Raytracer.cpp
@@ -262,12 +262,14 @@ raytracer::Direction raytracer::Raytracer::computeUniversalGravitationForce(cons
     raytracer::Type distance = 0.0, force = 0.0;
     raytracer::Coord position = object->getCFrame().position;
     raytracer::Type mass = object->getNewton().mass;
-    const raytracer::ForceKey key = {position, mass};
+    const raytracer::ForceKey key = {raytracer::getForceChunk(position), mass};
 
     // Check for already computed values
+    /*
     auto it = this->_forces.find(key);
     if (it != this->_forces.end())
         return it->second;
+    */
 
     // For each object
     for (const raytracer::IObject *const actualObject: this->_newtonianObjects) {
@@ -290,7 +292,7 @@ raytracer::Direction raytracer::Raytracer::computeUniversalGravitationForce(cons
     }
 
     // Store computed value
-    this->_forces.try_emplace(key, totalForce);
+    //this->_forces.try_emplace(key, totalForce);
 
     return totalForce;
 }
@@ -345,7 +347,7 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
             }
 
             // 2 - Apply SDF (discrete gravity curve, only in newton mode)
-            if (raytracer.hasNewtonianObject() && raytracer.isNewton()) {
+            if (raytracer.hasNewtonianObject() && raytracer.isLightNewton() && raytracer.isNewton()) {
                 float mv = std::min(static_cast<float>(delta), sdf);
                 raytracer::Newton& gravity = ray->getNewton();
                 gravity.acceleration = raytracer.computeUniversalGravitationForce(ray);
@@ -393,8 +395,8 @@ static hot void processLightChunk(raytracer::Raytracer& raytracer,
                 angle = raytracer::radToDeg(std::atan2(look.dot(ray->getCFrame().look), look.length() * ray->getCFrame().look.length()));
                 float localIntensityCoef = 1.0f - (angle / 180.0f); // 0° = 1.0f, 180° = 0.0f
                 nearestObject->addLightData(ray->getCFrame().position, ray->getColor(), ray->getLuminescence() * localIntensityCoef * (1.0f - material->getReflection()));
+                ray->setColor(raytracer::mergeColor(material->getColor(), ray->getColor(), ray->getLuminescence() * material->getReflection()));
                 ray->setIntensity(ray->getIntensity() * material->getReflection());
-                ray->setColor(raytracer::mergeColor(material->getColor(), ray->getColor(), ray->getIntensity()));
 
                 // Only if the light will be alive after
                 if (ray->getIntensity() > LIGHT_INTENSITY_LIMIT) {
@@ -479,7 +481,7 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
             }
 
             // 2 - Apply SDF (discrete gravity curve, only in newton mode)
-            if (raytracer.hasNewtonianObject() && raytracer.isNewton()) {
+            if (raytracer.hasNewtonianObject() && raytracer.isCameraNewton() && raytracer.isNewton()) {
                 float mv = std::min(static_cast<float>(delta), sdf);
                 raytracer::Newton& gravity = ray->getNewton();
                 gravity.acceleration = raytracer.computeUniversalGravitationForce(ray);
@@ -515,14 +517,6 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
                     continue;
                 }
 
-                // Transparency & Refraction
-                if (material->getTransparency() > 1e-8) {
-                    raysClones.push_back(static_cast<raytracer::Ray*>(ray->clone()));
-                    raysClones.back()->setImmunity(nearestObject);
-                    raysClones.back()->setCoef(raysClones.back()->getCoef() * material->getTransparency() * (1.0f - material->getReflection()));
-                    raysClones.back()->setColor(raytracer::mergeColor(material->getColor(), raysClones.back()->getColor(), raysClones.back()->getCoef()));
-                }
-
                 // Normal computing
                 float d = (ray->getCFrame().position - ray->getCFrameOrigin().position).length() / camera->getRenderDistance();
                 float localIntensityCoef = std::exp(-EXP_K * d * d * d * d);
@@ -539,9 +533,16 @@ static hot void processCameraChunk(raytracer::Raytracer& raytracer,
                     raytracer::noise(ray->getCFrame().position - nearestObject->getCFrame().position, color, strength, size);
                 }
 
+                // Transparency & Refraction
+                if (material->getTransparency() > 1e-8) {
+                    raysClones.push_back(static_cast<raytracer::Ray*>(ray->clone()));
+                    raysClones.back()->setImmunity(nearestObject);
+                    raysClones.back()->setCoef(raysClones.back()->getCoef() * material->getTransparency() * (1.0f - material->getReflection()));
+                    raysClones.back()->setColor(raytracer::mergeColor(color, raysClones.back()->getColor(), raysClones.back()->getCoef()));
+                }
+
                 // Set the color
-                color = raytracer::mergeColor(ray->getColor(), color, ray->getCoef() * localIntensityCoef);
-                ray->setColor(color);
+                ray->setColor(raytracer::mergeColor(ray->getColor(), color, ray->getCoef() * localIntensityCoef));
 
                 // Update coef
                 ray->setCoef(ray->getCoef() * material->getReflection());
